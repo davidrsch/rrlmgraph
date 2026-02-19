@@ -29,11 +29,14 @@ Imports:
     text2vec
 Suggests:
     covr,
+    digest,
     dplyr,
     ellmer,
     httr2,
     jsonlite,
     knitr,
+    mockery,
+    ollamar,
     rmarkdown,
     testthat (>= 3.0.0),
     withr
