@@ -13,9 +13,11 @@ fixture_path <- system.file(
   package = "rrlmgraph"
 )
 if (!nzchar(fixture_path)) {
-  # Fallback: look for the bench repo alongside this checkout
+  # Fallback: the bench repo is a sibling directory.
+  # During devtools::test() getwd() is the package root, so
+  # dirname(getwd()) is the repos/ folder next to rrlmgraph-bench.
   fixture_path <- file.path(
-    dirname(dirname(dirname(dirname(getwd())))),
+    dirname(getwd()),
     "rrlmgraph-bench",
     "inst",
     "projects",
