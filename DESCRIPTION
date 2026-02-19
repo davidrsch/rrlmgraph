@@ -24,6 +24,7 @@ Imports:
 Suggests:
     covr,
     dplyr,
+    ellmer,
     httr2,
     jsonlite,
     knitr,
