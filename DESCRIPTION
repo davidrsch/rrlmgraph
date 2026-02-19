@@ -19,7 +19,8 @@ Imports:
     fs,
     igraph,
     rlang,
-    RSQLite
+    RSQLite,
+    text2vec
 Suggests:
     covr,
     dplyr,
