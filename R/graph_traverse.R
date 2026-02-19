@@ -129,65 +129,6 @@ compute_relevance <- function(
   max(0, min(1, score))
 }
 
-# ---- update_task_weights (stub) -------------------------------------
-
-#' Update task-trace weights on graph vertices
-#'
-#' Record that a set of nodes was useful for a task, increasing their
-#' \code{task_trace_weight} vertex attribute so they rank higher in
-#' future \code{compute_relevance()} calls.
-#'
-#' The full learning implementation (issue \#13) writes history to
-#' SQLite.  This Sprint-2 stub applies an in-memory exponential
-#' moving-average update and returns the modified graph.
-#'
-#' @param graph An \code{rrlm_graph} / \code{igraph} object.
-#' @param useful_nodes Character vector of node names that were
-#'   helpful for the current task.
-#' @param alpha Numeric(1).  EMA learning rate in \eqn{(0, 1)}.
-#'   Default \eqn{0.3}.
-#' @param decay Numeric(1).  Multiplicative decay applied to all
-#'   \emph{other} nodes so weights stay bounded.  Default \eqn{0.99}.
-#'
-#' @return The modified \code{graph} with updated \code{task_trace_weight}
-#'   vertex attributes.
-#' @export
-#' @examples
-#' \dontrun{
-#' g <- build_rrlm_graph("mypkg")
-#' g <- update_task_weights(g, useful_nodes = c("utils::load_data"))
-#' }
-update_task_weights <- function(
-  graph,
-  useful_nodes,
-  alpha = 0.3,
-  decay = 0.99
-) {
-  # Initialise attribute if absent
-  cur <- igraph::V(graph)$task_trace_weight
-  if (is.null(cur)) {
-    igraph::V(graph)$task_trace_weight <- rep(0.5, igraph::vcount(graph))
-    cur <- igraph::V(graph)$task_trace_weight
-  }
-  cur <- as.numeric(cur)
-  cur[is.na(cur)] <- 0.5
-
-  # Decay all nodes
-  cur <- cur * decay
-
-  # Boost useful nodes via EMA towards 1.0
-  idx <- match(useful_nodes, igraph::V(graph)$name)
-  idx <- idx[!is.na(idx)]
-  if (length(idx) > 0L) {
-    cur[idx] <- cur[idx] * (1 - alpha) + 1.0 * alpha
-  }
-
-  # Clamp to [0, 1]
-  cur <- pmin(1, pmax(0, cur))
-  igraph::V(graph)$task_trace_weight <- cur
-  graph
-}
-
 # ---- internal helpers ------------------------------------------------
 
 #' @keywords internal
