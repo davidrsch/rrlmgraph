@@ -440,7 +440,8 @@ build_test_edges <- function(func_nodes, test_files) {
 #' @param semantic_threshold Numeric(1).  Minimum cosine similarity for a
 #'   `SEMANTIC` edge to be created.  Default `0.7`.
 #' @param cache Logical(1).  When `TRUE` (default), the graph is serialised
-#'   to `<project_root>/.rrlmgraph/graph.rds`.
+#'   to `<project_root>/.rrlmgraph/graph.rds` and
+#'   `<project_root>/.rrlmgraph/graph.sqlite`.
 #' @param verbose Logical(1).  When `TRUE`, progress messages are printed via
 #'   [cli::cli_inform()].  Default `FALSE`.
 #'
@@ -448,6 +449,10 @@ build_test_edges <- function(func_nodes, test_files) {
 #'
 #' @seealso [summary.rrlm_graph()], [print.rrlm_graph()],
 #'   [plot.rrlm_graph()], [detect_rproject()], [extract_function_nodes()]
+#' @importFrom DBI dbConnect dbDisconnect dbWriteTable
+#' @importFrom RSQLite SQLite
+#' @importFrom fs dir_create
+#' @importFrom igraph as_data_frame
 #' @export
 #' @examples
 #' \dontrun{
@@ -639,6 +644,7 @@ build_rrlm_graph <- function(
   # ---- 8. Graph metadata ----------------------------------------------
   build_time <- proc.time()[["elapsed"]] - t0
   cache_path <- as.character(fs::path(root, ".rrlmgraph", "graph.rds"))
+  sqlite_path <- as.character(fs::path(root, ".rrlmgraph", "graph.sqlite"))
 
   igraph::graph_attr(g, "project_name") <- basename(root)
   igraph::graph_attr(g, "project_root") <- root
@@ -653,6 +659,7 @@ build_rrlm_graph <- function(
   igraph::graph_attr(g, "embed_method") <- embed_method
   igraph::graph_attr(g, "embed_model") <- embed_result$model
   igraph::graph_attr(g, "cache_path") <- cache_path
+  igraph::graph_attr(g, "sqlite_path") <- sqlite_path
 
   # ---- 9. Class assignment -------------------------------------------
   class(g) <- c("rrlm_graph", class(g))
@@ -670,6 +677,7 @@ build_rrlm_graph <- function(
         "Cache write failed: {conditionMessage(e)}"
       )
     })
+    .cache_to_sqlite(g, sqlite_path)
   }
 
   .vlog(
@@ -813,5 +821,44 @@ build_rrlm_graph <- function(
     to = to_v,
     similarity = sim_v,
     stringsAsFactors = FALSE
+  )
+}
+
+#' @keywords internal
+.cache_to_sqlite <- function(g, sqlite_path) {
+  tryCatch(
+    {
+      cache_dir <- dirname(sqlite_path)
+      if (!fs::dir_exists(cache_dir)) {
+        fs::dir_create(cache_dir, recurse = TRUE)
+      }
+
+      con <- DBI::dbConnect(RSQLite::SQLite(), sqlite_path)
+      on.exit(DBI::dbDisconnect(con), add = TRUE)
+
+      # graph_meta table
+      attrs <- igraph::graph_attr(g)
+      meta_df <- data.frame(
+        key = names(attrs),
+        value = vapply(attrs, function(v) {
+          if (is.null(v)) NA_character_ else as.character(v)
+        }, character(1)),
+        stringsAsFactors = FALSE
+      )
+      DBI::dbWriteTable(con, "graph_meta", meta_df, overwrite = TRUE)
+
+      # nodes table
+      vdf <- igraph::as_data_frame(g, what = "vertices")
+      # Drop embedding column (binary / list) to keep SQLite-friendly
+      vdf$embedding <- NULL
+      DBI::dbWriteTable(con, "nodes", vdf, overwrite = TRUE)
+
+      # edges table
+      edf <- igraph::as_data_frame(g, what = "edges")
+      DBI::dbWriteTable(con, "edges", edf, overwrite = TRUE)
+    },
+    error = function(e) {
+      cli::cli_warn("SQLite cache write failed: {conditionMessage(e)}")
+    }
   )
 }

@@ -98,6 +98,36 @@ test_that("cache=TRUE writes .rrlmgraph/graph.rds", {
   expect_true(file.exists(cache_file))
 })
 
+test_that("cache=TRUE writes .rrlmgraph/graph.sqlite with nodes/edges/meta tables", {
+  skip_if_not_installed("DBI")
+  skip_if_not_installed("RSQLite")
+
+  tmp_root <- tempfile("rrlm_sqlite_test")
+  fs::dir_copy(fixture_path, tmp_root)
+  on.exit(fs::dir_delete(tmp_root), add = TRUE)
+
+  g <- build_rrlm_graph(tmp_root, cache = TRUE, verbose = FALSE)
+
+  sqlite_file <- file.path(tmp_root, ".rrlmgraph", "graph.sqlite")
+  expect_true(file.exists(sqlite_file))
+
+  con <- DBI::dbConnect(RSQLite::SQLite(), sqlite_file)
+  on.exit(DBI::dbDisconnect(con), add = TRUE)
+
+  tables <- DBI::dbListTables(con)
+  expect_true("graph_meta" %in% tables)
+  expect_true("nodes" %in% tables)
+  expect_true("edges" %in% tables)
+
+  meta <- DBI::dbReadTable(con, "graph_meta")
+  expect_true("project_name" %in% meta$key)
+
+  nodes_tbl <- DBI::dbReadTable(con, "nodes")
+  expect_gte(nrow(nodes_tbl), 1L)
+
+  expect_equal(igraph::graph_attr(g, "sqlite_path"), sqlite_file)
+})
+
 test_that("build_rrlm_graph completes in under 30 seconds", {
   elapsed <- system.time(
     build_rrlm_graph(fixture_path, cache = FALSE, verbose = FALSE)
