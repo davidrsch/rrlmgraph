@@ -609,6 +609,7 @@ build_rrlm_graph <- function(
   )
 
   # Store embeddings on relevant vertices
+  igraph::V(g)$embedding <- vector("list", igraph::vcount(g))
   for (nid in names(embed_result$embeddings)) {
     idx <- which(igraph::V(g)$name == nid)
     if (length(idx) == 1L) {
@@ -623,17 +624,29 @@ build_rrlm_graph <- function(
     semantic_threshold
   )
   if (nrow(sem_edges) > 0L) {
-    g <- igraph::add_edges(
-      g,
-      edges = as.vector(t(match(
-        cbind(sem_edges$from, sem_edges$to),
-        igraph::V(g)$name
-      ))),
-      attr = list(
-        weight = sem_edges$similarity,
-        edge_type = rep("SEMANTIC", nrow(sem_edges))
+    vertex_names <- igraph::V(g)$name
+    from_idx <- match(sem_edges$from, vertex_names)
+    to_idx <- match(sem_edges$to, vertex_names)
+    edge_mat <- cbind(from_idx, to_idx)
+    valid_edges <- stats::complete.cases(edge_mat)
+
+    if (!all(valid_edges)) {
+      cli::cli_warn(
+        "Skipping {sum(!valid_edges)} semantic similarity edge(s) whose nodes are not present in the graph."
       )
-    )
+    }
+
+    if (any(valid_edges)) {
+      edge_vec <- as.vector(t(edge_mat[valid_edges, , drop = FALSE]))
+      g <- igraph::add_edges(
+        g,
+        edges = edge_vec,
+        attr = list(
+          weight = sem_edges$similarity[valid_edges],
+          edge_type = rep("SEMANTIC", sum(valid_edges))
+        )
+      )
+    }
   }
 
   # ---- 8. Graph metadata ----------------------------------------------
