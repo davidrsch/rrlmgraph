@@ -1,0 +1,29 @@
+# R artifacts
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+.httr-oauth
+.DS_Store
+
+# Package build outputs
+*.tar.gz
+*.zip
+/src/*.o
+/src/*.so
+
+# Documentation
+/docs/
+/man/*.Rd
+
+# Test coverage
+coverage/
+*.gcov
+
+# renv / packrat
+renv/library/
+packrat/lib*/
+packrat/bundles/
+
+# vscode
+.vscode/
