@@ -1,0 +1,38 @@
+Package: rrlmgraph
+Type: Package
+Title: Recursive Language Model Graph for R Projects
+Version: 0.1.0
+Authors@R: person("David", "Schoch", email = "davidrsch@gmail.com",
+    role = c("aut", "cre"))
+Description: Builds a typed knowledge graph of an R project's structure
+    for use with large language models. The graph encodes functions, files,
+    packages, and tests as nodes, with call, import, and test edges capturing
+    dependencies. Supports TF-IDF embeddings out-of-the-box, with optional
+    Ollama and OpenAI backends.
+License: MIT + file LICENSE
+Depends:
+    R (>= 4.1.0)
+Imports:
+    codetools,
+    cli,
+    DBI,
+    fs,
+    igraph,
+    rlang,
+    RSQLite
+Suggests:
+    covr,
+    dplyr,
+    httr2,
+    jsonlite,
+    knitr,
+    rmarkdown,
+    testthat (>= 3.0.0),
+    withr
+Config/testthat/edition: 3
+Encoding: UTF-8
+Language: en-US
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+URL: https://github.com/davidrsch/rrlmgraph
+BugReports: https://github.com/davidrsch/rrlmgraph/issues
