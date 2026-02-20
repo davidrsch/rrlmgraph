@@ -74,8 +74,8 @@ show.  Default <code>15</code>.</p></dd>
 
 <dt id="arg-layout">layout<a class="anchor" aria-label="anchor" href="#arg-layout"></a></dt>
 <dd><p>Function.  igraph layout function.  Defaults to
-<a href="https://r.igraph.org/reference/layout_nicely.html" class="external-link">igraph::layout_nicely</a> when <code>NULL</code> (auto-selects a stable algorithm
-for the graph topology, avoiding degenerate coordinates).</p></dd>
+<a href="https://r.igraph.org/reference/layout_with_fr.html" class="external-link">igraph::layout_with_fr</a> when <code>NULL</code> (Fruchterman-Reingold; safe for
+all graph topologies including disconnected and edge-less graphs).</p></dd>
 
 
 <dt id="arg-vertex-label-cex">vertex.label.cex<a class="anchor" aria-label="anchor" href="#arg-vertex-label-cex"></a></dt>

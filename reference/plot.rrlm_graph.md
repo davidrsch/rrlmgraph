@@ -34,9 +34,9 @@ plot(
 - layout:
 
   Function. igraph layout function. Defaults to
-  [igraph::layout_nicely](https://r.igraph.org/reference/layout_nicely.html)
-  when `NULL` (auto-selects a stable algorithm for the graph topology,
-  avoiding degenerate coordinates).
+  [igraph::layout_with_fr](https://r.igraph.org/reference/layout_with_fr.html)
+  when `NULL` (Fruchterman-Reingold; safe for all graph topologies
+  including disconnected and edge-less graphs).
 
 - vertex.label.cex:
 
