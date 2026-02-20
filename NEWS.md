@@ -1,6 +1,4 @@
-﻿# News
-
-## rrlmgraph 0.1.0
+﻿# rrlmgraph 0.1.0
 
 First release.
 

@@ -33,8 +33,11 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::pkgdown, any::magick, local::.
+          extra-packages: any::pkgdown, any::magick, any::devtools, local::.
           needs: website
+
+      - name: Document
+        run: Rscript -e 'devtools::document()'
 
       - name: Build favicons
         run: pkgdown::build_favicons(overwrite = TRUE)
