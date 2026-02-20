@@ -37,7 +37,7 @@ graph <- build_rrlm_graph(pkg_dir, verbose = TRUE)
 #> Computing PageRank
 #> Embedding nodes with method 'tfidf'
 #> Computing semantic similarity edges (threshold 0.7)
-#> Done in 0.35s -- 9 nodes, 0 edges
+#> Done in 0.4s -- 9 nodes, 0 edges
 ```
 
 The function:
@@ -51,7 +51,7 @@ The function:
 
 ``` r
 summary(graph)
-#> IGRAPH af4913a DNW- 9 0 -- 
+#> IGRAPH b5ff6a8 DNW- 9 0 -- 
 #> + attr: project_name (g/c), project_root (g/c), project_type (g/c),
 #> | r_version (g/c), build_time (g/n), build_at (g/c), embed_method
 #> | (g/c), embed_model (g/x), cache_path (g/c), name (v/c), node_type
@@ -62,14 +62,14 @@ summary(graph)
 
 ``` r
 print(graph)
-#> IGRAPH af4913a DNW- 9 0 -- 
+#> IGRAPH b5ff6a8 DNW- 9 0 -- 
 #> + attr: project_name (g/c), project_root (g/c), project_type (g/c),
 #> | r_version (g/c), build_time (g/n), build_at (g/c), embed_method
 #> | (g/c), embed_model (g/x), cache_path (g/c), name (v/c), node_type
 #> | (v/c), file (v/c), line_start (v/n), line_end (v/n), signature (v/c),
 #> | complexity (v/n), pagerank (v/n), embedding (v/x), weight (e/n),
 #> | edge_type (e/c)
-#> + edges from af4913a (vertex names):
+#> + edges from b5ff6a8 (vertex names):
 ```
 
 [`plot()`](https://rdrr.io/r/graphics/plot.default.html) draws a
@@ -138,14 +138,14 @@ the `ellmer` package:
 # OpenAI (default) -- requires OPENAI_API_KEY
 answer <- chat_with_context(
   graph,
-  "How does prepare_data() ensure clean input?"
+  "How does build_rrlm_graph() process R source files?"
 )
 cat(answer)
 
 # GitHub Models Marketplace -- requires GITHUB_PAT
 answer <- chat_with_context(
   graph,
-  "What does fit_model() return?",
+  "What does query_context() return?",
   provider = "github",
   model    = "gpt-4o-mini"
 )
@@ -153,7 +153,7 @@ answer <- chat_with_context(
 # Local Ollama -- no API key needed
 answer <- chat_with_context(
   graph,
-  "Summarise the prediction pipeline.",
+  "Summarise how the graph traversal works.",
   provider = "ollama",
   model    = "llama3.2"
 )
@@ -161,7 +161,7 @@ answer <- chat_with_context(
 # Anthropic Claude -- requires ANTHROPIC_API_KEY
 answer <- chat_with_context(
   graph,
-  "Which function calls prepare_data()?",
+  "Which functions call extract_function_nodes()?",
   provider = "anthropic"
 )
 ```
@@ -201,14 +201,14 @@ graph_small <- update_graph_incremental(
 #> 
 #> ── Incremental graph update ──
 #> 
-#> Changed files: /tmp/RtmpHchp6R/mypkg_demo/R/data_prep.R
+#> Changed files: /tmp/RtmpZGDKV0/mypkg_demo/R/data_prep.R
 #> Re-parsing 1 file(s).
 #> No new nodes; finalising graph.
-#> Persisting cache to /tmp/RtmpHchp6R/mypkg_demo.
-#> Graph cached at /tmp/RtmpHchp6R/mypkg_demo/.rrlmgraph
+#> Persisting cache to /tmp/RtmpZGDKV0/mypkg_demo.
+#> Graph cached at /tmp/RtmpZGDKV0/mypkg_demo/.rrlmgraph
 
 summary(graph_small)
-#> IGRAPH 6db780a DNW- 0 0 -- 
+#> IGRAPH 6cee8b5 DNW- 0 0 -- 
 #> + attr: project_name (g/c), project_root (g/c), project_type (g/c),
 #> | r_version (g/c), build_time (g/n), build_at (g/c), embed_method
 #> | (g/c), embed_model (g/x), cache_path (g/c), name (v/c), node_type
