@@ -2,7 +2,15 @@
 
 First release.
 
-### Infrastructure
+### Improvements
+
+* `plot.rrlm_graph()`: labels now placed **outside** nodes (`vertex.label.dist = 1.5`),
+  colour changed to `"gray15"` (was white) for readability on all backgrounds,
+  cex increased to `0.85`, default layout changed to Kamada-Kawai
+  (`layout_with_kk`) for better node separation on sparse graphs (#29).
+* Vignette figure size increased to 10 × 8 inches.
+
+### Original first-release notes
 
 * `R CMD check --as-cran`: zero errors, zero warnings verified across
   ubuntu/windows/macos x R release/oldrel/devel (#25).

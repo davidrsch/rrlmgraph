@@ -113,7 +113,7 @@ print(graph)
 - **seagreen** -- test files
 - Labels on function nodes only; arrows show CALLS direction
 
-```{r plot, fig.width = 8, fig.height = 6}
+```{r plot, fig.width = 10, fig.height = 8}
 plot(graph)
 ```
 

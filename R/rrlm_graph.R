@@ -130,11 +130,14 @@ summary.rrlm_graph <- function(object, ...) {
 #' @param n_hubs Integer(1).  Number of top-PageRank *function* hub nodes to
 #'   show.  Default `15`.
 #' @param layout Function.  igraph layout function.  Defaults to
-#'   [igraph::layout_with_fr] when `NULL` (Fruchterman-Reingold; safe for
-#'   all graph topologies including disconnected and edge-less graphs).
+#'   [igraph::layout_with_kk] when `NULL` (Kamada-Kawai; gives good node
+#'   separation on sparse graphs for readable labels).
 #' @param vertex.label.cex Numeric(1).  Label size for function nodes.
-#'   Default `0.75`.
-#' @param edge.arrow.size Numeric(1).  Arrow size.  Default `0.3`.
+#'   Default `0.85`.
+#' @param vertex.label.dist Numeric(1).  Distance of labels from node
+#'   centres, in units of vertex size.  Default `1.5` places labels just
+#'   outside the node circles so they don't overlap the node fill.
+#' @param edge.arrow.size Numeric(1).  Arrow size.  Default `0.35`.
 #' @param ... Additional arguments forwarded to [igraph::plot.igraph()].
 #' @return `x` invisibly.
 #' @seealso [print.rrlm_graph()], [summary.rrlm_graph()], [build_rrlm_graph()]
@@ -149,8 +152,9 @@ plot.rrlm_graph <- function(
   x,
   n_hubs = 15L,
   layout = NULL,
-  vertex.label.cex = 0.75,
-  edge.arrow.size = 0.3,
+  vertex.label.cex = 0.85,
+  vertex.label.dist = 1.5,
+  edge.arrow.size = 0.35,
   ...
 ) {
   g <- x
@@ -228,10 +232,11 @@ plot.rrlm_graph <- function(
   )
 
   # -- Layout -----------------------------------------------------------
-  # layout_with_fr is used because it handles all topology cases (no edges,
-  # disconnected, single-component) without returning NaN or zero-range coords.
+  # layout_with_kk (Kamada-Kawai) is used by default because it gives better
+  # node separation on sparse graphs, making labels easier to read.
+  # Falls back to layout_in_circle if KK fails or produces degenerate coords.
   if (is.null(layout)) {
-    layout <- igraph::layout_with_fr
+    layout <- igraph::layout_with_kk
   }
   coords <- tryCatch(
     layout(sub),
@@ -250,7 +255,7 @@ plot.rrlm_graph <- function(
   }
 
   # -- Plot -------------------------------------------------------------
-  op <- graphics::par(mar = c(0, 0, 2.5, 0))
+  op <- graphics::par(mar = c(2, 2, 3, 2))
   on.exit(graphics::par(op), add = TRUE)
 
   igraph::plot.igraph(
@@ -260,7 +265,8 @@ plot.rrlm_graph <- function(
     vertex.size = scaled,
     vertex.label = labels,
     vertex.label.cex = vertex.label.cex,
-    vertex.label.color = "white",
+    vertex.label.dist = vertex.label.dist,
+    vertex.label.color = "gray15",
     vertex.label.font = 2L, # bold
     vertex.frame.color = "white",
     edge.arrow.size = edge.arrow.size,
