@@ -38,7 +38,7 @@ graph <- build_rrlm_graph(demo_dir, verbose = TRUE)
 #> Computing PageRank
 #> Embedding nodes with method 'tfidf'
 #> Computing semantic similarity edges (threshold 0.7)
-#> Done in 0.4s -- 10 nodes, 0 edges
+#> Done in 0.39s -- 10 nodes, 0 edges
 ```
 
 The function:
@@ -52,7 +52,7 @@ The function:
 
 ``` r
 summary(graph)
-#> IGRAPH 74b1637 DNW- 10 0 -- 
+#> IGRAPH 54ed380 DNW- 10 0 -- 
 #> + attr: project_name (g/c), project_root (g/c), project_type (g/c),
 #> | r_version (g/c), build_time (g/n), build_at (g/c), embed_method
 #> | (g/c), embed_model (g/x), cache_path (g/c), name (v/c), node_type
@@ -63,14 +63,14 @@ summary(graph)
 
 ``` r
 print(graph)
-#> IGRAPH 74b1637 DNW- 10 0 -- 
+#> IGRAPH 54ed380 DNW- 10 0 -- 
 #> + attr: project_name (g/c), project_root (g/c), project_type (g/c),
 #> | r_version (g/c), build_time (g/n), build_at (g/c), embed_method
 #> | (g/c), embed_model (g/x), cache_path (g/c), name (v/c), node_type
 #> | (v/c), file (v/c), line_start (v/n), line_end (v/n), signature (v/c),
 #> | complexity (v/n), pagerank (v/n), embedding (v/x), weight (e/n),
 #> | edge_type (e/c)
-#> + edges from 74b1637 (vertex names):
+#> + edges from 54ed380 (vertex names):
 ```
 
 [`plot()`](https://rdrr.io/r/graphics/plot.default.html) draws a
@@ -202,14 +202,14 @@ graph_small <- update_graph_incremental(
 #> 
 #> ── Incremental graph update ──
 #> 
-#> Changed files: /tmp/RtmpWQnn2B/mypkg_demo/R/data_prep.R
+#> Changed files: /tmp/RtmpFulUXy/mypkg_demo/R/data_prep.R
 #> Re-parsing 1 file(s).
 #> No new nodes; finalising graph.
-#> Persisting cache to /tmp/RtmpWQnn2B/mypkg_demo.
-#> Graph cached at /tmp/RtmpWQnn2B/mypkg_demo/.rrlmgraph
+#> Persisting cache to /tmp/RtmpFulUXy/mypkg_demo.
+#> Graph cached at /tmp/RtmpFulUXy/mypkg_demo/.rrlmgraph
 
 summary(graph_small)
-#> IGRAPH b5820c1 DNW- 0 0 -- 
+#> IGRAPH 75ffb56 DNW- 0 0 -- 
 #> + attr: project_name (g/c), project_root (g/c), project_type (g/c),
 #> | r_version (g/c), build_time (g/n), build_at (g/c), embed_method
 #> | (g/c), embed_model (g/x), cache_path (g/c), name (v/c), node_type

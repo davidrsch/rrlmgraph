@@ -33,11 +33,10 @@ plot(
 
 - layout:
 
-  Function. igraph layout function. Auto-selects
-  [igraph::layout_with_kk](https://r.igraph.org/reference/layout_with_kk.html)
-  for ≤ 20 nodes and
-  [igraph::layout_with_fr](https://r.igraph.org/reference/layout_with_fr.html)
-  for larger sub-graphs when `NULL` (default).
+  Function. igraph layout function. Defaults to
+  [igraph::layout_nicely](https://r.igraph.org/reference/layout_nicely.html)
+  when `NULL` (auto-selects a stable algorithm for the graph topology,
+  avoiding degenerate coordinates).
 
 - vertex.label.cex:
 
