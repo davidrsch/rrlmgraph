@@ -162,14 +162,14 @@ Supported providers via the `ellmer` package:
 # OpenAI (default) -- requires OPENAI_API_KEY
 answer <- chat_with_context(
   graph,
-  "How does prepare_data() ensure clean input?"
+  "How does build_rrlm_graph() process R source files?"
 )
 cat(answer)
 
 # GitHub Models Marketplace -- requires GITHUB_PAT
 answer <- chat_with_context(
   graph,
-  "What does fit_model() return?",
+  "What does query_context() return?",
   provider = "github",
   model    = "gpt-4o-mini"
 )
@@ -177,7 +177,7 @@ answer <- chat_with_context(
 # Local Ollama -- no API key needed
 answer <- chat_with_context(
   graph,
-  "Summarise the prediction pipeline.",
+  "Summarise how the graph traversal works.",
   provider = "ollama",
   model    = "llama3.2"
 )
@@ -185,7 +185,7 @@ answer <- chat_with_context(
 # Anthropic Claude -- requires ANTHROPIC_API_KEY
 answer <- chat_with_context(
   graph,
-  "Which function calls prepare_data()?",
+  "Which functions call extract_function_nodes()?",
   provider = "anthropic"
 )
 ```
