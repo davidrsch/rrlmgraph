@@ -29,8 +29,7 @@ library(rrlmgraph)
 graph <- build_rrlm_graph(demo_dir, verbose = TRUE)
 #> Detecting project at /home/runner/work/_temp/Library/rrlmgraph/extdata/demo
 #> Parsing 3 R file(s)
-#> Warning: No function nodes found in
-#> /home/runner/work/_temp/Library/rrlmgraph/extdata/demo.  Empty graph returned.
+#> Warning: <anonymous>: ... may be used in an incorrect context: 'fit_model(raw, ...)' (/home/runner/work/_temp/Library/rrlmgraph/extdata/demo/predict.R:51)
 #> Building CALLS edges
 #> Building IMPORT edges
 #> Building TEST edges
@@ -38,7 +37,7 @@ graph <- build_rrlm_graph(demo_dir, verbose = TRUE)
 #> Computing PageRank
 #> Embedding nodes with method 'tfidf'
 #> Computing semantic similarity edges (threshold 0.7)
-#> Done in 0.4s -- 10 nodes, 0 edges
+#> Done in 0.59s -- 19 nodes, 6 edges
 ```
 
 The function:
@@ -52,7 +51,7 @@ The function:
 
 ``` r
 summary(graph)
-#> IGRAPH aee65d4 DNW- 10 0 -- 
+#> IGRAPH f10e380 DNW- 19 6 -- 
 #> + attr: project_name (g/c), project_root (g/c), project_type (g/c),
 #> | r_version (g/c), build_time (g/n), build_at (g/c), embed_method
 #> | (g/c), embed_model (g/x), cache_path (g/c), name (v/c), node_type
@@ -63,14 +62,18 @@ summary(graph)
 
 ``` r
 print(graph)
-#> IGRAPH aee65d4 DNW- 10 0 -- 
+#> IGRAPH f10e380 DNW- 19 6 -- 
 #> + attr: project_name (g/c), project_root (g/c), project_type (g/c),
 #> | r_version (g/c), build_time (g/n), build_at (g/c), embed_method
 #> | (g/c), embed_model (g/x), cache_path (g/c), name (v/c), node_type
 #> | (v/c), file (v/c), line_start (v/n), line_end (v/n), signature (v/c),
 #> | complexity (v/n), pagerank (v/n), embedding (v/x), weight (e/n),
 #> | edge_type (e/c)
-#> + edges from aee65d4 (vertex names):
+#> + edges from f10e380 (vertex names):
+#> [1] data_prep::prepare_data->data_prep::clean_data        
+#> [2] data_prep::prepare_data->data_prep::validate_inputs   
+#> [3] predict::run_pipeline  ->predict::evaluate_predictions
+#> + ... omitted several edges
 ```
 
 [`plot()`](https://rdrr.io/r/graphics/plot.default.html) draws a
@@ -100,15 +103,24 @@ ctx <- query_context(
   budget_tokens = 400L,
   verbose = TRUE
 )
-#> Seed node: "stats"
+#> Seed node: "data_prep::validate_inputs"
+#> + "data_prep::prepare_data" (score=0.273, tokens=8)
+#> + "data_prep::clean_data" (score=0.401, tokens=5)
+#> + "predict::run_pipeline" (score=0.22, tokens=7)
+#> + "model::fit_model" (score=0.253, tokens=8)
+#> + "predict::predict_results" (score=0.237, tokens=9)
+#> + "predict::evaluate_predictions" (score=0.234, tokens=10)
 
 # Nodes selected for the context window
 ctx$nodes
-#> [1] "stats"
+#> [1] "data_prep::validate_inputs"    "data_prep::prepare_data"      
+#> [3] "data_prep::clean_data"         "predict::run_pipeline"        
+#> [5] "model::fit_model"              "predict::predict_results"     
+#> [7] "predict::evaluate_predictions"
 
 # Number of tokens used
 ctx$tokens_used
-#> [1] 84
+#> [1] 271
 ```
 
 The assembled context string – ready to paste into a system prompt:
@@ -116,13 +128,40 @@ The assembled context string – ready to paste into a system prompt:
 ``` r
 cat(ctx$context_string)
 #> # rrlm_graph Context
-#> # Project: demo | R 4.5.2 | ~52 tokens
+#> # Project: demo | R 4.5.2 | ~238 tokens
 #> # Query: How does the data preparation and validation pipeline work?
 #> 
 #> ## CORE FUNCTIONS
 #> ---
-#> ### stats
-#> stats
+#> ### data_prep::validate_inputs
+#> validate_inputs(raw, required_cols) {}
+#> 
+#> ## SUPPORTING FUNCTIONS
+#> ---
+#> ### data_prep::prepare_data
+#> prepare_data(raw, scale_x)
+#> Calls: data_prep::validate_inputs, data_prep::clean_data
+#> Called by: predict::run_pipeline
+#> 
+#> ### data_prep::clean_data
+#> clean_data(raw)
+#> Called by: data_prep::prepare_data
+#> 
+#> ### predict::run_pipeline
+#> run_pipeline(raw, ...)
+#> Calls: data_prep::prepare_data, model::fit_model, predict::predict_results, predict::evaluate_predictions
+#> 
+#> ### model::fit_model
+#> fit_model(raw, tune, select)
+#> Called by: predict::run_pipeline
+#> 
+#> ### predict::predict_results
+#> predict_results(model, newdata)
+#> Called by: predict::run_pipeline
+#> 
+#> ### predict::evaluate_predictions
+#> evaluate_predictions(preds, actuals)
+#> Called by: predict::run_pipeline
 #> 
 #> ## CONSTRAINTS
 #> ---
@@ -202,20 +241,24 @@ graph_small <- update_graph_incremental(
 #> 
 #> ── Incremental graph update ──
 #> 
-#> Changed files: /tmp/RtmpKyedLW/mypkg_demo/R/data_prep.R
+#> Changed files: /tmp/RtmpVGcIuT/mypkg_demo/R/data_prep.R
+#> Removing 1 stale node(s).
 #> Re-parsing 1 file(s).
-#> No new nodes; finalising graph.
-#> Persisting cache to /tmp/RtmpKyedLW/mypkg_demo.
-#> Graph cached at /tmp/RtmpKyedLW/mypkg_demo/.rrlmgraph
+#> Embedding 1 new node(s) using method 'tfidf'.
+#> Graph now has 2 nodes, 0 edges.
+#> Recomputing PageRank.
+#> Persisting cache to /tmp/RtmpVGcIuT/mypkg_demo.
+#> Graph cached at /tmp/RtmpVGcIuT/mypkg_demo/.rrlmgraph
 
 summary(graph_small)
-#> IGRAPH bd2c4a2 DNW- 0 0 -- 
+#> IGRAPH dbc03a0 DNW- 2 0 -- 
 #> + attr: project_name (g/c), project_root (g/c), project_type (g/c),
 #> | r_version (g/c), build_time (g/n), build_at (g/c), embed_method
 #> | (g/c), embed_model (g/x), cache_path (g/c), name (v/c), node_type
 #> | (v/c), file (v/c), line_start (v/n), line_end (v/n), signature (v/c),
-#> | complexity (v/n), pagerank (v/n), embedding (v/x), weight (e/n),
-#> | edge_type (e/c)
+#> | complexity (v/n), pagerank (v/n), embedding (v/x), label (v/c), pkg
+#> | (v/c), doc (v/c), task_trace_weight (v/n), weight (e/n), edge_type
+#> | (e/c)
 ```
 
 ## 6. Caching the graph

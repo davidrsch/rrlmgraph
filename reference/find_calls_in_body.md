@@ -43,6 +43,6 @@ a function in the package namespace before being included.
 ``` r
 fn <- function(x) sqrt(x) + log(x)
 find_calls_in_body(body(fn))
-#> character(0)
+#> [1] "log"  "sqrt"
 # [1] "log"  "sqrt"
 ```
