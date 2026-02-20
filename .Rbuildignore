@@ -12,3 +12,5 @@
 ^cran-comments\.md$
 ^revdep$
 ^\.covrignore$
+^_pkgdown\.yml$
+^pkgdown$

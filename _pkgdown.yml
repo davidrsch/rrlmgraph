@@ -1,0 +1,90 @@
+url: https://davidrsch.github.io/rrlmgraph/
+
+template:
+  bootstrap: 5
+  bslib:
+    primary: "#1A4F74"
+    navbar-light-color: "white"
+    navbar-light-brand-color: "white"
+    navbar-light-brand-hover-color: "white"
+    navbar-light-active-color: "white"
+    code_font: "monospace"
+
+development:
+  mode: auto
+
+navbar:
+  bg: primary
+  type: light
+  structure:
+    left:  [intro, reference, news]
+    right: [search, github]
+  components:
+    intro:
+      text: "Getting Started"
+      href: articles/getting-started.html
+    github:
+      icon: fa-github
+      href: https://github.com/davidrsch/rrlmgraph
+
+reference:
+  - title: "Core API"
+    desc: >
+      The primary user-facing functions for building a project graph,
+      querying it for LLM context, and generating static instructions.
+    contents:
+      - build_rrlm_graph
+      - query_context
+      - chat_with_context
+      - generate_instructions
+      - update_graph_incremental
+
+  - title: "Graph Construction"
+    desc: >
+      Internal building blocks that parse R source files into nodes and edges.
+    contents:
+      - detect_rproject
+      - extract_function_nodes
+      - build_call_edges
+      - build_import_edges
+      - build_test_edges
+      - find_calls_in_body
+      - embed_nodes
+      - embed_query
+      - build_node_context
+      - assemble_context_string
+      - compute_relevance
+      - cosine_similarity
+
+  - title: "Caching & Persistence"
+    desc: >
+      Functions for saving, loading, and exporting the graph to disk.
+    contents:
+      - save_graph_cache
+      - load_graph_cache
+      - is_cache_stale
+      - export_to_sqlite
+
+  - title: "Task Trace"
+    desc: >
+      Record and weight LLM interaction feedback to improve future traversals.
+    contents:
+      - log_task_trace
+      - update_task_weights
+      - update_task_polarity
+
+  - title: "Utilities"
+    desc: Helper utilities.
+    contents:
+      - ollama_available
+
+  - title: "S3 Methods"
+    desc: >
+      Print, summary, and plot methods for `rrlm_graph` and `rrlm_context`
+      objects.
+    contents:
+      - print.rrlm_graph
+      - summary.rrlm_graph
+      - plot.rrlm_graph
+      - print.rrlm_context
+      - summary.rrlm_context
