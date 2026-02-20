@@ -130,8 +130,8 @@ summary.rrlm_graph <- function(object, ...) {
 #' @param n_hubs Integer(1).  Number of top-PageRank *function* hub nodes to
 #'   show.  Default `15`.
 #' @param layout Function.  igraph layout function.  Defaults to
-#'   [igraph::layout_nicely] when `NULL` (auto-selects a stable algorithm
-#'   for the graph topology, avoiding degenerate coordinates).
+#'   [igraph::layout_with_fr] when `NULL` (Fruchterman-Reingold; safe for
+#'   all graph topologies including disconnected and edge-less graphs).
 #' @param vertex.label.cex Numeric(1).  Label size for function nodes.
 #'   Default `0.75`.
 #' @param edge.arrow.size Numeric(1).  Arrow size.  Default `0.3`.
@@ -177,6 +177,12 @@ plot.rrlm_graph <- function(
   keep_idx <- unique(c(top_fn, nbrs))
   sub <- igraph::induced_subgraph(g, keep_idx)
 
+  # Need at least 2 nodes to produce a layout with non-zero extent.
+  if (igraph::vcount(sub) <= 1L) {
+    cli::cli_inform(c("i" = "Sub-graph has only {igraph::vcount(sub)} node(s) -- skipping plot."))
+    return(invisible(x))
+  }
+
   # -- Node colours by type ---------------------------------------------
   type_map <- c(
     "function" = "#4682B4",   # steelblue
@@ -210,13 +216,24 @@ plot.rrlm_graph <- function(
   )
 
   # -- Layout -----------------------------------------------------------
+  # layout_with_fr is used because it handles all topology cases (no edges,
+  # disconnected, single-component) without returning NaN or zero-range coords.
   if (is.null(layout)) {
-    layout <- igraph::layout_nicely
+    layout <- igraph::layout_with_fr
   }
-  coords <- layout(sub)
-  # Guard against degenerate coordinates (e.g. isolated nodes with some
-  # algorithms) -- fall back to a circle which always gives finite values.
-  if (any(!is.finite(coords))) {
+  coords <- tryCatch(
+    layout(sub),
+    error = function(e) igraph::layout_in_circle(sub)
+  )
+  # Guard against degenerate coordinates: non-finite OR zero range on either
+  # axis (would cause plot.window() to fail with 'need finite xlim values').
+  degenerate <- !is.matrix(coords) ||
+    any(!is.finite(coords)) ||
+    diff(range(coords[, 1L])) < .Machine$double.eps ||
+    diff(range(coords[, 2L])) < .Machine$double.eps
+  if (degenerate) {
+    # layout_in_circle places n nodes evenly on the unit circle;
+    # always gives distinct finite coordinates for n >= 2.
     coords <- igraph::layout_in_circle(sub)
   }
 
