@@ -39,11 +39,21 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::rcmdcheck, any::devtools
+          extra-packages: any::rcmdcheck, any::devtools, any::spelling
           needs: check
 
       - name: Document
         run: Rscript -e 'devtools::document()'
+
+      - name: Spell check
+        shell: Rscript {0}
+        run: |
+          res <- spelling::spell_check_package()
+          if (nrow(res) > 0L) {
+            print(res)
+            stop("Spell check failed -- add words to inst/WORDLIST.",
+                 call. = FALSE)
+          }
 
       - uses: r-lib/actions/check-r-package@v2
         with:

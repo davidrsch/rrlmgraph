@@ -4,6 +4,15 @@
 
 First release.
 
+### Infrastructure
+
+* `R CMD check --as-cran`: zero errors, zero warnings verified across
+  ubuntu/windows/macos x R release/oldrel/devel (#25).
+* `DESCRIPTION`: added `BugReports` URL and `spelling` to `Suggests`.
+* `inst/WORDLIST`: package-specific technical terms registered to pass
+  `spelling::spell_check_package()` cleanly.
+* CI: added spelling check step after `devtools::document()` (#25).
+
 ### Breaking changes
 
 * `chat_with_context()`: the `model` parameter is now `NULL` by default (was
