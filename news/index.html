@@ -36,7 +36,13 @@
 <h2 class="pkg-version" data-toc-text="0.1.0" id="rrlmgraph-010">rrlmgraph 0.1.0<a class="anchor" aria-label="anchor" href="#rrlmgraph-010"></a></h2>
 <p>First release.</p>
 <div class="section level4">
-<h4 id="infrastructure-0-1-0">Infrastructure<a class="anchor" aria-label="anchor" href="#infrastructure-0-1-0"></a></h4>
+<h4 id="improvements-0-1-0">Improvements<a class="anchor" aria-label="anchor" href="#improvements-0-1-0"></a></h4>
+<ul><li>
+<code><a href="../reference/plot.rrlm_graph.html">plot.rrlm_graph()</a></code>: labels now placed <strong>outside</strong> nodes (<code>vertex.label.dist = 1.5</code>), colour changed to <code>"gray15"</code> (was white) for readability on all backgrounds, cex increased to <code>0.85</code>, default layout changed to Kamada-Kawai (<code>layout_with_kk</code>) for better node separation on sparse graphs (<a href="https://github.com/davidrsch/rrlmgraph/issues/29" class="external-link">#29</a>).</li>
+<li>Vignette figure size increased to 10 × 8 inches.</li>
+</ul></div>
+<div class="section level4">
+<h4 id="original-first-release-notes-0-1-0">Original first-release notes<a class="anchor" aria-label="anchor" href="#original-first-release-notes-0-1-0"></a></h4>
 <ul><li>
 <code>R CMD check --as-cran</code>: zero errors, zero warnings verified across ubuntu/windows/macos x R release/oldrel/devel (<a href="https://github.com/davidrsch/rrlmgraph/issues/25" class="external-link">#25</a>).</li>
 <li>
@@ -51,7 +57,7 @@
 <code><a href="../reference/chat_with_context.html">chat_with_context()</a></code>: the <code>model</code> parameter is now <code>NULL</code> by default (was <code>"gpt-4o-mini"</code>). A per-provider sensible default is applied automatically. Code that passed <code>model</code> explicitly is unaffected.</li>
 </ul></div>
 <div class="section level4">
-<h4 id="improvements-0-1-0">Improvements<a class="anchor" aria-label="anchor" href="#improvements-0-1-0"></a></h4>
+<h4 id="improvements-0-1-0-1">Improvements<a class="anchor" aria-label="anchor" href="#improvements-0-1-0-1"></a></h4>
 <ul><li>
 <code><a href="../reference/chat_with_context.html">chat_with_context()</a></code> gains a <code>provider</code> argument (<code>"openai"</code>, <code>"ollama"</code>, <code>"github"</code>, <code>"anthropic"</code>). When <code>ellmer</code> is installed the appropriate <code>ellmer::chat_*()</code> backend is used; the <code>httr2</code> fallback is retained for <code>provider = "openai"</code> when <code>ellmer</code> is absent (<a href="https://github.com/davidrsch/rrlmgraph/issues/41" class="external-link">#41</a>).</li>
 <li>

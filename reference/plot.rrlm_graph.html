@@ -53,8 +53,9 @@ to avoid clutter.  Vertex size scales with relative PageRank importance.</p>
 <span>  <span class="va">x</span>,</span>
 <span>  n_hubs <span class="op">=</span> <span class="fl">15L</span>,</span>
 <span>  layout <span class="op">=</span> <span class="cn">NULL</span>,</span>
-<span>  vertex.label.cex <span class="op">=</span> <span class="fl">0.75</span>,</span>
-<span>  edge.arrow.size <span class="op">=</span> <span class="fl">0.3</span>,</span>
+<span>  vertex.label.cex <span class="op">=</span> <span class="fl">0.85</span>,</span>
+<span>  vertex.label.dist <span class="op">=</span> <span class="fl">1.5</span>,</span>
+<span>  edge.arrow.size <span class="op">=</span> <span class="fl">0.35</span>,</span>
 <span>  <span class="va">...</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -74,17 +75,23 @@ show.  Default <code>15</code>.</p></dd>
 
 <dt id="arg-layout">layout<a class="anchor" aria-label="anchor" href="#arg-layout"></a></dt>
 <dd><p>Function.  igraph layout function.  Defaults to
-<a href="https://r.igraph.org/reference/layout_with_fr.html" class="external-link">igraph::layout_with_fr</a> when <code>NULL</code> (Fruchterman-Reingold; safe for
-all graph topologies including disconnected and edge-less graphs).</p></dd>
+<a href="https://r.igraph.org/reference/layout_with_kk.html" class="external-link">igraph::layout_with_kk</a> when <code>NULL</code> (Kamada-Kawai; gives good node
+separation on sparse graphs for readable labels).</p></dd>
 
 
 <dt id="arg-vertex-label-cex">vertex.label.cex<a class="anchor" aria-label="anchor" href="#arg-vertex-label-cex"></a></dt>
 <dd><p>Numeric(1).  Label size for function nodes.
-Default <code>0.75</code>.</p></dd>
+Default <code>0.85</code>.</p></dd>
+
+
+<dt id="arg-vertex-label-dist">vertex.label.dist<a class="anchor" aria-label="anchor" href="#arg-vertex-label-dist"></a></dt>
+<dd><p>Numeric(1).  Distance of labels from node
+centres, in units of vertex size.  Default <code>1.5</code> places labels just
+outside the node circles so they don't overlap the node fill.</p></dd>
 
 
 <dt id="arg-edge-arrow-size">edge.arrow.size<a class="anchor" aria-label="anchor" href="#arg-edge-arrow-size"></a></dt>
-<dd><p>Numeric(1).  Arrow size.  Default <code>0.3</code>.</p></dd>
+<dd><p>Numeric(1).  Arrow size.  Default <code>0.35</code>.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>

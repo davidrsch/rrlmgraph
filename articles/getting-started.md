@@ -37,7 +37,7 @@ graph <- build_rrlm_graph(demo_dir, verbose = TRUE)
 #> Computing PageRank
 #> Embedding nodes with method 'tfidf'
 #> Computing semantic similarity edges (threshold 0.7)
-#> Done in 0.59s -- 19 nodes, 6 edges
+#> Done in 0.6s -- 19 nodes, 6 edges
 ```
 
 The function:
@@ -51,7 +51,7 @@ The function:
 
 ``` r
 summary(graph)
-#> IGRAPH f10e380 DNW- 19 6 -- 
+#> IGRAPH 76a7fd0 DNW- 19 6 -- 
 #> + attr: project_name (g/c), project_root (g/c), project_type (g/c),
 #> | r_version (g/c), build_time (g/n), build_at (g/c), embed_method
 #> | (g/c), embed_model (g/x), cache_path (g/c), name (v/c), node_type
@@ -62,14 +62,14 @@ summary(graph)
 
 ``` r
 print(graph)
-#> IGRAPH f10e380 DNW- 19 6 -- 
+#> IGRAPH 76a7fd0 DNW- 19 6 -- 
 #> + attr: project_name (g/c), project_root (g/c), project_type (g/c),
 #> | r_version (g/c), build_time (g/n), build_at (g/c), embed_method
 #> | (g/c), embed_model (g/x), cache_path (g/c), name (v/c), node_type
 #> | (v/c), file (v/c), line_start (v/n), line_end (v/n), signature (v/c),
 #> | complexity (v/n), pagerank (v/n), embedding (v/x), weight (e/n),
 #> | edge_type (e/c)
-#> + edges from f10e380 (vertex names):
+#> + edges from 76a7fd0 (vertex names):
 #> [1] data_prep::prepare_data->data_prep::clean_data        
 #> [2] data_prep::prepare_data->data_prep::validate_inputs   
 #> [3] predict::run_pipeline  ->predict::evaluate_predictions
@@ -241,17 +241,17 @@ graph_small <- update_graph_incremental(
 #> 
 #> ── Incremental graph update ──
 #> 
-#> Changed files: /tmp/RtmpVGcIuT/mypkg_demo/R/data_prep.R
+#> Changed files: /tmp/Rtmp30Gysn/mypkg_demo/R/data_prep.R
 #> Removing 1 stale node(s).
 #> Re-parsing 1 file(s).
 #> Embedding 1 new node(s) using method 'tfidf'.
 #> Graph now has 2 nodes, 0 edges.
 #> Recomputing PageRank.
-#> Persisting cache to /tmp/RtmpVGcIuT/mypkg_demo.
-#> Graph cached at /tmp/RtmpVGcIuT/mypkg_demo/.rrlmgraph
+#> Persisting cache to /tmp/Rtmp30Gysn/mypkg_demo.
+#> Graph cached at /tmp/Rtmp30Gysn/mypkg_demo/.rrlmgraph
 
 summary(graph_small)
-#> IGRAPH dbc03a0 DNW- 2 0 -- 
+#> IGRAPH a2093a2 DNW- 2 0 -- 
 #> + attr: project_name (g/c), project_root (g/c), project_type (g/c),
 #> | r_version (g/c), build_time (g/n), build_at (g/c), embed_method
 #> | (g/c), embed_model (g/x), cache_path (g/c), name (v/c), node_type

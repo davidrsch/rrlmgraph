@@ -14,8 +14,9 @@ plot(
   x,
   n_hubs = 15L,
   layout = NULL,
-  vertex.label.cex = 0.75,
-  edge.arrow.size = 0.3,
+  vertex.label.cex = 0.85,
+  vertex.label.dist = 1.5,
+  edge.arrow.size = 0.35,
   ...
 )
 ```
@@ -34,17 +35,23 @@ plot(
 - layout:
 
   Function. igraph layout function. Defaults to
-  [igraph::layout_with_fr](https://r.igraph.org/reference/layout_with_fr.html)
-  when `NULL` (Fruchterman-Reingold; safe for all graph topologies
-  including disconnected and edge-less graphs).
+  [igraph::layout_with_kk](https://r.igraph.org/reference/layout_with_kk.html)
+  when `NULL` (Kamada-Kawai; gives good node separation on sparse graphs
+  for readable labels).
 
 - vertex.label.cex:
 
-  Numeric(1). Label size for function nodes. Default `0.75`.
+  Numeric(1). Label size for function nodes. Default `0.85`.
+
+- vertex.label.dist:
+
+  Numeric(1). Distance of labels from node centres, in units of vertex
+  size. Default `1.5` places labels just outside the node circles so
+  they don't overlap the node fill.
 
 - edge.arrow.size:
 
-  Numeric(1). Arrow size. Default `0.3`.
+  Numeric(1). Arrow size. Default `0.35`.
 
 - ...:
 

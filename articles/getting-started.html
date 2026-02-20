@@ -100,7 +100,7 @@ package, a scripts folder, or a Shiny app – and returns an
 <span><span class="co">#&gt; Computing PageRank</span></span>
 <span><span class="co">#&gt; Embedding nodes with method 'tfidf'</span></span>
 <span><span class="co">#&gt; Computing semantic similarity edges (threshold 0.7)</span></span>
-<span><span class="co">#&gt; Done in 0.59s -- 19 nodes, 6 edges</span></span></code></pre></div>
+<span><span class="co">#&gt; Done in 0.6s -- 19 nodes, 6 edges</span></span></code></pre></div>
 <p>The function:</p>
 <ol style="list-style-type: decimal">
 <li>Detects the project type (package / scripts / Shiny app)</li>
@@ -115,7 +115,7 @@ analysis</li>
 </h2>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">graph</span><span class="op">)</span></span>
-<span><span class="co">#&gt; IGRAPH f10e380 DNW- 19 6 -- </span></span>
+<span><span class="co">#&gt; IGRAPH 76a7fd0 DNW- 19 6 -- </span></span>
 <span><span class="co">#&gt; + attr: project_name (g/c), project_root (g/c), project_type (g/c),</span></span>
 <span><span class="co">#&gt; | r_version (g/c), build_time (g/n), build_at (g/c), embed_method</span></span>
 <span><span class="co">#&gt; | (g/c), embed_model (g/x), cache_path (g/c), name (v/c), node_type</span></span>
@@ -124,14 +124,14 @@ analysis</li>
 <span><span class="co">#&gt; | edge_type (e/c)</span></span></code></pre></div>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">graph</span><span class="op">)</span></span>
-<span><span class="co">#&gt; IGRAPH f10e380 DNW- 19 6 -- </span></span>
+<span><span class="co">#&gt; IGRAPH 76a7fd0 DNW- 19 6 -- </span></span>
 <span><span class="co">#&gt; + attr: project_name (g/c), project_root (g/c), project_type (g/c),</span></span>
 <span><span class="co">#&gt; | r_version (g/c), build_time (g/n), build_at (g/c), embed_method</span></span>
 <span><span class="co">#&gt; | (g/c), embed_model (g/x), cache_path (g/c), name (v/c), node_type</span></span>
 <span><span class="co">#&gt; | (v/c), file (v/c), line_start (v/n), line_end (v/n), signature (v/c),</span></span>
 <span><span class="co">#&gt; | complexity (v/n), pagerank (v/n), embedding (v/x), weight (e/n),</span></span>
 <span><span class="co">#&gt; | edge_type (e/c)</span></span>
-<span><span class="co">#&gt; + edges from f10e380 (vertex names):</span></span>
+<span><span class="co">#&gt; + edges from 76a7fd0 (vertex names):</span></span>
 <span><span class="co">#&gt; [1] data_prep::prepare_data-&gt;data_prep::clean_data        </span></span>
 <span><span class="co">#&gt; [2] data_prep::prepare_data-&gt;data_prep::validate_inputs   </span></span>
 <span><span class="co">#&gt; [3] predict::run_pipeline  -&gt;predict::evaluate_predictions</span></span>
@@ -150,7 +150,7 @@ with PageRank)</li>
 </ul>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">graph</span><span class="op">)</span></span></code></pre></div>
-<p><img src="getting-started_files/figure-html/plot-1.png" class="r-plt" alt="" width="768"></p>
+<p><img src="getting-started_files/figure-html/plot-1.png" class="r-plt" alt="" width="960"></p>
 </div>
 <div class="section level2">
 <h2 id="querying-context">3. Querying context<a class="anchor" aria-label="anchor" href="#querying-context"></a>
@@ -296,17 +296,17 @@ files:</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── <span style="font-weight: bold;">Incremental graph update</span> ──</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Changed files: <span style="color: #0000BB;">/tmp/RtmpVGcIuT/mypkg_demo/R/data_prep.R</span></span></span>
+<span><span class="co">#&gt; Changed files: <span style="color: #0000BB;">/tmp/Rtmp30Gysn/mypkg_demo/R/data_prep.R</span></span></span>
 <span><span class="co">#&gt; Removing 1 stale node(s).</span></span>
 <span><span class="co">#&gt; Re-parsing 1 file(s).</span></span>
 <span><span class="co">#&gt; Embedding 1 new node(s) using method 'tfidf'.</span></span>
 <span><span class="co">#&gt; Graph now has 2 nodes, 0 edges.</span></span>
 <span><span class="co">#&gt; Recomputing PageRank.</span></span>
-<span><span class="co">#&gt; Persisting cache to <span style="color: #0000BB;">/tmp/RtmpVGcIuT/mypkg_demo</span>.</span></span>
-<span><span class="co">#&gt; Graph cached at <span style="color: #0000BB;">/tmp/RtmpVGcIuT/mypkg_demo/.rrlmgraph</span></span></span>
+<span><span class="co">#&gt; Persisting cache to <span style="color: #0000BB;">/tmp/Rtmp30Gysn/mypkg_demo</span>.</span></span>
+<span><span class="co">#&gt; Graph cached at <span style="color: #0000BB;">/tmp/Rtmp30Gysn/mypkg_demo/.rrlmgraph</span></span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">graph_small</span><span class="op">)</span></span>
-<span><span class="co">#&gt; IGRAPH dbc03a0 DNW- 2 0 -- </span></span>
+<span><span class="co">#&gt; IGRAPH a2093a2 DNW- 2 0 -- </span></span>
 <span><span class="co">#&gt; + attr: project_name (g/c), project_root (g/c), project_type (g/c),</span></span>
 <span><span class="co">#&gt; | r_version (g/c), build_time (g/n), build_at (g/c), embed_method</span></span>
 <span><span class="co">#&gt; | (g/c), embed_model (g/x), cache_path (g/c), name (v/c), node_type</span></span>
