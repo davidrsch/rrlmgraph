@@ -4,6 +4,25 @@
 
 First release.
 
+### Breaking changes
+
+* `chat_with_context()`: the `model` parameter is now `NULL` by default (was
+  `"gpt-4o-mini"`).  A per-provider sensible default is applied automatically.
+  Code that passed `model` explicitly is unaffected.
+
+### Improvements
+
+* `chat_with_context()` gains a `provider` argument (`"openai"`, `"ollama"`,
+  `"github"`, `"anthropic"`).  When `ellmer` is installed the appropriate
+  `ellmer::chat_*()` backend is used; the `httr2` fallback is retained for
+  `provider = "openai"` when `ellmer` is absent (#41).
+* `ollama_available()` no longer requires the `ollamar` package.  It now pings
+  the Ollama REST API directly via `httr2` (`GET /api/tags`).  Set
+  `OLLAMA_BASE_URL` to override the default `http://localhost:11434` (#40).
+* Ollama embedding calls (`embed_nodes()`, `embed_query()`) now hit
+  `POST /api/embed` directly via `httr2`, removing the `ollamar` dependency
+  entirely (#40).
+
 ### New features
 
 **Graph construction**

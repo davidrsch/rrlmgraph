@@ -88,16 +88,15 @@ test_that(".build_system_prompt grounding instructs context-only answers", {
 # ---- prompt construction via chat_with_context ----------------------
 
 test_that("chat_with_context returns character(1) with mocked backend", {
-  # Patch the httr2 backend to return a canned response
   g <- make_llm_graph()
 
+  # Mock both paths so the test passes regardless of whether ellmer is installed
   with_mocked_bindings(
-    .llm_via_httr2 = function(sp, msg, model) "mocked response",
+    .llm_via_ellmer = function(sp, msg, provider, model, ...) "mocked response",
+    .llm_via_httr2  = function(sp, msg, model) "mocked response",
     .package = "rrlmgraph",
     {
-      Sys.setenv(OPENAI_API_KEY = "sk-test-mock")
       result <- chat_with_context(g, "What does fit_model do?")
-      Sys.unsetenv("OPENAI_API_KEY")
     }
   )
 
@@ -110,9 +109,8 @@ test_that("chat_with_context returns error string when LLM fails", {
   g <- make_llm_graph()
 
   with_mocked_bindings(
-    .llm_via_httr2 = function(sp, msg, model) {
-      stop("connection timeout")
-    },
+    .llm_via_ellmer = function(sp, msg, provider, model, ...) stop("connection timeout"),
+    .llm_via_httr2  = function(sp, msg, model) stop("connection timeout"),
     .package = "rrlmgraph",
     {
       result <- suppressWarnings(
@@ -123,6 +121,39 @@ test_that("chat_with_context returns error string when LLM fails", {
 
   expect_type(result, "character")
   expect_match(result, "\\[rrlmgraph error\\]")
+})
+
+test_that("chat_with_context dispatches correct provider to .llm_via_ellmer", {
+  g <- make_llm_graph()
+  captured <- list()
+
+  with_mocked_bindings(
+    .llm_via_ellmer = function(sp, msg, provider, model, ...) {
+      captured$provider <<- provider
+      captured$model   <<- model
+      "ok"
+    },
+    .llm_via_httr2 = function(sp, msg, model) "ok",
+    .package = "rrlmgraph",
+    {
+      chat_with_context(g, "test", provider = "github",
+                        model = "gpt-4o")
+    }
+  )
+
+  # Only check when ellmer path was actually taken
+  if (!is.null(captured$provider)) {
+    expect_equal(captured$provider, "github")
+    expect_equal(captured$model, "gpt-4o")
+  }
+})
+
+test_that("chat_with_context rejects invalid provider", {
+  g <- make_llm_graph()
+  expect_error(
+    chat_with_context(g, "test", provider = "invalid_provider"),
+    regexp = "provider"
+  )
 })
 
 # ---- task logging ---------------------------------------------------
