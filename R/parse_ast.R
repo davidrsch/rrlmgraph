@@ -57,7 +57,13 @@ extract_function_nodes <- function(r_files) {
     }
 
     exprs <- as.list(parsed)
-    src_refs <- lapply(exprs, utils::getSrcref)
+    # parse() stores srcrefs as an attribute on the whole result object, NOT
+    # on individual expressions.  Using lapply(exprs, getSrcref) returns all
+    # NULLs, causing every node to be silently dropped in .make_node().
+    src_refs <- attr(parsed, "srcref")
+    if (is.null(src_refs)) {
+      src_refs <- vector("list", length(exprs))
+    }
     new_nodes <- .extract_from_exprs(exprs, src_refs, src, fpath)
     nodes <- c(nodes, new_nodes)
   }
@@ -303,9 +309,11 @@ find_calls_in_body <- function(fn_body) {
     return(character(0))
   }
 
-  # Wrap in a dummy function so codetools can analyse the body
+  # Wrap in a dummy function so codetools can analyse the body.
+  # MUST use pairlist() not list() for the formals -- R's function() primitive
+  # expects a pairlist, not a plain list, as its first argument.
   dummy_fn <- tryCatch(
-    eval(call("function", list(), fn_body)),
+    eval(call("function", pairlist(), fn_body)),
     error = function(e) NULL
   )
   if (is.null(dummy_fn)) {
