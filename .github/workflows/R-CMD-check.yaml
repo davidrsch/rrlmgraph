@@ -6,6 +6,9 @@ on:
 
 name: R-CMD-check
 
+permissions:
+  contents: read
+
 jobs:
   R-CMD-check:
     runs-on: ${{ matrix.config.os }}
@@ -16,11 +19,13 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - { os: ubuntu-latest, r: "release" }
-          - { os: ubuntu-latest, r: "oldrel" }
-          - { os: ubuntu-latest, r: "devel", http-user-agent: "release" }
+          - { os: ubuntu-latest,  r: "release" }
+          - { os: ubuntu-latest,  r: "oldrel-1" }
+          - { os: ubuntu-latest,  r: "oldrel-2" }
+          - { os: ubuntu-latest,  r: "oldrel-3" }
+          - { os: ubuntu-latest,  r: "devel", http-user-agent: "release" }
           - { os: windows-latest, r: "release" }
-          - { os: macos-latest, r: "release" }
+          - { os: macos-latest,   r: "release" }
 
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,37 @@
+# Workflow derived from https://github.com/posit-dev/setup-air/tree/main/examples
+#
+# Using `pull_request_target` over `pull_request` for elevated `GITHUB_TOKEN`
+# privileges so we can post suggestion comments even from forks.
+# The step explicitly checks out the PR head SHA to format the contributor code.
+# https://securitylab.github.com/resources/github-actions-preventing-pwn-requests/
+on:
+  pull_request_target:
+
+name: format-suggest.yaml
+
+jobs:
+  format-suggest:
+    name: format-suggest
+    runs-on: ubuntu-latest
+
+    permissions:
+      pull-requests: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Install air
+        uses: posit-dev/setup-air@v1
+
+      - name: Format
+        run: air format .
+
+      - name: Suggest
+        uses: reviewdog/action-suggester@v1
+        with:
+          level: error
+          fail_level: error
+          tool_name: air
+          reviewdog_version: latest
