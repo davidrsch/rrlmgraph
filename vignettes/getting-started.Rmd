@@ -38,8 +38,11 @@ scripts folder, or a Shiny app -- and returns an `rrlm_graph` object.
 ```{r build-setup, include = FALSE}
 library(rrlmgraph)
 
+# Point to rrlmgraph's own installed source -- always has real function nodes.
+pkg_dir <- system.file(package = "rrlmgraph")
+
 # Create a tiny self-contained R project in a temp directory so this
-# vignette can run without any real project on disk.
+# vignette can run without any real project on disk (used in §5 only).
 proj_dir <- file.path(tempdir(), "mypkg_demo")
 dir.create(file.path(proj_dir, "R"), recursive = TRUE, showWarnings = FALSE)
 
@@ -91,8 +94,9 @@ writeLines(c(
 ```{r build-graph}
 library(rrlmgraph)
 
-# Point to any R project directory -- here we use a small demo package
-graph <- build_rrlm_graph(proj_dir, verbose = TRUE)
+# Build a graph for rrlmgraph's own source -- a real package with many
+# functions and edges, so all downstream examples produce meaningful output.
+graph <- build_rrlm_graph(pkg_dir, verbose = TRUE)
 ```
 
 The function:
@@ -131,7 +135,7 @@ nodes and returns a token-budgeted context window ideal for LLM prompts.
 ```{r query}
 ctx <- query_context(
   graph,
-  query = "How does the data preparation step work?",
+  query = "How does graph traversal select nodes for context?",
   budget_tokens = 400L,
   verbose = TRUE
 )
@@ -196,6 +200,11 @@ nodes in future relevance scoring.
 After editing source files you do not need to rebuild the full graph.
 `update_graph_incremental()` re-parses only the changed files:
 
+```{r incremental-setup, include = FALSE}
+# Build a small graph from the demo project for the incremental-update demo.
+graph_small <- build_rrlm_graph(proj_dir, verbose = FALSE)
+```
+
 ```{r incremental}
 # Simulate editing a file
 writeLines(c(
@@ -211,13 +220,13 @@ writeLines(c(
   "}"
 ), file.path(proj_dir, "R", "data_prep.R"))
 
-graph <- update_graph_incremental(
-  graph,
+graph_small <- update_graph_incremental(
+  graph_small,
   changed_files = file.path(proj_dir, "R", "data_prep.R"),
   verbose = TRUE
 )
 
-summary(graph)
+summary(graph_small)
 ```
 
 ## 6. Caching the graph
