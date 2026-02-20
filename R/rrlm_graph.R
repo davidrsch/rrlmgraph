@@ -115,22 +115,26 @@ summary.rrlm_graph <- function(object, ...) {
 
 #' Plot an rrlm_graph
 #'
-#' Renders the top-`n_hubs` nodes (by PageRank) using [igraph::plot.igraph()].
-#' Node colour reflects the node type:
+#' Renders the top-`n_hubs` function nodes (by PageRank) using
+#' [igraph::plot.igraph()].  Package and test-file nodes are included only
+#' when they are connected to the selected hubs; their labels are suppressed
+#' to avoid clutter.  Vertex size scales with relative PageRank importance.
+#'
+#' Node colours:
 #' * User functions -- `"steelblue"`
-#' * Package nodes  -- `"grey70"`
+#' * Package nodes  -- `"#C8D8E8"` (pale blue, smaller)
 #' * Test files     -- `"seagreen3"`
 #' * Other/unknown  -- `"lightyellow"`
 #'
 #' @param x An `rrlm_graph` object.
-#' @param n_hubs Integer(1).  Number of top-PageRank hub nodes to include in
-#'   the sub-graph.  Default `30`.
-#' @param layout Function.  igraph layout function.  Defaults to
-#'   [igraph::layout_with_fr].
-#' @param vertex.size Numeric(1).  Vertex size passed to [igraph::plot.igraph()].
-#'   Default `8`.
-#' @param vertex.label.cex Numeric(1).  Label size.  Default `0.7`.
-#' @param edge.arrow.size Numeric(1).  Arrow size.  Default `0.4`.
+#' @param n_hubs Integer(1).  Number of top-PageRank *function* hub nodes to
+#'   show.  Default `15`.
+#' @param layout Function.  igraph layout function.  Auto-selects
+#'   [igraph::layout_with_kk] for ≤ 20 nodes and
+#'   [igraph::layout_with_fr] for larger sub-graphs when `NULL` (default).
+#' @param vertex.label.cex Numeric(1).  Label size for function nodes.
+#'   Default `0.75`.
+#' @param edge.arrow.size Numeric(1).  Arrow size.  Default `0.3`.
 #' @param ... Additional arguments forwarded to [igraph::plot.igraph()].
 #' @return `x` invisibly.
 #' @seealso [print.rrlm_graph()], [summary.rrlm_graph()], [build_rrlm_graph()]
@@ -143,11 +147,10 @@ summary.rrlm_graph <- function(object, ...) {
 #' @export
 plot.rrlm_graph <- function(
   x,
-  n_hubs = 30L,
-  layout = igraph::layout_with_fr,
-  vertex.size = 8,
-  vertex.label.cex = 0.7,
-  edge.arrow.size = 0.4,
+  n_hubs = 15L,
+  layout = NULL,
+  vertex.label.cex = 0.75,
+  edge.arrow.size = 0.3,
   ...
 ) {
   g <- x
@@ -157,51 +160,106 @@ plot.rrlm_graph <- function(
     return(invisible(g))
   }
 
-  # -- Select top n_hubs by PageRank ------------------------------------
+  # -- Select top n_hubs *function* nodes by PageRank -------------------
+  nt_all <- igraph::V(g)$node_type
+  if (is.null(nt_all)) nt_all <- rep("function", igraph::vcount(g))
+  fn_idx <- which(nt_all == "function")
+
   pr <- igraph::V(g)$pagerank
-  if (is.null(pr)) {
-    pr <- rep(0, igraph::vcount(g))
-  }
+  if (is.null(pr)) pr <- rep(1 / igraph::vcount(g), igraph::vcount(g))
   pr <- as.numeric(pr)
-  k <- min(as.integer(n_hubs), igraph::vcount(g))
-  idx <- order(pr, decreasing = TRUE)[seq_len(k)]
-  sub <- igraph::induced_subgraph(g, idx)
+
+  k <- min(as.integer(n_hubs), length(fn_idx))
+  top_fn <- fn_idx[order(pr[fn_idx], decreasing = TRUE)[seq_len(k)]]
+
+  # Include neighbour nodes (one hop) so edges have both endpoints
+  nbrs <- unique(unlist(igraph::neighborhood(g, order = 1L, nodes = top_fn)))
+  keep_idx <- unique(c(top_fn, nbrs))
+  sub <- igraph::induced_subgraph(g, keep_idx)
 
   # -- Node colours by type ---------------------------------------------
   type_map <- c(
-    "function" = "steelblue",
-    "package" = "grey70",
-    "testfile" = "seagreen3"
+    "function" = "#4682B4",   # steelblue
+    "package"  = "#C8D8E8",   # pale blue -- unobtrusive
+    "testfile" = "#3CB371"    # seagreen3
   )
-  nt <- igraph::V(sub)$node_type
-  if (is.null(nt)) {
-    nt <- rep(NA_character_, igraph::vcount(sub))
-  }
-  colours <- ifelse(nt %in% names(type_map), type_map[nt], "lightyellow")
+  nt_sub <- igraph::V(sub)$node_type
+  if (is.null(nt_sub)) nt_sub <- rep("function", igraph::vcount(sub))
+  colours <- ifelse(nt_sub %in% names(type_map), type_map[nt_sub], "#FFFACD")
 
-  # -- Node labels (short: last component of "::" id) -------------------
-  labels <- vapply(
-    igraph::V(sub)$name,
-    function(nm) {
-      parts <- strsplit(nm, "::", fixed = TRUE)[[1L]]
-      tail(parts, 1L)
-    },
-    character(1)
+  # -- Vertex sizes: scale by PageRank, pkg/test nodes smaller ----------
+  pr_sub <- as.numeric(igraph::V(sub)$pagerank)
+  pr_sub[is.na(pr_sub)] <- 0
+  pr_range <- range(pr_sub)
+  if (diff(pr_range) > 0) {
+    scaled <- 6 + 14 * (pr_sub - pr_range[[1L]]) / diff(pr_range)
+  } else {
+    scaled <- rep(8, igraph::vcount(sub))
+  }
+  # shrink package/testfile nodes
+  scaled[nt_sub %in% c("package", "testfile")] <-
+    scaled[nt_sub %in% c("package", "testfile")] * 0.55
+
+  # -- Labels: only for function nodes, bare name only ------------------
+  labels <- ifelse(
+    nt_sub == "function",
+    vapply(igraph::V(sub)$name, function(nm) {
+      tail(strsplit(nm, "::", fixed = TRUE)[[1L]], 1L)
+    }, character(1L)),
+    NA_character_
   )
+
+  # -- Layout -----------------------------------------------------------
+  if (is.null(layout)) {
+    layout <- if (igraph::vcount(sub) <= 20L) {
+      igraph::layout_with_kk
+    } else {
+      igraph::layout_with_fr
+    }
+  }
+  coords <- layout(sub)
+
+  # -- Plot -------------------------------------------------------------
+  op <- graphics::par(mar = c(0, 0, 2.5, 0))
+  on.exit(graphics::par(op), add = TRUE)
 
   igraph::plot.igraph(
     sub,
-    layout = layout,
-    vertex.color = colours,
-    vertex.label = labels,
-    vertex.size = vertex.size,
-    vertex.label.cex = vertex.label.cex,
-    edge.arrow.size = edge.arrow.size,
+    layout        = coords,
+    vertex.color  = colours,
+    vertex.size   = scaled,
+    vertex.label  = labels,
+    vertex.label.cex    = vertex.label.cex,
+    vertex.label.color  = "white",
+    vertex.label.font   = 2L,          # bold
+    vertex.frame.color  = "white",
+    edge.arrow.size     = edge.arrow.size,
+    edge.color          = "#88888866",  # semi-transparent grey
+    edge.curved         = 0.15,
     main = paste0(
-      "rrlm_graph: ",
-      igraph::graph_attr(g, "project_name") %||% ""
+      igraph::graph_attr(g, "project_name") %||% "rrlm_graph",
+      "  \u2014  top ", k, " hubs"
     ),
     ...
+  )
+
+  # -- Legend -----------------------------------------------------------
+  present_types <- intersect(c("function", "package", "testfile"), nt_sub)
+  legend_labels <- c(
+    "function" = "user function",
+    "package"  = "package dep.",
+    "testfile" = "test file"
+  )
+  graphics::legend(
+    "bottomleft",
+    legend  = legend_labels[present_types],
+    pch     = 21L,
+    pt.bg   = type_map[present_types],
+    col     = "white",
+    pt.cex  = 1.4,
+    cex     = 0.75,
+    bty     = "n",
+    text.col = "grey30"
   )
 
   invisible(g)

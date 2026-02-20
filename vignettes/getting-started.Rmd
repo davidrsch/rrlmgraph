@@ -38,11 +38,12 @@ scripts folder, or a Shiny app -- and returns an `rrlm_graph` object.
 ```{r build-setup, include = FALSE}
 library(rrlmgraph)
 
-# Point to rrlmgraph's own installed source -- always has real function nodes.
-pkg_dir <- system.file(package = "rrlmgraph")
+# The package ships demo R source files in inst/extdata/demo/ -- these are
+# always present after installation, so build_rrlm_graph() always finds real
+# function nodes and produces a meaningful graph for the examples below.
+demo_dir <- system.file("extdata", "demo", package = "rrlmgraph")
 
-# Create a tiny self-contained R project in a temp directory so this
-# vignette can run without any real project on disk (used in §5 only).
+# Also create a small temp project for the incremental-update demo (§5).
 proj_dir <- file.path(tempdir(), "mypkg_demo")
 dir.create(file.path(proj_dir, "R"), recursive = TRUE, showWarnings = FALSE)
 
@@ -61,7 +62,7 @@ writeLines(c(
 writeLines(c(
   "#' Fit a linear model",
   "#'",
-  "#' @param df A data.frame with columns `x` and `y`.",
+  "#' @param df A data.frame with columns x and y.",
   "#' @return A fitted lm object.",
   "#' @export",
   "fit_model <- function(df) {",
@@ -69,18 +70,6 @@ writeLines(c(
   "  lm(y ~ x, data = df)",
   "}"
 ), file.path(proj_dir, "R", "model.R"))
-
-writeLines(c(
-  "#' Predict from a fitted model",
-  "#'",
-  "#' @param model A fitted lm object.",
-  "#' @param newdata A data.frame.",
-  "#' @return A numeric vector of predictions.",
-  "#' @export",
-  "predict_results <- function(model, newdata) {",
-  "  predict(model, newdata = newdata)",
-  "}"
-), file.path(proj_dir, "R", "predict.R"))
 
 writeLines(c(
   "Package: mypkg",
@@ -94,9 +83,10 @@ writeLines(c(
 ```{r build-graph}
 library(rrlmgraph)
 
-# Build a graph for rrlmgraph's own source -- a real package with many
-# functions and edges, so all downstream examples produce meaningful output.
-graph <- build_rrlm_graph(pkg_dir, verbose = TRUE)
+# Build the graph from the bundled demo project -- eight real functions with
+# genuine CALLS relationships guarantees a non-trivial graph in every
+# environment without needing any external files.
+graph <- build_rrlm_graph(demo_dir, verbose = TRUE)
 ```
 
 The function:
@@ -118,12 +108,12 @@ print(graph)
 
 `plot()` draws a force-directed layout coloured by node type:
 
-- **steelblue** -- user-defined functions
-- **grey70** -- package / imported functions
-- **seagreen3** -- test files
-- **lightyellow** -- other nodes
+- **steelblue** -- user-defined functions (size scales with PageRank)
+- **pale blue** -- package / imported dependencies
+- **seagreen** -- test files
+- Labels on function nodes only; arrows show CALLS direction
 
-```{r plot}
+```{r plot, fig.width = 8, fig.height = 6}
 plot(graph)
 ```
 
@@ -135,7 +125,7 @@ nodes and returns a token-budgeted context window ideal for LLM prompts.
 ```{r query}
 ctx <- query_context(
   graph,
-  query = "How does graph traversal select nodes for context?",
+  query = "How does the data preparation and validation pipeline work?",
   budget_tokens = 400L,
   verbose = TRUE
 )
@@ -162,14 +152,14 @@ Supported providers via the `ellmer` package:
 # OpenAI (default) -- requires OPENAI_API_KEY
 answer <- chat_with_context(
   graph,
-  "How does build_rrlm_graph() process R source files?"
+  "How does prepare_data() ensure clean input?"
 )
 cat(answer)
 
 # GitHub Models Marketplace -- requires GITHUB_PAT
 answer <- chat_with_context(
   graph,
-  "What does query_context() return?",
+  "What does fit_model() return?",
   provider = "github",
   model    = "gpt-4o-mini"
 )
@@ -177,7 +167,7 @@ answer <- chat_with_context(
 # Local Ollama -- no API key needed
 answer <- chat_with_context(
   graph,
-  "Summarise how the graph traversal works.",
+  "Walk me through the prediction pipeline.",
   provider = "ollama",
   model    = "llama3.2"
 )
@@ -185,7 +175,7 @@ answer <- chat_with_context(
 # Anthropic Claude -- requires ANTHROPIC_API_KEY
 answer <- chat_with_context(
   graph,
-  "Which functions call extract_function_nodes()?",
+  "Which function calls prepare_data()?",
   provider = "anthropic"
 )
 ```
