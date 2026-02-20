@@ -132,7 +132,7 @@ embed_query <- function(query, model, method = c("tfidf", "ollama", "openai")) {
         progressbar = FALSE
       )
       dtm <- text2vec::create_dtm(tokens, model$vectorizer)
-      tfidf_m <- text2vec::transform(dtm, model$tfidf)
+      tfidf_m <- model$tfidf$transform(dtm)
       as.numeric(tfidf_m[1L, , drop = TRUE])
     },
     ollama = {

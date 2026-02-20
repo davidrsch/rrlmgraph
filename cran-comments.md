@@ -11,9 +11,9 @@
 
 ## Test environments
 
-- local: Windows 10, R 4.4.2
-- GitHub Actions: ubuntu-latest (R 4.3, R 4.4), windows-latest (R 4.4),
-  macos-latest (R 4.4)
+- local: Windows 10, R 4.5.2
+- GitHub Actions: ubuntu-latest (R 4.4, R 4.5), windows-latest (R 4.5),
+  macos-latest (R 4.5)
 - win-builder: R-devel
 
 ## Reverse dependencies
