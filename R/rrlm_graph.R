@@ -129,9 +129,9 @@ summary.rrlm_graph <- function(object, ...) {
 #' @param x An `rrlm_graph` object.
 #' @param n_hubs Integer(1).  Number of top-PageRank *function* hub nodes to
 #'   show.  Default `15`.
-#' @param layout Function.  igraph layout function.  Auto-selects
-#'   [igraph::layout_with_kk] for ≤ 20 nodes and
-#'   [igraph::layout_with_fr] for larger sub-graphs when `NULL` (default).
+#' @param layout Function.  igraph layout function.  Defaults to
+#'   [igraph::layout_nicely] when `NULL` (auto-selects a stable algorithm
+#'   for the graph topology, avoiding degenerate coordinates).
 #' @param vertex.label.cex Numeric(1).  Label size for function nodes.
 #'   Default `0.75`.
 #' @param edge.arrow.size Numeric(1).  Arrow size.  Default `0.3`.
@@ -211,13 +211,14 @@ plot.rrlm_graph <- function(
 
   # -- Layout -----------------------------------------------------------
   if (is.null(layout)) {
-    layout <- if (igraph::vcount(sub) <= 20L) {
-      igraph::layout_with_kk
-    } else {
-      igraph::layout_with_fr
-    }
+    layout <- igraph::layout_nicely
   }
   coords <- layout(sub)
+  # Guard against degenerate coordinates (e.g. isolated nodes with some
+  # algorithms) -- fall back to a circle which always gives finite values.
+  if (any(!is.finite(coords))) {
+    coords <- igraph::layout_in_circle(sub)
+  }
 
   # -- Plot -------------------------------------------------------------
   op <- graphics::par(mar = c(0, 0, 2.5, 0))
