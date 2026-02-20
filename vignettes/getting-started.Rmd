@@ -1,0 +1,263 @@
+---
+title: "Getting Started with rrlmgraph"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Getting Started with rrlmgraph}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>",
+  fig.width = 7,
+  fig.height = 5
+)
+```
+
+`rrlmgraph` builds a typed knowledge graph of an R project and uses it to
+supply large language models (LLMs) with precise, token-budgeted context.
+This vignette walks through the full workflow on a small self-contained
+example.
+
+## Installation
+
+```{r install, eval = FALSE}
+install.packages("rrlmgraph")
+
+# For optional LLM chat integration:
+install.packages("ellmer")
+```
+
+## 1. Building your first graph
+
+`build_rrlm_graph()` accepts a path to any R project -- a package, a
+scripts folder, or a Shiny app -- and returns an `rrlm_graph` object.
+
+```{r build-setup, include = FALSE}
+library(rrlmgraph)
+
+# Create a tiny self-contained R project in a temp directory so this
+# vignette can run without any real project on disk.
+proj_dir <- file.path(tempdir(), "mypkg_demo")
+dir.create(file.path(proj_dir, "R"), recursive = TRUE, showWarnings = FALSE)
+
+writeLines(c(
+  "#' Prepare data",
+  "#'",
+  "#' @param raw A data.frame of raw values.",
+  "#' @return A cleaned data.frame.",
+  "#' @export",
+  "prepare_data <- function(raw) {",
+  "  raw <- raw[complete.cases(raw), ]",
+  "  raw",
+  "}"
+), file.path(proj_dir, "R", "data_prep.R"))
+
+writeLines(c(
+  "#' Fit a linear model",
+  "#'",
+  "#' @param df A data.frame with columns `x` and `y`.",
+  "#' @return A fitted lm object.",
+  "#' @export",
+  "fit_model <- function(df) {",
+  "  df <- prepare_data(df)",
+  "  lm(y ~ x, data = df)",
+  "}"
+), file.path(proj_dir, "R", "model.R"))
+
+writeLines(c(
+  "#' Predict from a fitted model",
+  "#'",
+  "#' @param model A fitted lm object.",
+  "#' @param newdata A data.frame.",
+  "#' @return A numeric vector of predictions.",
+  "#' @export",
+  "predict_results <- function(model, newdata) {",
+  "  predict(model, newdata = newdata)",
+  "}"
+), file.path(proj_dir, "R", "predict.R"))
+
+writeLines(c(
+  "Package: mypkg",
+  "Version: 0.1.0",
+  "Title: Demo Package",
+  "Description: A tiny demo package for rrlmgraph.",
+  "License: MIT + file LICENSE"
+), file.path(proj_dir, "DESCRIPTION"))
+```
+
+```{r build-graph}
+library(rrlmgraph)
+
+# Point to any R project directory -- here we use a small demo package
+graph <- build_rrlm_graph(proj_dir, verbose = TRUE)
+```
+
+The function:
+
+1. Detects the project type (package / scripts / Shiny app)
+2. Parses every `.R` file into function nodes via AST analysis
+3. Resolves CALLS, IMPORTS, and TEST edges between nodes
+4. Fits TF-IDF embeddings for semantic similarity
+
+## 2. Inspecting the graph
+
+```{r summary}
+summary(graph)
+```
+
+```{r print}
+print(graph)
+```
+
+`plot()` draws a force-directed layout coloured by node type:
+
+- **steelblue** -- user-defined functions
+- **grey70** -- package / imported functions
+- **seagreen3** -- test files
+- **lightyellow** -- other nodes
+
+```{r plot}
+plot(graph)
+```
+
+## 3. Querying context
+
+`query_context()` performs relevance-guided BFS from the most relevant
+nodes and returns a token-budgeted context window ideal for LLM prompts.
+
+```{r query}
+ctx <- query_context(
+  graph,
+  query = "How does the data preparation step work?",
+  budget_tokens = 400L,
+  verbose = TRUE
+)
+
+# Nodes selected for the context window
+ctx$nodes
+
+# Number of tokens used
+ctx$tokens_used
+```
+
+The assembled context string -- ready to paste into a system prompt:
+
+```{r context-string}
+cat(ctx$context_string)
+```
+
+## 4. Chatting with context (LLM required)
+
+`chat_with_context()` assembles the context and sends it to an LLM.
+Supported providers via the `ellmer` package:
+
+```{r chat, eval = FALSE}
+# OpenAI (default) -- requires OPENAI_API_KEY
+answer <- chat_with_context(
+  graph,
+  "How does prepare_data() ensure clean input?"
+)
+cat(answer)
+
+# GitHub Models Marketplace -- requires GITHUB_PAT
+answer <- chat_with_context(
+  graph,
+  "What does fit_model() return?",
+  provider = "github",
+  model    = "gpt-4o-mini"
+)
+
+# Local Ollama -- no API key needed
+answer <- chat_with_context(
+  graph,
+  "Summarise the prediction pipeline.",
+  provider = "ollama",
+  model    = "llama3.2"
+)
+
+# Anthropic Claude -- requires ANTHROPIC_API_KEY
+answer <- chat_with_context(
+  graph,
+  "Which function calls prepare_data()?",
+  provider = "anthropic"
+)
+```
+
+Each call automatically logs the query, nodes used, and a response
+excerpt to `.rrlmgraph/task_trace.jsonl` inside the project root.  This
+trace is used by `update_task_weights()` to boost frequently-referenced
+nodes in future relevance scoring.
+
+## 5. Incremental updates
+
+After editing source files you do not need to rebuild the full graph.
+`update_graph_incremental()` re-parses only the changed files:
+
+```{r incremental}
+# Simulate editing a file
+writeLines(c(
+  "#' Prepare data (updated)",
+  "#'",
+  "#' @param raw A data.frame of raw values.",
+  "#' @param remove_na Logical. Remove rows with NAs. Default TRUE.",
+  "#' @return A cleaned data.frame.",
+  "#' @export",
+  "prepare_data <- function(raw, remove_na = TRUE) {",
+  "  if (remove_na) raw <- raw[complete.cases(raw), ]",
+  "  raw",
+  "}"
+), file.path(proj_dir, "R", "data_prep.R"))
+
+graph <- update_graph_incremental(
+  graph,
+  changed_files = file.path(proj_dir, "R", "data_prep.R"),
+  verbose = TRUE
+)
+
+summary(graph)
+```
+
+## 6. Caching the graph
+
+For large projects, save the built graph to avoid re-parsing on every
+session:
+
+```{r cache, eval = FALSE}
+# Save to <project>/.rrlmgraph/graph.rds
+save_graph_cache(graph)
+
+# Restore in a later session
+graph <- load_graph_cache(proj_dir)
+```
+
+## 7. Generating Copilot instructions
+
+`generate_instructions()` writes a `.github/copilot-instructions.md` file
+that primes GitHub Copilot with project-specific context derived from the
+graph:
+
+```{r instructions, eval = FALSE}
+generate_instructions(graph, max_tokens = 3000L)
+```
+
+The generated file describes the project structure, key functions, and
+their call relationships, giving Copilot accurate context without manual
+maintenance.
+
+## 8. Using the MCP server
+
+For integration with VS Code and other MCP-capable editors, see the
+companion package **rrlmgraph-mcp**:
+<https://github.com/davidrsch/rrlmgraph-mcp>
+
+The MCP server exposes the SQLite-persisted graph (written by
+`export_to_sqlite()`) to any client that supports the Model Context
+Protocol, enabling IDE-level context injection independent of the R
+console.
+
+```{r cleanup, include = FALSE}
+unlink(proj_dir, recursive = TRUE)
+```
