@@ -1,4 +1,4 @@
-# R/cache.R
+﻿# R/cache.R
 # Graph caching and SQLite export for rrlmgraph.
 # Covers rrlmgraph issues #14 (cache) and #15 (SQLite bridge).
 
@@ -49,7 +49,7 @@ save_graph_cache <- function(graph, cache_dir = NULL) {
   if (!fs::file_exists(gi_path)) {
     writeLines(
       c(
-        "# rrlmgraph cache — generated automatically",
+        "# rrlmgraph cache -- generated automatically",
         "*.rds",
         "!config.yml",
         "!task_trace.jsonl"

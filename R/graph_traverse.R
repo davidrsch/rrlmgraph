@@ -1,4 +1,4 @@
-# R/graph_traverse.R
+﻿# R/graph_traverse.R
 # Traversal and relevance-scoring helpers for rrlm_graph objects.
 # Covers rrlmgraph issue #10 (Sprint 2).
 
@@ -421,7 +421,7 @@ query_context <- function(
     }
 
     if (!admitted) {
-      # No node fits within the remaining budget — stop
+      # No node fits within the remaining budget -- stop
       break
     }
   }

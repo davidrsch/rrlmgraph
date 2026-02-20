@@ -1,8 +1,8 @@
-#' Build CALLS edges between function nodes
+﻿#' Build CALLS edges between function nodes
 #'
 #' Cross-references each function node's `calls_list` against the set of
 #' known user-defined node identifiers.  Each matched call produces one
-#' directed edge `(from_node_id → to_node_id)`.
+#' directed edge `(from_node_id -> to_node_id)`.
 #'
 #' The matching strategy is:
 #' 1. Exact match on bare function name (`to_name`).
@@ -37,7 +37,7 @@ build_call_edges <- function(func_nodes) {
     return(.empty_edge_df())
   }
 
-  # Build lookup: bare_name → vector of node_ids (many nodes can share a name
+  # Build lookup: bare_name -> vector of node_ids (many nodes can share a name
   # across files; retain all so we keep the best match later)
   node_ids <- vapply(func_nodes, `[[`, character(1), "node_id")
   node_names <- vapply(func_nodes, `[[`, character(1), "name")
@@ -84,10 +84,10 @@ build_call_edges <- function(func_nodes) {
 #'
 #' Discovers package dependencies at two levels:
 #'
-#' 1. **Explicit** — `library(pkg)` and `require(pkg)` calls in source files.
-#' 2. **Qualified** — `pkg::fn` and `pkg:::fn` patterns (the package name is
+#' 1. **Explicit** -- `library(pkg)` and `require(pkg)` calls in source files.
+#' 2. **Qualified** -- `pkg::fn` and `pkg:::fn` patterns (the package name is
 #'    extracted as an import).
-#' 3. **DESCRIPTION** — if a `DESCRIPTION` file is found in the project root
+#' 3. **DESCRIPTION** -- if a `DESCRIPTION` file is found in the project root
 #'    (or any ancestor up to two levels up), its `Imports:` and `Depends:`
 #'    fields are parsed.
 #'
@@ -217,7 +217,7 @@ build_import_edges <- function(r_files, root = NULL) {
 #'
 #' Parses each test file for references to user-defined function names, using
 #' the same AST-walking approach used in `find_calls_in_body()`.  A `TEST`
-#' edge `(test_file_stem → function_node_id)` is emitted when a test file
+#' edge `(test_file_stem -> function_node_id)` is emitted when a test file
 #' calls a function that exists as a node in `func_nodes`.
 #'
 #' Test-helper symbols (`expect_*`, `test_that`, `describe`, `it`, `setup`,
@@ -248,7 +248,7 @@ build_test_edges <- function(func_nodes, test_files) {
     return(.empty_edge_df())
   }
 
-  # Build lookup: bare_name → node_id (prefer first match when duplicates)
+  # Build lookup: bare_name -> node_id (prefer first match when duplicates)
   node_ids <- vapply(func_nodes, `[[`, character(1), "node_id")
   node_names <- vapply(func_nodes, `[[`, character(1), "name")
   name_to_id <- setNames(node_ids, node_names)
@@ -697,7 +697,7 @@ build_rrlm_graph <- function(
   }
 
   .vlog(
-    "Done in {round(build_time, 2)}s — {igraph::vcount(g)} nodes, {igraph::ecount(g)} edges"
+    "Done in {round(build_time, 2)}s -- {igraph::vcount(g)} nodes, {igraph::ecount(g)} edges"
   )
   g
 }

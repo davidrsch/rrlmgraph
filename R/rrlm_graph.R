@@ -1,4 +1,4 @@
-# R/rrlm_graph.R
+﻿# R/rrlm_graph.R
 # S3 methods for the "rrlm_graph" class
 # Covers rrlmgraph issue #7 (Sprint 1)
 
@@ -117,10 +117,10 @@ summary.rrlm_graph <- function(object, ...) {
 #'
 #' Renders the top-`n_hubs` nodes (by PageRank) using [igraph::plot.igraph()].
 #' Node colour reflects the node type:
-#' * User functions — `"steelblue"`
-#' * Package nodes  — `"grey70"`
-#' * Test files     — `"seagreen3"`
-#' * Other/unknown  — `"lightyellow"`
+#' * User functions -- `"steelblue"`
+#' * Package nodes  -- `"grey70"`
+#' * Test files     -- `"seagreen3"`
+#' * Other/unknown  -- `"lightyellow"`
 #'
 #' @param x An `rrlm_graph` object.
 #' @param n_hubs Integer(1).  Number of top-PageRank hub nodes to include in
@@ -153,7 +153,7 @@ plot.rrlm_graph <- function(
   g <- x
 
   if (igraph::vcount(g) == 0L) {
-    cli::cli_warn("Graph has no nodes — nothing to plot.")
+    cli::cli_warn("Graph has no nodes -- nothing to plot.")
     return(invisible(g))
   }
 

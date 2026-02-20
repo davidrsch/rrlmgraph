@@ -16,11 +16,11 @@ jobs:
       fail-fast: false
       matrix:
         config:
-          - {os: ubuntu-latest,  r: 'release'}
-          - {os: ubuntu-latest,  r: 'oldrel'}
-          - {os: ubuntu-latest,  r: 'devel', http-user-agent: 'release'}
-          - {os: windows-latest, r: 'release'}
-          - {os: macos-latest,   r: 'release'}
+          - { os: ubuntu-latest, r: "release" }
+          - { os: ubuntu-latest, r: "oldrel" }
+          - { os: ubuntu-latest, r: "devel", http-user-agent: "release" }
+          - { os: windows-latest, r: "release" }
+          - { os: macos-latest, r: "release" }
 
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
@@ -39,8 +39,11 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::rcmdcheck
+          extra-packages: any::rcmdcheck, any::devtools
           needs: check
+
+      - name: Document
+        run: Rscript -e 'devtools::document()'
 
       - uses: r-lib/actions/check-r-package@v2
         with:

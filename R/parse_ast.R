@@ -1,7 +1,7 @@
-#' Extract function nodes from R source files
+﻿#' Extract function nodes from R source files
 #'
 #' Parses every file in `r_files`, walks its AST, and returns a list of node
-#' records — one per named function definition discovered.  Handles standard
+#' records -- one per named function definition discovered.  Handles standard
 #' `<-`/`=` assignments, S4 generics/methods/classes, and R6 class methods.
 #' Files that cannot be parsed are skipped with a warning; the function never
 #' throws.
@@ -399,7 +399,7 @@ find_calls_in_body <- function(fn_body) {
   # Remove remaining .data-like pronoun artefacts
   globals <- globals[!startsWith(globals, ".data")]
 
-  # Handle pkg::fn and pkg:::fn — walk AST directly for qualified calls
+  # Handle pkg::fn and pkg:::fn -- walk AST directly for qualified calls
   qualified <- .find_qualified_calls(fn_body)
 
   # Remove the plain "::" / ":::" operator names; keep qualified refs
@@ -511,7 +511,7 @@ find_calls_in_body <- function(fn_body) {
             if (!is.null(ns)) {
               exists(fn_name, where = ns, mode = "function", inherits = FALSE)
             } else {
-              TRUE # namespace unavailable at index time — keep tentatively
+              TRUE # namespace unavailable at index time -- keep tentatively
             }
           },
           error = function(x) TRUE

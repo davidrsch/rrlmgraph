@@ -1,4 +1,4 @@
-# R/context_assemble.R
+﻿# R/context_assemble.R
 # Node-context compression and LLM-ready string assembly.
 # Covers rrlmgraph issues #11 and #12 (Sprint 2).
 
@@ -65,7 +65,7 @@ build_node_context <- function(
     mode
   } else {
     "full"
-  } # auto → full (caller decides for supporting)
+  } # auto -> full (caller decides for supporting)
 
   if (effective_mode == "full") {
     .ctx_full(v_idx, graph)
@@ -83,15 +83,15 @@ build_node_context <- function(
 #' prompt.  The structure is:
 #'
 #' \enumerate{
-#'   \item **Header** — project name, R version, approximate token count.
-#'   \item **CORE FUNCTIONS** — seed node rendered in full-source mode.
-#'   \item **SUPPORTING FUNCTIONS** — remaining user-function nodes in
+#'   \item **Header** -- project name, R version, approximate token count.
+#'   \item **CORE FUNCTIONS** -- seed node rendered in full-source mode.
+#'   \item **SUPPORTING FUNCTIONS** -- remaining user-function nodes in
 #'     compressed mode.
-#'   \item **FRAMEWORK / PACKAGE CONTEXT** — package-type nodes in
+#'   \item **FRAMEWORK / PACKAGE CONTEXT** -- package-type nodes in
 #'     compressed mode.
-#'   \item **RECENT TASK HISTORY** — up to 3 entries from the
+#'   \item **RECENT TASK HISTORY** -- up to 3 entries from the
 #'     \code{task_history} graph attribute; omitted when empty.
-#'   \item **CONSTRAINTS** — boilerplate footer reminding the LLM to
+#'   \item **CONSTRAINTS** -- boilerplate footer reminding the LLM to
 #'     use only listed functions.
 #' }
 #'

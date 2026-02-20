@@ -1,4 +1,4 @@
-# cran-comments.md
+﻿# cran-comments.md
 
 ## R CMD check results
 
@@ -7,7 +7,7 @@
 (Or describe any NOTEs here, e.g.:)
 
 > Possibly misspelled words in DESCRIPTION: rrlm (3 occurrences)
-> — "rrlm" is the intentional package acronym.
+> -- "rrlm" is the intentional package acronym.
 
 ## Test environments
 
