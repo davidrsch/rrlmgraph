@@ -1,16 +1,10 @@
 # Plot an rrlm_graph
 
-Renders the top-`n_hubs` nodes (by PageRank) using
+Renders the top-`n_hubs` function nodes (by PageRank) using
 [`igraph::plot.igraph()`](https://r.igraph.org/reference/plot.igraph.html).
-Node colour reflects the node type:
-
-- User functions – `"steelblue"`
-
-- Package nodes – `"grey70"`
-
-- Test files – `"seagreen3"`
-
-- Other/unknown – `"lightyellow"`
+Package and test-file nodes are included only when they are connected to
+the selected hubs; their labels are suppressed to avoid clutter. Vertex
+size scales with relative PageRank importance.
 
 ## Usage
 
@@ -18,11 +12,10 @@ Node colour reflects the node type:
 # S3 method for class 'rrlm_graph'
 plot(
   x,
-  n_hubs = 30L,
-  layout = igraph::layout_with_fr,
-  vertex.size = 8,
-  vertex.label.cex = 0.7,
-  edge.arrow.size = 0.4,
+  n_hubs = 15L,
+  layout = NULL,
+  vertex.label.cex = 0.75,
+  edge.arrow.size = 0.3,
   ...
 )
 ```
@@ -35,27 +28,24 @@ plot(
 
 - n_hubs:
 
-  Integer(1). Number of top-PageRank hub nodes to include in the
-  sub-graph. Default `30`.
+  Integer(1). Number of top-PageRank *function* hub nodes to show.
+  Default `15`.
 
 - layout:
 
-  Function. igraph layout function. Defaults to
-  [igraph::layout_with_fr](https://r.igraph.org/reference/layout_with_fr.html).
-
-- vertex.size:
-
-  Numeric(1). Vertex size passed to
-  [`igraph::plot.igraph()`](https://r.igraph.org/reference/plot.igraph.html).
-  Default `8`.
+  Function. igraph layout function. Auto-selects
+  [igraph::layout_with_kk](https://r.igraph.org/reference/layout_with_kk.html)
+  for ≤ 20 nodes and
+  [igraph::layout_with_fr](https://r.igraph.org/reference/layout_with_fr.html)
+  for larger sub-graphs when `NULL` (default).
 
 - vertex.label.cex:
 
-  Numeric(1). Label size. Default `0.7`.
+  Numeric(1). Label size for function nodes. Default `0.75`.
 
 - edge.arrow.size:
 
-  Numeric(1). Arrow size. Default `0.4`.
+  Numeric(1). Arrow size. Default `0.3`.
 
 - ...:
 
@@ -65,6 +55,18 @@ plot(
 ## Value
 
 `x` invisibly.
+
+## Details
+
+Node colours:
+
+- User functions – `"steelblue"`
+
+- Package nodes – `"#C8D8E8"` (pale blue, smaller)
+
+- Test files – `"seagreen3"`
+
+- Other/unknown – `"lightyellow"`
 
 ## See also
 

@@ -23,13 +23,14 @@ Shiny app – and returns an `rrlm_graph` object.
 ``` r
 library(rrlmgraph)
 
-# Build a graph for rrlmgraph's own source -- a real package with many
-# functions and edges, so all downstream examples produce meaningful output.
-graph <- build_rrlm_graph(pkg_dir, verbose = TRUE)
-#> Detecting project at /home/runner/work/_temp/Library/rrlmgraph
-#> Parsing 0 R file(s)
-#> Warning: No function nodes found in /home/runner/work/_temp/Library/rrlmgraph.  Empty
-#> graph returned.
+# Build the graph from the bundled demo project -- eight real functions with
+# genuine CALLS relationships guarantees a non-trivial graph in every
+# environment without needing any external files.
+graph <- build_rrlm_graph(demo_dir, verbose = TRUE)
+#> Detecting project at /home/runner/work/_temp/Library/rrlmgraph/extdata/demo
+#> Parsing 3 R file(s)
+#> Warning: No function nodes found in
+#> /home/runner/work/_temp/Library/rrlmgraph/extdata/demo.  Empty graph returned.
 #> Building CALLS edges
 #> Building IMPORT edges
 #> Building TEST edges
@@ -37,7 +38,7 @@ graph <- build_rrlm_graph(pkg_dir, verbose = TRUE)
 #> Computing PageRank
 #> Embedding nodes with method 'tfidf'
 #> Computing semantic similarity edges (threshold 0.7)
-#> Done in 0.4s -- 9 nodes, 0 edges
+#> Done in 0.4s -- 10 nodes, 0 edges
 ```
 
 The function:
@@ -51,7 +52,7 @@ The function:
 
 ``` r
 summary(graph)
-#> IGRAPH b5ff6a8 DNW- 9 0 -- 
+#> IGRAPH 74b1637 DNW- 10 0 -- 
 #> + attr: project_name (g/c), project_root (g/c), project_type (g/c),
 #> | r_version (g/c), build_time (g/n), build_at (g/c), embed_method
 #> | (g/c), embed_model (g/x), cache_path (g/c), name (v/c), node_type
@@ -62,23 +63,23 @@ summary(graph)
 
 ``` r
 print(graph)
-#> IGRAPH b5ff6a8 DNW- 9 0 -- 
+#> IGRAPH 74b1637 DNW- 10 0 -- 
 #> + attr: project_name (g/c), project_root (g/c), project_type (g/c),
 #> | r_version (g/c), build_time (g/n), build_at (g/c), embed_method
 #> | (g/c), embed_model (g/x), cache_path (g/c), name (v/c), node_type
 #> | (v/c), file (v/c), line_start (v/n), line_end (v/n), signature (v/c),
 #> | complexity (v/n), pagerank (v/n), embedding (v/x), weight (e/n),
 #> | edge_type (e/c)
-#> + edges from b5ff6a8 (vertex names):
+#> + edges from 74b1637 (vertex names):
 ```
 
 [`plot()`](https://rdrr.io/r/graphics/plot.default.html) draws a
 force-directed layout coloured by node type:
 
-- **steelblue** – user-defined functions
-- **grey70** – package / imported functions
-- **seagreen3** – test files
-- **lightyellow** – other nodes
+- **steelblue** – user-defined functions (size scales with PageRank)
+- **pale blue** – package / imported dependencies
+- **seagreen** – test files
+- Labels on function nodes only; arrows show CALLS direction
 
 ``` r
 plot(graph)
@@ -95,19 +96,19 @@ token-budgeted context window ideal for LLM prompts.
 ``` r
 ctx <- query_context(
   graph,
-  query = "How does graph traversal select nodes for context?",
+  query = "How does the data preparation and validation pipeline work?",
   budget_tokens = 400L,
   verbose = TRUE
 )
-#> Seed node: "cli"
+#> Seed node: "stats"
 
 # Nodes selected for the context window
 ctx$nodes
-#> [1] "cli"
+#> [1] "stats"
 
 # Number of tokens used
 ctx$tokens_used
-#> [1] 82
+#> [1] 84
 ```
 
 The assembled context string – ready to paste into a system prompt:
@@ -115,13 +116,13 @@ The assembled context string – ready to paste into a system prompt:
 ``` r
 cat(ctx$context_string)
 #> # rrlm_graph Context
-#> # Project: rrlmgraph | R 4.5.2 | ~51 tokens
-#> # Query: How does graph traversal select nodes for context?
+#> # Project: demo | R 4.5.2 | ~52 tokens
+#> # Query: How does the data preparation and validation pipeline work?
 #> 
 #> ## CORE FUNCTIONS
 #> ---
-#> ### cli
-#> cli
+#> ### stats
+#> stats
 #> 
 #> ## CONSTRAINTS
 #> ---
@@ -138,14 +139,14 @@ the `ellmer` package:
 # OpenAI (default) -- requires OPENAI_API_KEY
 answer <- chat_with_context(
   graph,
-  "How does build_rrlm_graph() process R source files?"
+  "How does prepare_data() ensure clean input?"
 )
 cat(answer)
 
 # GitHub Models Marketplace -- requires GITHUB_PAT
 answer <- chat_with_context(
   graph,
-  "What does query_context() return?",
+  "What does fit_model() return?",
   provider = "github",
   model    = "gpt-4o-mini"
 )
@@ -153,7 +154,7 @@ answer <- chat_with_context(
 # Local Ollama -- no API key needed
 answer <- chat_with_context(
   graph,
-  "Summarise how the graph traversal works.",
+  "Walk me through the prediction pipeline.",
   provider = "ollama",
   model    = "llama3.2"
 )
@@ -161,7 +162,7 @@ answer <- chat_with_context(
 # Anthropic Claude -- requires ANTHROPIC_API_KEY
 answer <- chat_with_context(
   graph,
-  "Which functions call extract_function_nodes()?",
+  "Which function calls prepare_data()?",
   provider = "anthropic"
 )
 ```
@@ -201,14 +202,14 @@ graph_small <- update_graph_incremental(
 #> 
 #> ── Incremental graph update ──
 #> 
-#> Changed files: /tmp/RtmpZGDKV0/mypkg_demo/R/data_prep.R
+#> Changed files: /tmp/RtmpWQnn2B/mypkg_demo/R/data_prep.R
 #> Re-parsing 1 file(s).
 #> No new nodes; finalising graph.
-#> Persisting cache to /tmp/RtmpZGDKV0/mypkg_demo.
-#> Graph cached at /tmp/RtmpZGDKV0/mypkg_demo/.rrlmgraph
+#> Persisting cache to /tmp/RtmpWQnn2B/mypkg_demo.
+#> Graph cached at /tmp/RtmpWQnn2B/mypkg_demo/.rrlmgraph
 
 summary(graph_small)
-#> IGRAPH 6cee8b5 DNW- 0 0 -- 
+#> IGRAPH b5820c1 DNW- 0 0 -- 
 #> + attr: project_name (g/c), project_root (g/c), project_type (g/c),
 #> | r_version (g/c), build_time (g/n), build_at (g/c), embed_method
 #> | (g/c), embed_model (g/x), cache_path (g/c), name (v/c), node_type
