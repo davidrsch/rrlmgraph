@@ -1,4 +1,4 @@
-# R/rrlm_graph.R
+﻿# R/rrlm_graph.R
 # S3 methods for the "rrlm_graph" class
 # Covers rrlmgraph issue #7 (Sprint 1)
 
@@ -9,6 +9,12 @@
 #' @param x An `rrlm_graph` object.
 #' @param ... Ignored.
 #' @return `x` invisibly.
+#' @seealso [summary.rrlm_graph()], [plot.rrlm_graph()], [build_rrlm_graph()]
+#' @examples
+#' \dontrun{
+#' g <- build_rrlm_graph("mypkg")
+#' print(g)
+#' }
 #' @export
 print.rrlm_graph <- function(x, ...) {
   n_v <- igraph::vcount(x)
@@ -32,6 +38,12 @@ print.rrlm_graph <- function(x, ...) {
 #' @param object An `rrlm_graph` object.
 #' @param ... Ignored.
 #' @return `object` invisibly.
+#' @seealso [print.rrlm_graph()], [plot.rrlm_graph()], [build_rrlm_graph()]
+#' @examples
+#' \dontrun{
+#' g <- build_rrlm_graph("mypkg")
+#' summary(g)
+#' }
 #' @export
 summary.rrlm_graph <- function(object, ...) {
   g <- object
@@ -105,10 +117,10 @@ summary.rrlm_graph <- function(object, ...) {
 #'
 #' Renders the top-`n_hubs` nodes (by PageRank) using [igraph::plot.igraph()].
 #' Node colour reflects the node type:
-#' * User functions — `"steelblue"`
-#' * Package nodes  — `"grey70"`
-#' * Test files     — `"seagreen3"`
-#' * Other/unknown  — `"lightyellow"`
+#' * User functions -- `"steelblue"`
+#' * Package nodes  -- `"grey70"`
+#' * Test files     -- `"seagreen3"`
+#' * Other/unknown  -- `"lightyellow"`
 #'
 #' @param x An `rrlm_graph` object.
 #' @param n_hubs Integer(1).  Number of top-PageRank hub nodes to include in
@@ -121,6 +133,13 @@ summary.rrlm_graph <- function(object, ...) {
 #' @param edge.arrow.size Numeric(1).  Arrow size.  Default `0.4`.
 #' @param ... Additional arguments forwarded to [igraph::plot.igraph()].
 #' @return `x` invisibly.
+#' @seealso [print.rrlm_graph()], [summary.rrlm_graph()], [build_rrlm_graph()]
+#' @examples
+#' \dontrun{
+#' g <- build_rrlm_graph("mypkg")
+#' plot(g)
+#' plot(g, n_hubs = 10L)
+#' }
 #' @export
 plot.rrlm_graph <- function(
   x,
@@ -134,7 +153,7 @@ plot.rrlm_graph <- function(
   g <- x
 
   if (igraph::vcount(g) == 0L) {
-    cli::cli_warn("Graph has no nodes — nothing to plot.")
+    cli::cli_warn("Graph has no nodes -- nothing to plot.")
     return(invisible(g))
   }
 

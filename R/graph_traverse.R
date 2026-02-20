@@ -1,4 +1,4 @@
-# R/graph_traverse.R
+﻿# R/graph_traverse.R
 # Traversal and relevance-scoring helpers for rrlm_graph objects.
 # Covers rrlmgraph issue #10 (Sprint 2).
 
@@ -421,7 +421,7 @@ query_context <- function(
     }
 
     if (!admitted) {
-      # No node fits within the remaining budget — stop
+      # No node fits within the remaining budget -- stop
       break
     }
   }
@@ -473,6 +473,13 @@ query_context <- function(
 #' @param x An \code{rrlm_context} object.
 #' @param ... Ignored.
 #' @return \code{x}, invisibly.
+#' @seealso [query_context()], [summary.rrlm_context()]
+#' @examples
+#' \dontrun{
+#' g   <- build_rrlm_graph("mypkg")
+#' ctx <- query_context(g, "load data")
+#' print(ctx)
+#' }
 #' @export
 print.rrlm_context <- function(x, ...) {
   cli::cli_h1("rrlm_context")
@@ -491,6 +498,13 @@ print.rrlm_context <- function(x, ...) {
 #' @param object An \code{rrlm_context} object.
 #' @param ... Ignored.
 #' @return \code{object}, invisibly.
+#' @seealso [query_context()], [print.rrlm_context()]
+#' @examples
+#' \dontrun{
+#' g   <- build_rrlm_graph("mypkg")
+#' ctx <- query_context(g, "load data")
+#' summary(ctx)
+#' }
 #' @export
 summary.rrlm_context <- function(object, ...) {
   cli::cli_h1("rrlm_context summary")
