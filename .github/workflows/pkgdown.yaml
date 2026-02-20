@@ -9,9 +9,11 @@
 
 name: pkgdown
 
+permissions:
+  contents: read
+
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  group: pkgdown-${{ github.event_name != 'pull_request' || github.run_id }}
 
 jobs:
   pkgdown:
