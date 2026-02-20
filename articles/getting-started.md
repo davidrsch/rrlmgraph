@@ -16,17 +16,18 @@ install.packages("ellmer")
 
 ## 1. Building your first graph
 
-`build_rrlm_graph()` accepts a path to any R project – a package, a
-scripts folder, or a Shiny app – and returns an `rrlm_graph` object.
+[`build_rrlm_graph()`](https://davidrsch.github.io/rrlmgraph/reference/build_rrlm_graph.md)
+accepts a path to any R project – a package, a scripts folder, or a
+Shiny app – and returns an `rrlm_graph` object.
 
 ``` r
 library(rrlmgraph)
 
 # Point to any R project directory -- here we use a small demo package
 graph <- build_rrlm_graph(proj_dir, verbose = TRUE)
-#> Detecting project at /tmp/Rtmp69t8bv/mypkg_demo
+#> Detecting project at /tmp/Rtmp2SSn7g/mypkg_demo
 #> Parsing 3 R file(s)
-#> Warning: No function nodes found in /tmp/Rtmp69t8bv/mypkg_demo.
+#> Warning: No function nodes found in /tmp/Rtmp2SSn7g/mypkg_demo.
 #> Empty graph returned.
 #> Building CALLS edges
 #> Building IMPORT edges
@@ -35,7 +36,7 @@ graph <- build_rrlm_graph(proj_dir, verbose = TRUE)
 #> Computing PageRank
 #> Embedding nodes with method 'tfidf'
 #> Computing semantic similarity edges (threshold 0.7)
-#> Done in 0.35s -- 0 nodes, 0 edges
+#> Done in 0.39s -- 0 nodes, 0 edges
 ```
 
 The function:
@@ -49,7 +50,7 @@ The function:
 
 ``` r
 summary(graph)
-#> IGRAPH 2e071d2 DNW- 0 0 -- 
+#> IGRAPH 9835a08 DNW- 0 0 -- 
 #> + attr: project_name (g/c), project_root (g/c), project_type (g/c),
 #> | r_version (g/c), build_time (g/n), build_at (g/c), embed_method
 #> | (g/c), embed_model (g/x), cache_path (g/c), name (v/c), node_type
@@ -60,14 +61,14 @@ summary(graph)
 
 ``` r
 print(graph)
-#> IGRAPH 2e071d2 DNW- 0 0 -- 
+#> IGRAPH 9835a08 DNW- 0 0 -- 
 #> + attr: project_name (g/c), project_root (g/c), project_type (g/c),
 #> | r_version (g/c), build_time (g/n), build_at (g/c), embed_method
 #> | (g/c), embed_model (g/x), cache_path (g/c), name (v/c), node_type
 #> | (v/c), file (v/c), line_start (v/n), line_end (v/n), signature (v/c),
 #> | complexity (v/n), pagerank (v/n), embedding (v/x), weight (e/n),
 #> | edge_type (e/c)
-#> + edges from 2e071d2 (vertex names):
+#> + edges from 9835a08 (vertex names):
 ```
 
 [`plot()`](https://rdrr.io/r/graphics/plot.default.html) draws a
@@ -86,8 +87,9 @@ plot(graph)
 
 ## 3. Querying context
 
-`query_context()` performs relevance-guided BFS from the most relevant
-nodes and returns a token-budgeted context window ideal for LLM prompts.
+[`query_context()`](https://davidrsch.github.io/rrlmgraph/reference/query_context.md)
+performs relevance-guided BFS from the most relevant nodes and returns a
+token-budgeted context window ideal for LLM prompts.
 
 ``` r
 ctx <- query_context(
@@ -114,8 +116,9 @@ cat(ctx$context_string)
 
 ## 4. Chatting with context (LLM required)
 
-`chat_with_context()` assembles the context and sends it to an LLM.
-Supported providers via the `ellmer` package:
+[`chat_with_context()`](https://davidrsch.github.io/rrlmgraph/reference/chat_with_context.md)
+assembles the context and sends it to an LLM. Supported providers via
+the `ellmer` package:
 
 ``` r
 # OpenAI (default) -- requires OPENAI_API_KEY
@@ -151,13 +154,15 @@ answer <- chat_with_context(
 
 Each call automatically logs the query, nodes used, and a response
 excerpt to `.rrlmgraph/task_trace.jsonl` inside the project root. This
-trace is used by `update_task_weights()` to boost frequently-referenced
-nodes in future relevance scoring.
+trace is used by
+[`update_task_weights()`](https://davidrsch.github.io/rrlmgraph/reference/update_task_weights.md)
+to boost frequently-referenced nodes in future relevance scoring.
 
 ## 5. Incremental updates
 
 After editing source files you do not need to rebuild the full graph.
-`update_graph_incremental()` re-parses only the changed files:
+[`update_graph_incremental()`](https://davidrsch.github.io/rrlmgraph/reference/update_graph_incremental.md)
+re-parses only the changed files:
 
 ``` r
 # Simulate editing a file
@@ -182,14 +187,14 @@ graph <- update_graph_incremental(
 #> 
 #> ── Incremental graph update ──
 #> 
-#> Changed files: /tmp/Rtmp69t8bv/mypkg_demo/R/data_prep.R
+#> Changed files: /tmp/Rtmp2SSn7g/mypkg_demo/R/data_prep.R
 #> Re-parsing 1 file(s).
 #> No new nodes; finalising graph.
-#> Persisting cache to /tmp/Rtmp69t8bv/mypkg_demo.
-#> Graph cached at /tmp/Rtmp69t8bv/mypkg_demo/.rrlmgraph
+#> Persisting cache to /tmp/Rtmp2SSn7g/mypkg_demo.
+#> Graph cached at /tmp/Rtmp2SSn7g/mypkg_demo/.rrlmgraph
 
 summary(graph)
-#> IGRAPH 2e071d2 DNW- 0 0 -- 
+#> IGRAPH 9835a08 DNW- 0 0 -- 
 #> + attr: project_name (g/c), project_root (g/c), project_type (g/c),
 #> | r_version (g/c), build_time (g/n), build_at (g/c), embed_method
 #> | (g/c), embed_model (g/x), cache_path (g/c), name (v/c), node_type
@@ -213,9 +218,9 @@ graph <- load_graph_cache(proj_dir)
 
 ## 7. Generating Copilot instructions
 
-`generate_instructions()` writes a `.github/copilot-instructions.md`
-file that primes GitHub Copilot with project-specific context derived
-from the graph:
+[`generate_instructions()`](https://davidrsch.github.io/rrlmgraph/reference/generate_instructions.md)
+writes a `.github/copilot-instructions.md` file that primes GitHub
+Copilot with project-specific context derived from the graph:
 
 ``` r
 generate_instructions(graph, max_tokens = 3000L)
@@ -232,6 +237,6 @@ companion package **rrlmgraph-mcp**:
 <https://github.com/davidrsch/rrlmgraph-mcp>
 
 The MCP server exposes the SQLite-persisted graph (written by
-`export_to_sqlite()`) to any client that supports the Model Context
-Protocol, enabling IDE-level context injection independent of the R
-console.
+[`export_to_sqlite()`](https://davidrsch.github.io/rrlmgraph/reference/export_to_sqlite.md))
+to any client that supports the Model Context Protocol, enabling
+IDE-level context injection independent of the R console.

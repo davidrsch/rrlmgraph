@@ -32,7 +32,103 @@
       <small>Source: <a href="https://github.com/davidrsch/rrlmgraph/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
-  </main></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.1.0" id="rrlmgraph-010">rrlmgraph 0.1.0<a class="anchor" aria-label="anchor" href="#rrlmgraph-010"></a></h2>
+<p>First release.</p>
+<div class="section level4">
+<h4 id="infrastructure-0-1-0">Infrastructure<a class="anchor" aria-label="anchor" href="#infrastructure-0-1-0"></a></h4>
+<ul><li>
+<code>R CMD check --as-cran</code>: zero errors, zero warnings verified across ubuntu/windows/macos x R release/oldrel/devel (<a href="https://github.com/davidrsch/rrlmgraph/issues/25" class="external-link">#25</a>).</li>
+<li>
+<code>DESCRIPTION</code>: added <code>BugReports</code> URL and <code>spelling</code> to <code>Suggests</code>.</li>
+<li>
+<code>inst/WORDLIST</code>: package-specific technical terms registered to pass <code><a href="https://docs.ropensci.org/spelling//reference/spell_check_package.html" class="external-link">spelling::spell_check_package()</a></code> cleanly.</li>
+<li>CI: added spelling check step after <code><a href="https://devtools.r-lib.org/reference/document.html" class="external-link">devtools::document()</a></code> (<a href="https://github.com/davidrsch/rrlmgraph/issues/25" class="external-link">#25</a>).</li>
+</ul></div>
+<div class="section level4">
+<h4 id="breaking-changes-0-1-0">Breaking changes<a class="anchor" aria-label="anchor" href="#breaking-changes-0-1-0"></a></h4>
+<ul><li>
+<code><a href="../reference/chat_with_context.html">chat_with_context()</a></code>: the <code>model</code> parameter is now <code>NULL</code> by default (was <code>"gpt-4o-mini"</code>). A per-provider sensible default is applied automatically. Code that passed <code>model</code> explicitly is unaffected.</li>
+</ul></div>
+<div class="section level4">
+<h4 id="improvements-0-1-0">Improvements<a class="anchor" aria-label="anchor" href="#improvements-0-1-0"></a></h4>
+<ul><li>
+<code><a href="../reference/chat_with_context.html">chat_with_context()</a></code> gains a <code>provider</code> argument (<code>"openai"</code>, <code>"ollama"</code>, <code>"github"</code>, <code>"anthropic"</code>). When <code>ellmer</code> is installed the appropriate <code>ellmer::chat_*()</code> backend is used; the <code>httr2</code> fallback is retained for <code>provider = "openai"</code> when <code>ellmer</code> is absent (<a href="https://github.com/davidrsch/rrlmgraph/issues/41" class="external-link">#41</a>).</li>
+<li>
+<code><a href="../reference/ollama_available.html">ollama_available()</a></code> no longer requires the <code>ollamar</code> package. It now pings the Ollama REST API directly via <code>httr2</code> (<code>GET /api/tags</code>). Set <code>OLLAMA_BASE_URL</code> to override the default <code>http://localhost:11434</code> (<a href="https://github.com/davidrsch/rrlmgraph/issues/40" class="external-link">#40</a>).</li>
+<li>Ollama embedding calls (<code><a href="../reference/embed_nodes.html">embed_nodes()</a></code>, <code><a href="../reference/embed_query.html">embed_query()</a></code>) now hit <code>POST /api/embed</code> directly via <code>httr2</code>, removing the <code>ollamar</code> dependency entirely (<a href="https://github.com/davidrsch/rrlmgraph/issues/40" class="external-link">#40</a>).</li>
+</ul></div>
+<div class="section level4">
+<h4 id="new-features-0-1-0">New features<a class="anchor" aria-label="anchor" href="#new-features-0-1-0"></a></h4>
+<p><strong>Graph construction</strong></p>
+<ul><li>
+<code><a href="../reference/build_rrlm_graph.html">build_rrlm_graph()</a></code> – build a typed knowledge graph for any R project.</li>
+<li>
+<code><a href="../reference/update_graph_incremental.html">update_graph_incremental()</a></code> – re-parse only changed files for fast single-file updates.</li>
+<li>
+<code><a href="../reference/extract_function_nodes.html">extract_function_nodes()</a></code> – AST-based function node extraction supporting standard assignments, S4 generics/methods, and R5/R6 classes.</li>
+<li>
+<code><a href="../reference/find_calls_in_body.html">find_calls_in_body()</a></code> – enumerate global symbol references in a function body, filtering NSE false-positives.</li>
+<li>
+<code><a href="../reference/build_call_edges.html">build_call_edges()</a></code> – intra-project CALLS edges.</li>
+<li>
+<code><a href="../reference/build_import_edges.html">build_import_edges()</a></code> – IMPORTS edges from source files to package dependencies (library calls, qualified calls, and DESCRIPTION fields).</li>
+<li>
+<code><a href="../reference/build_test_edges.html">build_test_edges()</a></code> – TEST edges from test files to user-defined functions.</li>
+</ul><p><strong>Querying and context assembly</strong></p>
+<ul><li>
+<code><a href="../reference/query_context.html">query_context()</a></code> – relevance-guided BFS producing a token-budgeted context object for use with an LLM.</li>
+<li>
+<code><a href="../reference/compute_relevance.html">compute_relevance()</a></code> – composite relevance score (semantic, PageRank, task-trace, co-change).</li>
+<li>
+<code><a href="../reference/build_node_context.html">build_node_context()</a></code> – full or compressed text representation of a single graph node.</li>
+<li>
+<code><a href="../reference/assemble_context_string.html">assemble_context_string()</a></code> – structured, LLM-ready prompt string from ranked node hits.</li>
+</ul><p><strong>Embedding</strong></p>
+<ul><li>
+<code><a href="../reference/embed_nodes.html">embed_nodes()</a></code> – TF-IDF (default), Ollama, or OpenAI dense embeddings.</li>
+<li>
+<code><a href="../reference/embed_query.html">embed_query()</a></code> – project a free-text query into the model’s vector space.</li>
+<li>
+<code><a href="../reference/cosine_similarity.html">cosine_similarity()</a></code> – cosine similarity between two numeric vectors.</li>
+<li>
+<code><a href="../reference/ollama_available.html">ollama_available()</a></code> – runtime check for a reachable Ollama daemon.</li>
+</ul><p><strong>LLM interface</strong></p>
+<ul><li>
+<code><a href="../reference/chat_with_context.html">chat_with_context()</a></code> – chat with an LLM using graph-derived context; uses <code>ellmer</code> when installed, falls back to <code>httr2</code>.</li>
+</ul><p><strong>Task learning</strong></p>
+<ul><li>
+<code><a href="../reference/log_task_trace.html">log_task_trace()</a></code> – append a JSONL feedback entry to <code>.rrlmgraph/task_trace.jsonl</code>.</li>
+<li>
+<code><a href="../reference/update_task_weights.html">update_task_weights()</a></code> – apply exponential decay and accumulate per-node weights from the trace file.</li>
+<li>
+<code><a href="../reference/update_task_polarity.html">update_task_polarity()</a></code> – rewrite polarity values of recent trace entries.</li>
+</ul><p><strong>Cache and export</strong></p>
+<ul><li>
+<code><a href="../reference/save_graph_cache.html">save_graph_cache()</a></code> – serialise graph to <code>.rrlmgraph/graph.rds</code>.</li>
+<li>
+<code><a href="../reference/load_graph_cache.html">load_graph_cache()</a></code> – restore graph from cache, refreshing task weights.</li>
+<li>
+<code><a href="../reference/is_cache_stale.html">is_cache_stale()</a></code> – compare cache mtime against R source files.</li>
+<li>
+<code><a href="../reference/export_to_sqlite.html">export_to_sqlite()</a></code> – write nodes, edges, and traces to a SQLite database for the TypeScript MCP server.</li>
+</ul><p><strong>Project detection</strong></p>
+<ul><li>
+<code><a href="../reference/detect_rproject.html">detect_rproject()</a></code> – detect project type and discover all R source files.</li>
+</ul><p><strong>Instructions</strong></p>
+<ul><li>
+<code><a href="../reference/generate_instructions.html">generate_instructions()</a></code> – generate a Copilot-style instruction Markdown file from the project graph.</li>
+</ul><p><strong>S3 methods</strong></p>
+<ul><li>
+<code><a href="../reference/print.rrlm_graph.html">print.rrlm_graph()</a></code>, <code><a href="../reference/summary.rrlm_graph.html">summary.rrlm_graph()</a></code>, <code><a href="../reference/plot.rrlm_graph.html">plot.rrlm_graph()</a></code>
+</li>
+<li>
+<code><a href="../reference/print.rrlm_context.html">print.rrlm_context()</a></code>, <code><a href="../reference/summary.rrlm_context.html">summary.rrlm_context()</a></code>
+</li>
+</ul></div>
+</div>
+  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
+    </nav></aside></div>
 
 
     <footer><div class="pkgdown-footer-left">

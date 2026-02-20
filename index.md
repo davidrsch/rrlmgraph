@@ -1,7 +1,42 @@
-Builds a typed knowledge graph of an R project's structure for use with
-large language models. The graph encodes functions, files, packages, and
-tests as nodes, with call, import, and test edges capturing
-dependencies. Supports TF-IDF embeddings out-of-the-box, with optional
-Ollama and OpenAI embedding backends. Chat integration supports multiple
-providers (OpenAI, Ollama, GitHub Models, Anthropic) via the ellmer
-package.
+# rrlmgraph
+
+> Typed knowledge graphs for R projects — give your LLM the right
+> context, not the whole codebase.
+
+## Overview
+
+`rrlmgraph` builds a typed knowledge graph of an R project and uses it
+to supply large language models with precise, token-budgeted context. It
+reduces hallucinations and token consumption by grounding every LLM
+response in verified, version-specific project knowledge.
+
+## Installation
+
+``` r
+# install.packages("pak")
+pak::pak("davidrsch/rrlmgraph")
+```
+
+## Quick start
+
+``` r
+library(rrlmgraph)
+
+# Build the graph for any R project
+g <- build_rrlm_graph("path/to/my_project")
+
+# Query for context relevant to a task
+ctx <- query_context(g, "How does the model evaluation work?")
+cat(ctx$context_string)
+
+# Chat with an LLM using graph-derived context
+answer <- chat_with_context(g, "Add cross-validation to fit_model()")
+```
+
+## Learn more
+
+See the [Getting
+Started](https://davidrsch.github.io/rrlmgraph/articles/getting-started.md)
+vignette for a complete walkthrough, and the
+[Reference](https://davidrsch.github.io/rrlmgraph/reference/index.md)
+for full function documentation.

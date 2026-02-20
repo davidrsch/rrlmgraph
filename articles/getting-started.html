@@ -80,17 +80,17 @@ a small self-contained example.</p>
 <div class="section level2">
 <h2 id="building-your-first-graph">1. Building your first graph<a class="anchor" aria-label="anchor" href="#building-your-first-graph"></a>
 </h2>
-<p><code>build_rrlm_graph()</code> accepts a path to any R project – a
+<p><code><a href="../reference/build_rrlm_graph.html">build_rrlm_graph()</a></code> accepts a path to any R project – a
 package, a scripts folder, or a Shiny app – and returns an
 <code>rrlm_graph</code> object.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://davidrsch.github.io/rrlmgraph/">rrlmgraph</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Point to any R project directory -- here we use a small demo package</span></span>
-<span><span class="va">graph</span> <span class="op">&lt;-</span> <span class="fu">build_rrlm_graph</span><span class="op">(</span><span class="va">proj_dir</span>, verbose <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Detecting project at <span style="color: #0000BB;">/tmp/Rtmp69t8bv/mypkg_demo</span></span></span>
+<span><span class="va">graph</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_rrlm_graph.html">build_rrlm_graph</a></span><span class="op">(</span><span class="va">proj_dir</span>, verbose <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Detecting project at <span style="color: #0000BB;">/tmp/Rtmp2SSn7g/mypkg_demo</span></span></span>
 <span><span class="co">#&gt; Parsing 3 R file(s)</span></span>
-<span><span class="co">#&gt; Warning: No function nodes found in <span style="color: #0000BB;">/tmp/Rtmp69t8bv/mypkg_demo</span>.</span></span>
+<span><span class="co">#&gt; Warning: No function nodes found in <span style="color: #0000BB;">/tmp/Rtmp2SSn7g/mypkg_demo</span>.</span></span>
 <span><span class="co">#&gt; Empty graph returned.</span></span>
 <span><span class="co">#&gt; Building CALLS edges</span></span>
 <span><span class="co">#&gt; Building IMPORT edges</span></span>
@@ -99,7 +99,7 @@ package, a scripts folder, or a Shiny app – and returns an
 <span><span class="co">#&gt; Computing PageRank</span></span>
 <span><span class="co">#&gt; Embedding nodes with method 'tfidf'</span></span>
 <span><span class="co">#&gt; Computing semantic similarity edges (threshold 0.7)</span></span>
-<span><span class="co">#&gt; Done in 0.35s -- 0 nodes, 0 edges</span></span></code></pre></div>
+<span><span class="co">#&gt; Done in 0.39s -- 0 nodes, 0 edges</span></span></code></pre></div>
 <p>The function:</p>
 <ol style="list-style-type: decimal">
 <li>Detects the project type (package / scripts / Shiny app)</li>
@@ -114,7 +114,7 @@ analysis</li>
 </h2>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">graph</span><span class="op">)</span></span>
-<span><span class="co">#&gt; IGRAPH 2e071d2 DNW- 0 0 -- </span></span>
+<span><span class="co">#&gt; IGRAPH 9835a08 DNW- 0 0 -- </span></span>
 <span><span class="co">#&gt; + attr: project_name (g/c), project_root (g/c), project_type (g/c),</span></span>
 <span><span class="co">#&gt; | r_version (g/c), build_time (g/n), build_at (g/c), embed_method</span></span>
 <span><span class="co">#&gt; | (g/c), embed_model (g/x), cache_path (g/c), name (v/c), node_type</span></span>
@@ -123,14 +123,14 @@ analysis</li>
 <span><span class="co">#&gt; | edge_type (e/c)</span></span></code></pre></div>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">graph</span><span class="op">)</span></span>
-<span><span class="co">#&gt; IGRAPH 2e071d2 DNW- 0 0 -- </span></span>
+<span><span class="co">#&gt; IGRAPH 9835a08 DNW- 0 0 -- </span></span>
 <span><span class="co">#&gt; + attr: project_name (g/c), project_root (g/c), project_type (g/c),</span></span>
 <span><span class="co">#&gt; | r_version (g/c), build_time (g/n), build_at (g/c), embed_method</span></span>
 <span><span class="co">#&gt; | (g/c), embed_model (g/x), cache_path (g/c), name (v/c), node_type</span></span>
 <span><span class="co">#&gt; | (v/c), file (v/c), line_start (v/n), line_end (v/n), signature (v/c),</span></span>
 <span><span class="co">#&gt; | complexity (v/n), pagerank (v/n), embedding (v/x), weight (e/n),</span></span>
 <span><span class="co">#&gt; | edge_type (e/c)</span></span>
-<span><span class="co">#&gt; + edges from 2e071d2 (vertex names):</span></span></code></pre></div>
+<span><span class="co">#&gt; + edges from 9835a08 (vertex names):</span></span></code></pre></div>
 <p><code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> draws a force-directed layout coloured by node
 type:</p>
 <ul>
@@ -150,11 +150,11 @@ type:</p>
 <div class="section level2">
 <h2 id="querying-context">3. Querying context<a class="anchor" aria-label="anchor" href="#querying-context"></a>
 </h2>
-<p><code>query_context()</code> performs relevance-guided BFS from the
+<p><code><a href="../reference/query_context.html">query_context()</a></code> performs relevance-guided BFS from the
 most relevant nodes and returns a token-budgeted context window ideal
 for LLM prompts.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">ctx</span> <span class="op">&lt;-</span> <span class="fu">query_context</span><span class="op">(</span></span>
+<code class="sourceCode R"><span><span class="va">ctx</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/query_context.html">query_context</a></span><span class="op">(</span></span>
 <span>  <span class="va">graph</span>,</span>
 <span>  query <span class="op">=</span> <span class="st">"How does the data preparation step work?"</span>,</span>
 <span>  budget_tokens <span class="op">=</span> <span class="fl">400L</span>,</span>
@@ -176,18 +176,18 @@ prompt:</p>
 <div class="section level2">
 <h2 id="chatting-with-context-llm-required">4. Chatting with context (LLM required)<a class="anchor" aria-label="anchor" href="#chatting-with-context-llm-required"></a>
 </h2>
-<p><code>chat_with_context()</code> assembles the context and sends it
+<p><code><a href="../reference/chat_with_context.html">chat_with_context()</a></code> assembles the context and sends it
 to an LLM. Supported providers via the <code>ellmer</code> package:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># OpenAI (default) -- requires OPENAI_API_KEY</span></span>
-<span><span class="va">answer</span> <span class="op">&lt;-</span> <span class="fu">chat_with_context</span><span class="op">(</span></span>
+<span><span class="va">answer</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/chat_with_context.html">chat_with_context</a></span><span class="op">(</span></span>
 <span>  <span class="va">graph</span>,</span>
 <span>  <span class="st">"How does prepare_data() ensure clean input?"</span></span>
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="va">answer</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># GitHub Models Marketplace -- requires GITHUB_PAT</span></span>
-<span><span class="va">answer</span> <span class="op">&lt;-</span> <span class="fu">chat_with_context</span><span class="op">(</span></span>
+<span><span class="va">answer</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/chat_with_context.html">chat_with_context</a></span><span class="op">(</span></span>
 <span>  <span class="va">graph</span>,</span>
 <span>  <span class="st">"What does fit_model() return?"</span>,</span>
 <span>  provider <span class="op">=</span> <span class="st">"github"</span>,</span>
@@ -195,7 +195,7 @@ to an LLM. Supported providers via the <code>ellmer</code> package:</p>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Local Ollama -- no API key needed</span></span>
-<span><span class="va">answer</span> <span class="op">&lt;-</span> <span class="fu">chat_with_context</span><span class="op">(</span></span>
+<span><span class="va">answer</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/chat_with_context.html">chat_with_context</a></span><span class="op">(</span></span>
 <span>  <span class="va">graph</span>,</span>
 <span>  <span class="st">"Summarise the prediction pipeline."</span>,</span>
 <span>  provider <span class="op">=</span> <span class="st">"ollama"</span>,</span>
@@ -203,21 +203,21 @@ to an LLM. Supported providers via the <code>ellmer</code> package:</p>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Anthropic Claude -- requires ANTHROPIC_API_KEY</span></span>
-<span><span class="va">answer</span> <span class="op">&lt;-</span> <span class="fu">chat_with_context</span><span class="op">(</span></span>
+<span><span class="va">answer</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/chat_with_context.html">chat_with_context</a></span><span class="op">(</span></span>
 <span>  <span class="va">graph</span>,</span>
 <span>  <span class="st">"Which function calls prepare_data()?"</span>,</span>
 <span>  provider <span class="op">=</span> <span class="st">"anthropic"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p>Each call automatically logs the query, nodes used, and a response
 excerpt to <code>.rrlmgraph/task_trace.jsonl</code> inside the project
-root. This trace is used by <code>update_task_weights()</code> to boost
+root. This trace is used by <code><a href="../reference/update_task_weights.html">update_task_weights()</a></code> to boost
 frequently-referenced nodes in future relevance scoring.</p>
 </div>
 <div class="section level2">
 <h2 id="incremental-updates">5. Incremental updates<a class="anchor" aria-label="anchor" href="#incremental-updates"></a>
 </h2>
 <p>After editing source files you do not need to rebuild the full graph.
-<code>update_graph_incremental()</code> re-parses only the changed
+<code><a href="../reference/update_graph_incremental.html">update_graph_incremental()</a></code> re-parses only the changed
 files:</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Simulate editing a file</span></span>
@@ -234,7 +234,7 @@ files:</p>
 <span>  <span class="st">"}"</span></span>
 <span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">proj_dir</span>, <span class="st">"R"</span>, <span class="st">"data_prep.R"</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">graph</span> <span class="op">&lt;-</span> <span class="fu">update_graph_incremental</span><span class="op">(</span></span>
+<span><span class="va">graph</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/update_graph_incremental.html">update_graph_incremental</a></span><span class="op">(</span></span>
 <span>  <span class="va">graph</span>,</span>
 <span>  changed_files <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">proj_dir</span>, <span class="st">"R"</span>, <span class="st">"data_prep.R"</span><span class="op">)</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">TRUE</span></span>
@@ -242,14 +242,14 @@ files:</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── <span style="font-weight: bold;">Incremental graph update</span> ──</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Changed files: <span style="color: #0000BB;">/tmp/Rtmp69t8bv/mypkg_demo/R/data_prep.R</span></span></span>
+<span><span class="co">#&gt; Changed files: <span style="color: #0000BB;">/tmp/Rtmp2SSn7g/mypkg_demo/R/data_prep.R</span></span></span>
 <span><span class="co">#&gt; Re-parsing 1 file(s).</span></span>
 <span><span class="co">#&gt; No new nodes; finalising graph.</span></span>
-<span><span class="co">#&gt; Persisting cache to <span style="color: #0000BB;">/tmp/Rtmp69t8bv/mypkg_demo</span>.</span></span>
-<span><span class="co">#&gt; Graph cached at <span style="color: #0000BB;">/tmp/Rtmp69t8bv/mypkg_demo/.rrlmgraph</span></span></span>
+<span><span class="co">#&gt; Persisting cache to <span style="color: #0000BB;">/tmp/Rtmp2SSn7g/mypkg_demo</span>.</span></span>
+<span><span class="co">#&gt; Graph cached at <span style="color: #0000BB;">/tmp/Rtmp2SSn7g/mypkg_demo/.rrlmgraph</span></span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">graph</span><span class="op">)</span></span>
-<span><span class="co">#&gt; IGRAPH 2e071d2 DNW- 0 0 -- </span></span>
+<span><span class="co">#&gt; IGRAPH 9835a08 DNW- 0 0 -- </span></span>
 <span><span class="co">#&gt; + attr: project_name (g/c), project_root (g/c), project_type (g/c),</span></span>
 <span><span class="co">#&gt; | r_version (g/c), build_time (g/n), build_at (g/c), embed_method</span></span>
 <span><span class="co">#&gt; | (g/c), embed_model (g/x), cache_path (g/c), name (v/c), node_type</span></span>
@@ -264,19 +264,19 @@ files:</p>
 session:</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Save to &lt;project&gt;/.rrlmgraph/graph.rds</span></span>
-<span><span class="fu">save_graph_cache</span><span class="op">(</span><span class="va">graph</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/save_graph_cache.html">save_graph_cache</a></span><span class="op">(</span><span class="va">graph</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Restore in a later session</span></span>
-<span><span class="va">graph</span> <span class="op">&lt;-</span> <span class="fu">load_graph_cache</span><span class="op">(</span><span class="va">proj_dir</span><span class="op">)</span></span></code></pre></div>
+<span><span class="va">graph</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/load_graph_cache.html">load_graph_cache</a></span><span class="op">(</span><span class="va">proj_dir</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="generating-copilot-instructions">7. Generating Copilot instructions<a class="anchor" aria-label="anchor" href="#generating-copilot-instructions"></a>
 </h2>
-<p><code>generate_instructions()</code> writes a
+<p><code><a href="../reference/generate_instructions.html">generate_instructions()</a></code> writes a
 <code>.github/copilot-instructions.md</code> file that primes GitHub
 Copilot with project-specific context derived from the graph:</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">generate_instructions</span><span class="op">(</span><span class="va">graph</span>, max_tokens <span class="op">=</span> <span class="fl">3000L</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="../reference/generate_instructions.html">generate_instructions</a></span><span class="op">(</span><span class="va">graph</span>, max_tokens <span class="op">=</span> <span class="fl">3000L</span><span class="op">)</span></span></code></pre></div>
 <p>The generated file describes the project structure, key functions,
 and their call relationships, giving Copilot accurate context without
 manual maintenance.</p>
@@ -287,7 +287,7 @@ manual maintenance.</p>
 <p>For integration with VS Code and other MCP-capable editors, see the
 companion package <strong>rrlmgraph-mcp</strong>: <a href="https://github.com/davidrsch/rrlmgraph-mcp" class="external-link uri">https://github.com/davidrsch/rrlmgraph-mcp</a></p>
 <p>The MCP server exposes the SQLite-persisted graph (written by
-<code>export_to_sqlite()</code>) to any client that supports the Model
+<code><a href="../reference/export_to_sqlite.html">export_to_sqlite()</a></code>) to any client that supports the Model
 Context Protocol, enabling IDE-level context injection independent of
 the R console.</p>
 </div>

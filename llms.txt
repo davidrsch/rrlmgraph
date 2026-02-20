@@ -1,12 +1,136 @@
-Builds a typed knowledge graph of an R project's structure for use with
-large language models. The graph encodes functions, files, packages, and
-tests as nodes, with call, import, and test edges capturing
-dependencies. Supports TF-IDF embeddings out-of-the-box, with optional
-Ollama and OpenAI embedding backends. Chat integration supports multiple
-providers (OpenAI, Ollama, GitHub Models, Anthropic) via the ellmer
-package.
+# rrlmgraph
 
-# 
+> Typed knowledge graphs for R projects — give your LLM the right
+> context, not the whole codebase.
+
+## Overview
+
+`rrlmgraph` builds a typed knowledge graph of an R project and uses it
+to supply large language models with precise, token-budgeted context. It
+reduces hallucinations and token consumption by grounding every LLM
+response in verified, version-specific project knowledge.
+
+## Installation
+
+``` r
+# install.packages("pak")
+pak::pak("davidrsch/rrlmgraph")
+```
+
+## Quick start
+
+``` r
+library(rrlmgraph)
+
+# Build the graph for any R project
+g <- build_rrlm_graph("path/to/my_project")
+
+# Query for context relevant to a task
+ctx <- query_context(g, "How does the model evaluation work?")
+cat(ctx$context_string)
+
+# Chat with an LLM using graph-derived context
+answer <- chat_with_context(g, "Add cross-validation to fit_model()")
+```
+
+## Learn more
+
+See the [Getting
+Started](https://davidrsch.github.io/rrlmgraph/articles/getting-started.md)
+vignette for a complete walkthrough, and the
+[Reference](https://davidrsch.github.io/rrlmgraph/reference/index.md)
+for full function documentation.
+
+# Package index
+
+## Core API
+
+Primary user-facing functions for building a project graph, querying it
+for LLM context, and generating static instructions.
+
+- [`build_rrlm_graph()`](https://davidrsch.github.io/rrlmgraph/reference/build_rrlm_graph.md)
+  : Build an RLM-Graph for an R project
+- [`query_context()`](https://davidrsch.github.io/rrlmgraph/reference/query_context.md)
+  : Query the rrlm graph and retrieve a token-budgeted context
+- [`chat_with_context()`](https://davidrsch.github.io/rrlmgraph/reference/chat_with_context.md)
+  : Chat with an LLM using graph-derived context
+- [`generate_instructions()`](https://davidrsch.github.io/rrlmgraph/reference/generate_instructions.md)
+  : Generate a Copilot-style instruction file from the project graph
+- [`update_graph_incremental()`](https://davidrsch.github.io/rrlmgraph/reference/update_graph_incremental.md)
+  : Incrementally update the graph for changed files
+
+## Graph Construction
+
+Parse R source files into nodes and edges.
+
+- [`detect_rproject()`](https://davidrsch.github.io/rrlmgraph/reference/detect_rproject.md)
+  : Detect an R project type and discover its files
+- [`extract_function_nodes()`](https://davidrsch.github.io/rrlmgraph/reference/extract_function_nodes.md)
+  : Extract function nodes from R source files
+- [`build_call_edges()`](https://davidrsch.github.io/rrlmgraph/reference/build_call_edges.md)
+  : Build CALLS edges between function nodes
+- [`build_import_edges()`](https://davidrsch.github.io/rrlmgraph/reference/build_import_edges.md)
+  : Build IMPORTS edges from R files to package dependencies
+- [`build_test_edges()`](https://davidrsch.github.io/rrlmgraph/reference/build_test_edges.md)
+  : Build TEST edges from test files to user-defined functions
+- [`find_calls_in_body()`](https://davidrsch.github.io/rrlmgraph/reference/find_calls_in_body.md)
+  : Find function calls within an R function body
+- [`embed_nodes()`](https://davidrsch.github.io/rrlmgraph/reference/embed_nodes.md)
+  : Embed function nodes with TF-IDF, Ollama, or OpenAI vectors
+- [`embed_query()`](https://davidrsch.github.io/rrlmgraph/reference/embed_query.md)
+  : Embed a free-text query into the model's vector space
+- [`build_node_context()`](https://davidrsch.github.io/rrlmgraph/reference/build_node_context.md)
+  : Build a text representation of a single graph node
+- [`assemble_context_string()`](https://davidrsch.github.io/rrlmgraph/reference/assemble_context_string.md)
+  : Assemble a structured, LLM-ready context string from ranked hits
+- [`compute_relevance()`](https://davidrsch.github.io/rrlmgraph/reference/compute_relevance.md)
+  : Compute composite relevance score for a graph node
+- [`cosine_similarity()`](https://davidrsch.github.io/rrlmgraph/reference/cosine_similarity.md)
+  : Compute cosine similarity between two numeric vectors
+
+## Caching & Persistence
+
+Save, load, and export the graph.
+
+- [`save_graph_cache()`](https://davidrsch.github.io/rrlmgraph/reference/save_graph_cache.md)
+  : Save an rrlm_graph to a local cache directory
+- [`load_graph_cache()`](https://davidrsch.github.io/rrlmgraph/reference/load_graph_cache.md)
+  : Load an rrlm_graph from a local cache
+- [`is_cache_stale()`](https://davidrsch.github.io/rrlmgraph/reference/is_cache_stale.md)
+  : Check whether the graph cache is stale
+- [`export_to_sqlite()`](https://davidrsch.github.io/rrlmgraph/reference/export_to_sqlite.md)
+  : Export an rrlm_graph to a SQLite database
+
+## Task Trace
+
+Record and weight LLM interaction feedback.
+
+- [`log_task_trace()`](https://davidrsch.github.io/rrlmgraph/reference/log_task_trace.md)
+  : Log a task-trace entry to the JSONL feedback file
+- [`update_task_weights()`](https://davidrsch.github.io/rrlmgraph/reference/update_task_weights.md)
+  : Update task-trace weights on graph vertices
+- [`update_task_polarity()`](https://davidrsch.github.io/rrlmgraph/reference/update_task_polarity.md)
+  : Update the polarity of recent task-trace entries
+
+## Utilities
+
+- [`ollama_available()`](https://davidrsch.github.io/rrlmgraph/reference/ollama_available.md)
+  : Check whether Ollama is available
+
+## S3 Methods
+
+Print, summary, and plot for `rrlm_graph` / `rrlm_context`.
+
+- [`print(`*`<rrlm_graph>`*`)`](https://davidrsch.github.io/rrlmgraph/reference/print.rrlm_graph.md)
+  : Print a compact one-line summary of an rrlm_graph
+- [`summary(`*`<rrlm_graph>`*`)`](https://davidrsch.github.io/rrlmgraph/reference/summary.rrlm_graph.md)
+  : Detailed summary of an rrlm_graph
+- [`plot(`*`<rrlm_graph>`*`)`](https://davidrsch.github.io/rrlmgraph/reference/plot.rrlm_graph.md)
+  : Plot an rrlm_graph
+- [`print(`*`<rrlm_context>`*`)`](https://davidrsch.github.io/rrlmgraph/reference/print.rrlm_context.md)
+  : Print an rrlm_context object
+- [`summary(`*`<rrlm_context>`*`)`](https://davidrsch.github.io/rrlmgraph/reference/summary.rrlm_context.md)
+  : Summarise an rrlm_context object
 
 # Articles
 

@@ -53,8 +53,48 @@
   </div>
 </nav><div class="container template-home">
 <div class="row">
-  <main id="main" class="col-md-9">
-Builds a typed knowledge graph of an R project's structure for use with large language models. The graph encodes functions, files, packages, and tests as nodes, with call, import, and test edges capturing dependencies. Supports TF-IDF embeddings out-of-the-box, with optional Ollama and OpenAI embedding backends. Chat integration supports multiple providers (OpenAI, Ollama, GitHub Models, Anthropic) via the ellmer package.
+  <main id="main" class="col-md-9"><div class="section level1">
+<div class="page-header">
+<img src="logo.svg" class="logo" alt=""><h1 id="rrlmgraph-">rrlmgraph <a class="anchor" aria-label="anchor" href="#rrlmgraph-"></a>
+</h1>
+</div>
+<blockquote>
+<p>Typed knowledge graphs for R projects — give your LLM the right context, not the whole codebase.</p>
+</blockquote>
+<div class="section level2">
+<h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
+</h2>
+<p><code>rrlmgraph</code> builds a typed knowledge graph of an R project and uses it to supply large language models with precise, token-budgeted context. It reduces hallucinations and token consumption by grounding every LLM response in verified, version-specific project knowledge.</p>
+</div>
+<div class="section level2">
+<h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
+</h2>
+<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># install.packages("pak")</span></span>
+<span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pak.html" class="external-link">pak</a></span><span class="op">(</span><span class="st">"davidrsch/rrlmgraph"</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="quick-start">Quick start<a class="anchor" aria-label="anchor" href="#quick-start"></a>
+</h2>
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://davidrsch.github.io/rrlmgraph/">rrlmgraph</a></span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Build the graph for any R project</span></span>
+<span><span class="va">g</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/build_rrlm_graph.html">build_rrlm_graph</a></span><span class="op">(</span><span class="st">"path/to/my_project"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Query for context relevant to a task</span></span>
+<span><span class="va">ctx</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/query_context.html">query_context</a></span><span class="op">(</span><span class="va">g</span>, <span class="st">"How does the model evaluation work?"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="va">ctx</span><span class="op">$</span><span class="va">context_string</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Chat with an LLM using graph-derived context</span></span>
+<span><span class="va">answer</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/chat_with_context.html">chat_with_context</a></span><span class="op">(</span><span class="va">g</span>, <span class="st">"Add cross-validation to fit_model()"</span><span class="op">)</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="learn-more">Learn more<a class="anchor" aria-label="anchor" href="#learn-more"></a>
+</h2>
+<p>See the <a href="articles/getting-started.html">Getting Started</a> vignette for a complete walkthrough, and the <a href="reference/index.html">Reference</a> for full function documentation.</p>
+</div>
+</div>
   </main><aside class="col-md-3"><div class="links">
 <h2 data-toc-skip>Links</h2>
 <ul class="list-unstyled">
