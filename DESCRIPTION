@@ -18,7 +18,7 @@ Description: Builds a typed knowledge graph of an R project's structure
     providers (OpenAI, Ollama, GitHub Models, Anthropic) via the ellmer package.
 License: MIT + file LICENSE
 Depends:
-    R (>= 4.1.0)
+    R (>= 4.2.0)
 Imports:
     codetools,
     cli,
