@@ -46,15 +46,14 @@ jobs:
         run: Rscript -e 'devtools::document()'
 
       - name: Spell check
+        shell: Rscript {0}
         run: |
-          Rscript -e '
-            res <- spelling::spell_check_package()
-            if (nrow(res) > 0L) {
-              print(res)
-              stop("Spell check failed -- add words to inst/WORDLIST.",
-                   call. = FALSE)
-            }
-          '
+          res <- spelling::spell_check_package()
+          if (nrow(res) > 0L) {
+            print(res)
+            stop("Spell check failed -- add words to inst/WORDLIST.",
+                 call. = FALSE)
+          }
 
       - uses: r-lib/actions/check-r-package@v2
         with:
