@@ -19,16 +19,16 @@ make_embed_nodes <- function(n = 3L) {
 
 # ---- ollama_available -----------------------------------------------
 
-test_that("ollama_available returns FALSE when ollamar not installed", {
-  # We cannot guarantee ollamar is present in the test environment
-  # so we mock requireNamespace to return FALSE
-  mockr_available <- requireNamespace("mockery", quietly = TRUE) ||
-    requireNamespace("testthat", quietly = TRUE)
-
-  # Without mocking, at minimum the function should return a logical scalar
-  result <- tryCatch(ollama_available(), error = function(e) NA)
-  expect_true(is.logical(result) || is.na(result))
-  expect_length(result %||% FALSE, 1L)
+test_that("ollama_available returns FALSE when Ollama not reachable", {
+  # Mock httr2::req_perform to simulate a connection failure
+  local_mocked_bindings(
+    req_perform = function(req, ...) stop("Connection refused"),
+    .package = "httr2",
+    {
+      result <- ollama_available()
+      expect_false(result)
+    }
+  )
 })
 
 # ---- .embed_ollama fallback when Ollama unavailable -----------------
@@ -55,19 +55,19 @@ test_that("embed_nodes('ollama') falls back to TF-IDF when Ollama unavailable", 
 
 # ---- .embed_ollama with mocked ollamar::embed -----------------------
 
-test_that("embed_nodes('ollama') calls ollamar::embed in batches", {
+test_that("embed_nodes('ollama') calls .ollama_embed_text in batches", {
   skip_if_not_installed("mockery")
   nodes <- make_embed_nodes(5L)
   n_dims <- 768L
 
-  # Build a fake embed response
-  fake_embed <- function(model_name, text) {
-    list(embedding = list(as.numeric(seq_len(n_dims))))
+  # .ollama_embed_text now returns a plain numeric vector
+  fake_embed <- function(model_name, text, base_url) {
+    as.numeric(seq_len(n_dims))
   }
 
   mockery::stub(
     rrlmgraph:::.embed_ollama,
-    "ollamar::embed",
+    ".ollama_embed_text",
     fake_embed
   )
   mockery::stub(
@@ -92,8 +92,8 @@ test_that("embed_nodes('ollama') produces 768-dim vectors", {
   nodes <- make_embed_nodes(2L)
   n_dims <- 768L
 
-  mockery::stub(rrlmgraph:::.embed_ollama, "ollamar::embed", function(m, t) {
-    list(embedding = list(rep(0.1, n_dims)))
+  mockery::stub(rrlmgraph:::.embed_ollama, ".ollama_embed_text", function(m, t, b) {
+    rep(0.1, n_dims)
   })
   mockery::stub(rrlmgraph:::embed_nodes, "ollama_available", function() TRUE)
 
@@ -117,12 +117,12 @@ test_that("embed_nodes('ollama') skips re-embedding cached nodes", {
   n_dims <- 768L
   call_count <- 0L
 
-  fake_embed <- function(m, t) {
+  fake_embed <- function(m, t, b) {
     call_count <<- call_count + 1L
-    list(embedding = list(rep(0.5, n_dims)))
+    rep(0.5, n_dims)
   }
 
-  mockery::stub(rrlmgraph:::.embed_ollama, "ollamar::embed", fake_embed)
+  mockery::stub(rrlmgraph:::.embed_ollama, ".ollama_embed_text", fake_embed)
   mockery::stub(rrlmgraph:::embed_nodes, "ollama_available", function() TRUE)
 
   # First call — should embed 2 nodes
@@ -144,8 +144,8 @@ test_that("embed_nodes('ollama') returns a matrix when vectors are non-null", {
   nodes <- make_embed_nodes(3L)
   n_dims <- 768L
 
-  mockery::stub(rrlmgraph:::.embed_ollama, "ollamar::embed", function(m, t) {
-    list(embedding = list(rep(0.2, n_dims)))
+  mockery::stub(rrlmgraph:::.embed_ollama, ".ollama_embed_text", function(m, t, b) {
+    rep(0.2, n_dims)
   })
   mockery::stub(rrlmgraph:::embed_nodes, "ollama_available", function() TRUE)
 
@@ -167,8 +167,8 @@ test_that("embed_query('ollama') returns a 768-dim vector when Ollama available"
   n_dims <- 768L
 
   mockery::stub(rrlmgraph:::embed_query, "ollama_available", function() TRUE)
-  mockery::stub(rrlmgraph:::embed_query, "ollamar::embed", function(m, t) {
-    list(embedding = list(rep(0.3, n_dims)))
+  mockery::stub(rrlmgraph:::embed_query, ".ollama_embed_text", function(m, t, b) {
+    rep(0.3, n_dims)
   })
 
   vec <- embed_query(

@@ -55,12 +55,12 @@
 #' }
 embed_nodes <- function(
   func_nodes,
-  method           = c("tfidf", "ollama", "openai"),
-  min_term_count   = 1L,
-  min_doc_count    = 1L,
-  existing_corpus  = NULL,
-  verbose          = FALSE,
-  cache_dir        = NULL
+  method = c("tfidf", "ollama", "openai"),
+  min_term_count = 1L,
+  min_doc_count = 1L,
+  existing_corpus = NULL,
+  verbose = FALSE,
+  cache_dir = NULL
 ) {
   method <- match.arg(method)
 
@@ -69,21 +69,23 @@ embed_nodes <- function(
   }
 
   node_ids <- vapply(func_nodes, `[[`, character(1), "node_id")
-  texts    <- vapply(func_nodes, .node_text, character(1))
+  texts <- vapply(func_nodes, .node_text, character(1))
 
   switch(
     method,
-    tfidf  = {
+    tfidf = {
       all_texts <- if (length(existing_corpus) > 0L) {
         c(existing_corpus, texts)
       } else {
         texts
       }
       # Fit on full corpus but embed only the new nodes
-      model <- .fit_tfidf(all_texts,
-                           c(rep(NA_character_, length(existing_corpus)),
-                             node_ids),
-                           min_term_count, min_doc_count)
+      model <- .fit_tfidf(
+        all_texts,
+        c(rep(NA_character_, length(existing_corpus)), node_ids),
+        min_term_count,
+        min_doc_count
+      )
       # Keep only the new nodes' embeddings
       model$embeddings <- model$embeddings[node_ids]
       list(embeddings = model$embeddings, model = model, matrix = NULL)
@@ -140,11 +142,12 @@ embed_query <- function(query, model, method = c("tfidf", "ollama", "openai")) {
         cli::cli_warn("Ollama not available; returning zero vector.")
         return(numeric(768L))
       }
+      base_url <- Sys.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
       res <- tryCatch(
-        ollamar::embed("nomic-embed-text", as.character(query)),
+        .ollama_embed_text("nomic-embed-text", as.character(query), base_url),
         error = function(e) NULL
       )
-      if (is.null(res)) numeric(768L) else as.numeric(res$embedding[[1L]])
+      if (is.null(res)) numeric(768L) else as.numeric(res)
     },
     openai = {
       key <- Sys.getenv("OPENAI_API_KEY", unset = "")
@@ -255,10 +258,14 @@ cosine_similarity <- function(a, b) {
 
 #' Check whether Ollama is available
 #'
-#' Returns `TRUE` if the \pkg{ollamar} package is installed **and** the
-#' local Ollama daemon is reachable (i.e. responds within a short
-#' timeout).  This is used internally to decide whether to fall back to
-#' TF-IDF when the caller requests `method = "ollama"`.
+#' Returns `TRUE` if the local Ollama daemon is reachable (i.e. responds
+#' to a `GET /api/tags` request within a short timeout).  This is used
+#' internally to decide whether to fall back to TF-IDF when the caller
+#' requests `method = "ollama"`.
+#'
+#' @section Configuration:
+#' Set the `OLLAMA_BASE_URL` environment variable to override the default
+#' endpoint (`http://localhost:11434`).
 #'
 #' @return Logical(1).
 #' @seealso [embed_nodes()], [embed_query()]
@@ -270,40 +277,63 @@ cosine_similarity <- function(a, b) {
 #' }
 #' }
 ollama_available <- function() {
-  if (!requireNamespace("ollamar", quietly = TRUE)) {
-    return(FALSE)
+  base_url <- Sys.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
+  tryCatch(
+    {
+      req <- httr2::request(paste0(base_url, "/api/tags")) |>
+        httr2::req_timeout(5L) |>
+        httr2::req_error(is_error = function(resp) FALSE)
+      resp <- httr2::req_perform(req)
+      httr2::resp_status(resp) == 200L
+    },
+    error = function(e) FALSE
+  )
+}
+
+#' Call the Ollama `/api/embed` endpoint for a single text
+#' @keywords internal
+.ollama_embed_text <- function(model_name, text, base_url) {
+  req <- httr2::request(paste0(base_url, "/api/embed")) |>
+    httr2::req_body_json(list(model = model_name, input = text)) |>
+    httr2::req_error(is_error = function(resp) FALSE)
+  resp <- httr2::req_perform(req)
+  if (httr2::resp_status(resp) != 200L) {
+    return(NULL)
   }
-  tryCatch({
-    res <- ollamar::list_models()
-    !is.null(res)
-  }, error = function(e) FALSE)
+  body <- httr2::resp_body_json(resp)
+  body$embeddings[[1L]]
 }
 
 #' Build Ollama embeddings for a set of nodes
 #' @keywords internal
-.embed_ollama <- function(func_nodes, node_ids, texts,
-                           verbose = FALSE, cache_dir = NULL) {
+.embed_ollama <- function(
+  func_nodes,
+  node_ids,
+  texts,
+  verbose = FALSE,
+  cache_dir = NULL
+) {
   # ---- check availability -------------------------------------------
   if (!ollama_available()) {
     cli::cli_warn(
       "Ollama is not available; falling back to TF-IDF embeddings."
     )
     model <- .fit_tfidf(texts, node_ids, 1L, 1L)
-    return(list(embeddings = model$embeddings,
-                model       = model,
-                matrix      = NULL))
+    return(list(embeddings = model$embeddings, model = model, matrix = NULL))
   }
+
+  base_url <- Sys.getenv("OLLAMA_BASE_URL", "http://localhost:11434")
 
   # ---- cache set-up --------------------------------------------------
   cache_path <- .resolve_embed_cache(cache_dir, "embeddings_ollama.rds")
-  cache      <- .load_embed_cache(cache_path)
+  cache <- .load_embed_cache(cache_path)
 
   # Use a SHA-1 of the node text as the cache key
   hashes <- vapply(texts, .text_hash, character(1))
   names(hashes) <- node_ids
 
   to_embed <- node_ids[!hashes %in% names(cache)]
-  cached   <- node_ids[ hashes %in% names(cache)]
+  cached <- node_ids[hashes %in% names(cache)]
 
   if (verbose) {
     cli::cli_inform(
@@ -320,13 +350,19 @@ ollama_available <- function() {
     for (batch_ids in batches) {
       batch_texts <- texts[match(batch_ids, node_ids)]
       for (i in seq_along(batch_ids)) {
-        vec <- tryCatch({
-          res <- ollamar::embed("nomic-embed-text", batch_texts[[i]])
-          as.numeric(res$embedding[[1L]])
-        }, error = function(e) {
-          cli::cli_warn("Ollama embed failed for {batch_ids[[i]]}: {e$message}")
-          rep(0, 768L)
-        })
+        vec <- tryCatch(
+          {
+            as.numeric(
+              .ollama_embed_text("nomic-embed-text", batch_texts[[i]], base_url)
+            )
+          },
+          error = function(e) {
+            cli::cli_warn(
+              "Ollama embed failed for {batch_ids[[i]]}: {e$message}"
+            )
+            rep(0, 768L)
+          }
+        )
         key <- hashes[[batch_ids[[i]]]]
         new_embeddings[[key]] <- vec
       }
@@ -343,7 +379,7 @@ ollama_available <- function() {
     node_ids
   )
 
-  n   <- length(node_ids)
+  n <- length(node_ids)
   mat <- if (n > 0L && !is.null(emb_list[[1L]])) {
     do.call(rbind, emb_list)
   } else {
@@ -352,8 +388,8 @@ ollama_available <- function() {
 
   list(
     embeddings = emb_list,
-    model      = list(method = "ollama"),
-    matrix     = mat
+    model = list(method = "ollama"),
+    matrix = mat
   )
 }
 
@@ -361,14 +397,21 @@ ollama_available <- function() {
 
 #' Build OpenAI embeddings for a set of nodes
 #' @keywords internal
-.embed_openai <- function(func_nodes, node_ids, texts,
-                           verbose = FALSE, cache_dir = NULL) {
+.embed_openai <- function(
+  func_nodes,
+  node_ids,
+  texts,
+  verbose = FALSE,
+  cache_dir = NULL
+) {
   # ---- API key validation -------------------------------------------
   key <- Sys.getenv("OPENAI_API_KEY", unset = "")
   if (!nzchar(key)) {
     cli::cli_abort(
-      c("OPENAI_API_KEY environment variable is not set.",
-        "i" = "Set it with {.code Sys.setenv(OPENAI_API_KEY = '<your-key>')}.")
+      c(
+        "OPENAI_API_KEY environment variable is not set.",
+        "i" = "Set it with {.code Sys.setenv(OPENAI_API_KEY = '<your-key>')}."
+      )
     )
   }
 
@@ -378,29 +421,31 @@ ollama_available <- function() {
 
   # ---- cache set-up --------------------------------------------------
   cache_path <- .resolve_embed_cache(cache_dir, "embeddings_openai.rds")
-  cache      <- .load_embed_cache(cache_path)
+  cache <- .load_embed_cache(cache_path)
 
   hashes <- vapply(texts, .text_hash, character(1))
   names(hashes) <- node_ids
 
   to_embed <- node_ids[!hashes %in% names(cache)]
-  cached   <- node_ids[ hashes %in% names(cache)]
+  cached <- node_ids[hashes %in% names(cache)]
 
   # ---- cost estimate --------------------------------------------------
   if (verbose) {
     # text-embedding-3-small: ~$0.02 per 1M tokens; estimate ~100 tok/node
     est_tokens <- length(to_embed) * 100L
-    est_cost   <- round(est_tokens / 1e6 * 0.02, 6)
+    est_cost <- round(est_tokens / 1e6 * 0.02, 6)
     cli::cli_inform(
-      paste0("OpenAI: {length(cached)} cached, {length(to_embed)} to embed. ",
-             "Estimated cost: ${est_cost} (est. {est_tokens} tokens).")
+      paste0(
+        "OpenAI: {length(cached)} cached, {length(to_embed)} to embed. ",
+        "Estimated cost: ${est_cost} (est. {est_tokens} tokens)."
+      )
     )
   }
 
   # ---- embed in batches of 100 ---------------------------------------
   if (length(to_embed) > 0L) {
     batch_size <- 100L
-    batches    <- split(to_embed, ceiling(seq_along(to_embed) / batch_size))
+    batches <- split(to_embed, ceiling(seq_along(to_embed) / batch_size))
     new_embeddings <- list()
 
     for (batch_ids in batches) {
@@ -424,7 +469,7 @@ ollama_available <- function() {
     node_ids
   )
 
-  n   <- length(node_ids)
+  n <- length(node_ids)
   mat <- if (n > 0L && !is.null(emb_list[[1L]])) {
     do.call(rbind, emb_list)
   } else {
@@ -433,8 +478,8 @@ ollama_available <- function() {
 
   list(
     embeddings = emb_list,
-    model      = list(method = "openai"),
-    matrix     = mat
+    model = list(method = "openai"),
+    matrix = mat
   )
 }
 
@@ -510,7 +555,9 @@ ollama_available <- function() {
   if (requireNamespace("digest", quietly = TRUE)) {
     digest::digest(text, algo = "sha1", serialize = FALSE)
   } else {
-    as.character(sum(utf8ToInt(substr(text, 1L, 500L))) *
-                 nchar(text))
+    as.character(
+      sum(utf8ToInt(substr(text, 1L, 500L))) *
+        nchar(text)
+    )
   }
 }

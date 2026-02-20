@@ -8,8 +8,9 @@
 #'
 #' Retrieves a token-budgeted context window from the graph via
 #' \code{query_context()}, builds a grounded system prompt, and sends a
-#' message to an LLM.  Uses \pkg{ellmer} when installed; falls back to a
-#' direct \pkg{httr2} call to the OpenAI-compatible API otherwise.
+#' message to an LLM.  Uses \pkg{ellmer} when installed (supporting
+#' multiple providers); falls back to a direct \pkg{httr2} call for
+#' the \code{"openai"} provider when \pkg{ellmer} is absent.
 #'
 #' @section System prompt structure:
 #' The system prompt combines:
@@ -20,21 +21,33 @@
 #' }
 #'
 #' @section Authentication:
-#' Reads \code{OPENAI_API_KEY} from the environment.  Set it with
-#' \code{Sys.setenv(OPENAI_API_KEY = "sk-...")}.
+#' \describe{
+#'   \item{\code{"openai"}}{Set \code{OPENAI_API_KEY} environment variable.}
+#'   \item{\code{"ollama"}}{No key required (local daemon).  Set
+#'     \code{OLLAMA_BASE_URL} to override the default
+#'     \code{http://localhost:11434}.}
+#'   \item{\code{"github"}}{Set \code{GITHUB_PAT} environment variable.
+#'     Requires access to the GitHub Models Marketplace
+#'     (\url{https://github.com/marketplace/models}).}
+#'   \item{\code{"anthropic"}}{Set \code{ANTHROPIC_API_KEY} environment variable.}
+#' }
 #'
 #' @param graph An \code{rrlm_graph} / \code{igraph} object.
 #' @param message Character(1).  User message / question.
-#' @param model Character(1).  Model identifier.  Default
-#'   \code{"gpt-4o-mini"}.
+#' @param provider Character(1).  LLM provider.  One of \code{"openai"}
+#'   (default), \code{"ollama"}, \code{"github"}, \code{"anthropic"}.
+#' @param model Character(1) or \code{NULL}.  Model identifier.  When
+#'   \code{NULL} (default) a sensible per-provider default is used:
+#'   \code{"gpt-4o-mini"} (openai/github), \code{"llama3.2"} (ollama),
+#'   \code{"claude-3-5-haiku-latest"} (anthropic).
 #' @param budget_tokens Integer(1).  Context token budget passed to
 #'   \code{query_context()}.  Default \code{6000L}.
 #' @param seed_node Character(1) or \code{NULL}.  Forwarded to
 #'   \code{query_context()}.
 #' @param min_relevance Numeric(1).  Forwarded to
 #'   \code{query_context()}.
-#' @param ... Additional arguments forwarded to
-#'   \code{ellmer::chat_openai()} (when ellmer is available).
+#' @param ... Additional arguments forwarded to the \pkg{ellmer}
+#'   \code{chat_*()} constructor (e.g. \code{base_url} for ollama).
 #'
 #' @return Character(1) containing the LLM response text.  Returns a
 #'   descriptive error string (prefixed \code{"[rrlmgraph error]"}) rather
@@ -44,19 +57,26 @@
 #' @export
 #' @examples
 #' \dontrun{
-#' g   <- build_rrlm_graph("mypkg")
-#' ans <- chat_with_context(g, "How does data_prep() work?")
-#' cat(ans)
+#' g <- build_rrlm_graph("mypkg")
+#' # OpenAI (default) -- requires OPENAI_API_KEY
+#' chat_with_context(g, "How does data_prep() work?")
+#' # GitHub Models Marketplace -- requires GITHUB_PAT
+#' chat_with_context(g, "How does data_prep() work?", provider = "github")
+#' # Local Ollama
+#' chat_with_context(g, "How does data_prep() work?",
+#'   provider = "ollama", model = "llama3.2")
 #' }
 chat_with_context <- function(
   graph,
   message,
-  model = "gpt-4o-mini",
+  provider = c("openai", "ollama", "github", "anthropic"),
+  model = NULL,
   budget_tokens = 6000L,
   seed_node = NULL,
   min_relevance = 0.1,
   ...
 ) {
+  provider <- match.arg(provider)
   if (!inherits(graph, "igraph")) {
     cli::cli_abort("{.arg graph} must be an igraph / rrlm_graph object.")
   }
@@ -76,13 +96,27 @@ chat_with_context <- function(
   # ---- 2. Build system prompt -----------------------------------------
   system_prompt <- .build_system_prompt(ctx$context_string)
 
-  # ---- 3. Send to LLM -------------------------------------------------
+  # ---- 3. Validate provider availability ------------------------------
+  if (!requireNamespace("ellmer", quietly = TRUE) && provider != "openai") {
+    cli::cli_abort(
+      c(
+        "{.pkg ellmer} is required for provider {.val {provider}}.",
+        "i" = "Install it with {.code install.packages('ellmer')}."
+      )
+    )
+  }
+
+  # ---- 4. Send to LLM -------------------------------------------------
   response_text <- tryCatch(
     {
       if (requireNamespace("ellmer", quietly = TRUE)) {
-        .llm_via_ellmer(system_prompt, message, model, ...)
+        .llm_via_ellmer(system_prompt, message, provider, model, ...)
       } else {
-        .llm_via_httr2(system_prompt, message, model)
+        .llm_via_httr2(
+          system_prompt,
+          message,
+          if (is.null(model)) "gpt-4o-mini" else model
+        )
       }
     },
     error = function(e) {
@@ -91,7 +125,7 @@ chat_with_context <- function(
     }
   )
 
-  # ---- 4. Log task completion -----------------------------------------
+  # ---- 5. Log task completion -----------------------------------------
   .log_task_completion(
     graph = graph,
     query = message,
@@ -129,9 +163,24 @@ chat_with_context <- function(
 }
 
 #' @keywords internal
-.llm_via_ellmer <- function(system_prompt, message, model, ...) {
-  chat_fn <- getExportedValue("ellmer", "chat_openai")
-  chat <- chat_fn(system_prompt = system_prompt, model = model, ...)
+.llm_via_ellmer <- function(system_prompt, message, provider, model, ...) {
+  default_models <- c(
+    openai = "gpt-4o-mini",
+    ollama = "llama3.2",
+    github = "gpt-4o-mini",
+    anthropic = "claude-3-5-haiku-latest"
+  )
+  resolved_model <- if (!is.null(model)) model else default_models[[provider]]
+
+  chat_fn_name <- switch(
+    provider,
+    openai = "chat_openai",
+    ollama = "chat_ollama",
+    github = "chat_github",
+    anthropic = "chat_anthropic"
+  )
+  chat_fn <- getExportedValue("ellmer", chat_fn_name)
+  chat <- chat_fn(system_prompt = system_prompt, model = resolved_model, ...)
   chat$chat(message)
 }
 
