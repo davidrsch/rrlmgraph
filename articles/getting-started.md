@@ -23,12 +23,13 @@ Shiny app – and returns an `rrlm_graph` object.
 ``` r
 library(rrlmgraph)
 
-# Point to any R project directory -- here we use a small demo package
-graph <- build_rrlm_graph(proj_dir, verbose = TRUE)
-#> Detecting project at /tmp/Rtmp0uWZ55/mypkg_demo
-#> Parsing 3 R file(s)
-#> Warning: No function nodes found in /tmp/Rtmp0uWZ55/mypkg_demo.
-#> Empty graph returned.
+# Build a graph for rrlmgraph's own source -- a real package with many
+# functions and edges, so all downstream examples produce meaningful output.
+graph <- build_rrlm_graph(pkg_dir, verbose = TRUE)
+#> Detecting project at /home/runner/work/_temp/Library/rrlmgraph
+#> Parsing 0 R file(s)
+#> Warning: No function nodes found in /home/runner/work/_temp/Library/rrlmgraph.  Empty
+#> graph returned.
 #> Building CALLS edges
 #> Building IMPORT edges
 #> Building TEST edges
@@ -36,7 +37,7 @@ graph <- build_rrlm_graph(proj_dir, verbose = TRUE)
 #> Computing PageRank
 #> Embedding nodes with method 'tfidf'
 #> Computing semantic similarity edges (threshold 0.7)
-#> Done in 0.41s -- 0 nodes, 0 edges
+#> Done in 0.35s -- 9 nodes, 0 edges
 ```
 
 The function:
@@ -50,7 +51,7 @@ The function:
 
 ``` r
 summary(graph)
-#> IGRAPH 25ff66b DNW- 0 0 -- 
+#> IGRAPH af4913a DNW- 9 0 -- 
 #> + attr: project_name (g/c), project_root (g/c), project_type (g/c),
 #> | r_version (g/c), build_time (g/n), build_at (g/c), embed_method
 #> | (g/c), embed_model (g/x), cache_path (g/c), name (v/c), node_type
@@ -61,14 +62,14 @@ summary(graph)
 
 ``` r
 print(graph)
-#> IGRAPH 25ff66b DNW- 0 0 -- 
+#> IGRAPH af4913a DNW- 9 0 -- 
 #> + attr: project_name (g/c), project_root (g/c), project_type (g/c),
 #> | r_version (g/c), build_time (g/n), build_at (g/c), embed_method
 #> | (g/c), embed_model (g/x), cache_path (g/c), name (v/c), node_type
 #> | (v/c), file (v/c), line_start (v/n), line_end (v/n), signature (v/c),
 #> | complexity (v/n), pagerank (v/n), embedding (v/x), weight (e/n),
 #> | edge_type (e/c)
-#> + edges from 25ff66b (vertex names):
+#> + edges from af4913a (vertex names):
 ```
 
 [`plot()`](https://rdrr.io/r/graphics/plot.default.html) draws a
@@ -94,24 +95,37 @@ token-budgeted context window ideal for LLM prompts.
 ``` r
 ctx <- query_context(
   graph,
-  query = "How does the data preparation step work?",
+  query = "How does graph traversal select nodes for context?",
   budget_tokens = 400L,
   verbose = TRUE
 )
+#> Seed node: "cli"
 
 # Nodes selected for the context window
 ctx$nodes
-#> character(0)
+#> [1] "cli"
 
 # Number of tokens used
 ctx$tokens_used
-#> [1] 0
+#> [1] 82
 ```
 
 The assembled context string – ready to paste into a system prompt:
 
 ``` r
 cat(ctx$context_string)
+#> # rrlm_graph Context
+#> # Project: rrlmgraph | R 4.5.2 | ~51 tokens
+#> # Query: How does graph traversal select nodes for context?
+#> 
+#> ## CORE FUNCTIONS
+#> ---
+#> ### cli
+#> cli
+#> 
+#> ## CONSTRAINTS
+#> ---
+#> Only use the functions and packages listed above. Do not invent APIs, function names, or arguments not shown here. If unsure, ask for clarification.
 ```
 
 ## 4. Chatting with context (LLM required)
@@ -179,22 +193,22 @@ writeLines(c(
   "}"
 ), file.path(proj_dir, "R", "data_prep.R"))
 
-graph <- update_graph_incremental(
-  graph,
+graph_small <- update_graph_incremental(
+  graph_small,
   changed_files = file.path(proj_dir, "R", "data_prep.R"),
   verbose = TRUE
 )
 #> 
 #> ── Incremental graph update ──
 #> 
-#> Changed files: /tmp/Rtmp0uWZ55/mypkg_demo/R/data_prep.R
+#> Changed files: /tmp/RtmpHchp6R/mypkg_demo/R/data_prep.R
 #> Re-parsing 1 file(s).
 #> No new nodes; finalising graph.
-#> Persisting cache to /tmp/Rtmp0uWZ55/mypkg_demo.
-#> Graph cached at /tmp/Rtmp0uWZ55/mypkg_demo/.rrlmgraph
+#> Persisting cache to /tmp/RtmpHchp6R/mypkg_demo.
+#> Graph cached at /tmp/RtmpHchp6R/mypkg_demo/.rrlmgraph
 
-summary(graph)
-#> IGRAPH 25ff66b DNW- 0 0 -- 
+summary(graph_small)
+#> IGRAPH 6db780a DNW- 0 0 -- 
 #> + attr: project_name (g/c), project_root (g/c), project_type (g/c),
 #> | r_version (g/c), build_time (g/n), build_at (g/c), embed_method
 #> | (g/c), embed_model (g/x), cache_path (g/c), name (v/c), node_type
