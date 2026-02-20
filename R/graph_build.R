@@ -111,6 +111,11 @@ build_call_edges <- function(func_nodes) {
 #'
 #' @seealso [build_call_edges()], [build_test_edges()]
 #' @export
+#' @examples
+#' \dontrun{
+#' proj  <- detect_rproject("/path/to/mypkg")
+#' edges <- build_import_edges(proj$r_files, root = proj$root)
+#' }
 build_import_edges <- function(r_files, root = NULL) {
   rows <- list()
 
@@ -232,6 +237,12 @@ build_import_edges <- function(r_files, root = NULL) {
 #'
 #' @seealso [build_call_edges()], [build_import_edges()]
 #' @export
+#' @examples
+#' \dontrun{
+#' proj  <- detect_rproject("/path/to/mypkg")
+#' nodes <- extract_function_nodes(proj$r_files)
+#' edges <- build_test_edges(nodes, proj$test_files)
+#' }
 build_test_edges <- function(func_nodes, test_files) {
   if (length(func_nodes) == 0L || length(test_files) == 0L) {
     return(.empty_edge_df())

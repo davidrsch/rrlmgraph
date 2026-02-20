@@ -22,6 +22,7 @@
 #'     \item{`root`}{Character(1): the absolute path of the project root.}
 #'   }
 #'
+#' @seealso [extract_function_nodes()], [build_rrlm_graph()]
 #' @export
 #' @examples
 #' \dontrun{

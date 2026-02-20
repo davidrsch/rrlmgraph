@@ -1,0 +1,14 @@
+# R.buildignore entries — development-only files excluded from the tarball
+^\.git$
+^\.gitignore$
+^\.github$
+^\.Rproj\.user$
+^rrlmgraph\.Rproj$
+^\.rrlmgraph$
+^create_issues.*\.ps1$
+^add_to_project.*\.ps1$
+^fix_issue.*\.ps1$
+^README\.Rmd$
+^cran-comments\.md$
+^revdep$
+^\.covrignore$

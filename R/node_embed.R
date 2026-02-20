@@ -261,6 +261,7 @@ cosine_similarity <- function(a, b) {
 #' TF-IDF when the caller requests `method = "ollama"`.
 #'
 #' @return Logical(1).
+#' @seealso [embed_nodes()], [embed_query()]
 #' @export
 #' @examples
 #' \dontrun{
