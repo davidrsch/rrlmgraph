@@ -25,9 +25,9 @@ library(rrlmgraph)
 
 # Point to any R project directory -- here we use a small demo package
 graph <- build_rrlm_graph(proj_dir, verbose = TRUE)
-#> Detecting project at /tmp/Rtmp2SSn7g/mypkg_demo
+#> Detecting project at /tmp/Rtmp0uWZ55/mypkg_demo
 #> Parsing 3 R file(s)
-#> Warning: No function nodes found in /tmp/Rtmp2SSn7g/mypkg_demo.
+#> Warning: No function nodes found in /tmp/Rtmp0uWZ55/mypkg_demo.
 #> Empty graph returned.
 #> Building CALLS edges
 #> Building IMPORT edges
@@ -36,7 +36,7 @@ graph <- build_rrlm_graph(proj_dir, verbose = TRUE)
 #> Computing PageRank
 #> Embedding nodes with method 'tfidf'
 #> Computing semantic similarity edges (threshold 0.7)
-#> Done in 0.39s -- 0 nodes, 0 edges
+#> Done in 0.41s -- 0 nodes, 0 edges
 ```
 
 The function:
@@ -50,7 +50,7 @@ The function:
 
 ``` r
 summary(graph)
-#> IGRAPH 9835a08 DNW- 0 0 -- 
+#> IGRAPH 25ff66b DNW- 0 0 -- 
 #> + attr: project_name (g/c), project_root (g/c), project_type (g/c),
 #> | r_version (g/c), build_time (g/n), build_at (g/c), embed_method
 #> | (g/c), embed_model (g/x), cache_path (g/c), name (v/c), node_type
@@ -61,14 +61,14 @@ summary(graph)
 
 ``` r
 print(graph)
-#> IGRAPH 9835a08 DNW- 0 0 -- 
+#> IGRAPH 25ff66b DNW- 0 0 -- 
 #> + attr: project_name (g/c), project_root (g/c), project_type (g/c),
 #> | r_version (g/c), build_time (g/n), build_at (g/c), embed_method
 #> | (g/c), embed_model (g/x), cache_path (g/c), name (v/c), node_type
 #> | (v/c), file (v/c), line_start (v/n), line_end (v/n), signature (v/c),
 #> | complexity (v/n), pagerank (v/n), embedding (v/x), weight (e/n),
 #> | edge_type (e/c)
-#> + edges from 9835a08 (vertex names):
+#> + edges from 25ff66b (vertex names):
 ```
 
 [`plot()`](https://rdrr.io/r/graphics/plot.default.html) draws a
@@ -187,14 +187,14 @@ graph <- update_graph_incremental(
 #> 
 #> ── Incremental graph update ──
 #> 
-#> Changed files: /tmp/Rtmp2SSn7g/mypkg_demo/R/data_prep.R
+#> Changed files: /tmp/Rtmp0uWZ55/mypkg_demo/R/data_prep.R
 #> Re-parsing 1 file(s).
 #> No new nodes; finalising graph.
-#> Persisting cache to /tmp/Rtmp2SSn7g/mypkg_demo.
-#> Graph cached at /tmp/Rtmp2SSn7g/mypkg_demo/.rrlmgraph
+#> Persisting cache to /tmp/Rtmp0uWZ55/mypkg_demo.
+#> Graph cached at /tmp/Rtmp0uWZ55/mypkg_demo/.rrlmgraph
 
 summary(graph)
-#> IGRAPH 9835a08 DNW- 0 0 -- 
+#> IGRAPH 25ff66b DNW- 0 0 -- 
 #> + attr: project_name (g/c), project_root (g/c), project_type (g/c),
 #> | r_version (g/c), build_time (g/n), build_at (g/c), embed_method
 #> | (g/c), embed_model (g/x), cache_path (g/c), name (v/c), node_type

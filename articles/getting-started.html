@@ -88,9 +88,9 @@ package, a scripts folder, or a Shiny app – and returns an
 <span></span>
 <span><span class="co"># Point to any R project directory -- here we use a small demo package</span></span>
 <span><span class="va">graph</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/build_rrlm_graph.html">build_rrlm_graph</a></span><span class="op">(</span><span class="va">proj_dir</span>, verbose <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
-<span><span class="co">#&gt; Detecting project at <span style="color: #0000BB;">/tmp/Rtmp2SSn7g/mypkg_demo</span></span></span>
+<span><span class="co">#&gt; Detecting project at <span style="color: #0000BB;">/tmp/Rtmp0uWZ55/mypkg_demo</span></span></span>
 <span><span class="co">#&gt; Parsing 3 R file(s)</span></span>
-<span><span class="co">#&gt; Warning: No function nodes found in <span style="color: #0000BB;">/tmp/Rtmp2SSn7g/mypkg_demo</span>.</span></span>
+<span><span class="co">#&gt; Warning: No function nodes found in <span style="color: #0000BB;">/tmp/Rtmp0uWZ55/mypkg_demo</span>.</span></span>
 <span><span class="co">#&gt; Empty graph returned.</span></span>
 <span><span class="co">#&gt; Building CALLS edges</span></span>
 <span><span class="co">#&gt; Building IMPORT edges</span></span>
@@ -99,7 +99,7 @@ package, a scripts folder, or a Shiny app – and returns an
 <span><span class="co">#&gt; Computing PageRank</span></span>
 <span><span class="co">#&gt; Embedding nodes with method 'tfidf'</span></span>
 <span><span class="co">#&gt; Computing semantic similarity edges (threshold 0.7)</span></span>
-<span><span class="co">#&gt; Done in 0.39s -- 0 nodes, 0 edges</span></span></code></pre></div>
+<span><span class="co">#&gt; Done in 0.41s -- 0 nodes, 0 edges</span></span></code></pre></div>
 <p>The function:</p>
 <ol style="list-style-type: decimal">
 <li>Detects the project type (package / scripts / Shiny app)</li>
@@ -114,7 +114,7 @@ analysis</li>
 </h2>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">graph</span><span class="op">)</span></span>
-<span><span class="co">#&gt; IGRAPH 9835a08 DNW- 0 0 -- </span></span>
+<span><span class="co">#&gt; IGRAPH 25ff66b DNW- 0 0 -- </span></span>
 <span><span class="co">#&gt; + attr: project_name (g/c), project_root (g/c), project_type (g/c),</span></span>
 <span><span class="co">#&gt; | r_version (g/c), build_time (g/n), build_at (g/c), embed_method</span></span>
 <span><span class="co">#&gt; | (g/c), embed_model (g/x), cache_path (g/c), name (v/c), node_type</span></span>
@@ -123,14 +123,14 @@ analysis</li>
 <span><span class="co">#&gt; | edge_type (e/c)</span></span></code></pre></div>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">graph</span><span class="op">)</span></span>
-<span><span class="co">#&gt; IGRAPH 9835a08 DNW- 0 0 -- </span></span>
+<span><span class="co">#&gt; IGRAPH 25ff66b DNW- 0 0 -- </span></span>
 <span><span class="co">#&gt; + attr: project_name (g/c), project_root (g/c), project_type (g/c),</span></span>
 <span><span class="co">#&gt; | r_version (g/c), build_time (g/n), build_at (g/c), embed_method</span></span>
 <span><span class="co">#&gt; | (g/c), embed_model (g/x), cache_path (g/c), name (v/c), node_type</span></span>
 <span><span class="co">#&gt; | (v/c), file (v/c), line_start (v/n), line_end (v/n), signature (v/c),</span></span>
 <span><span class="co">#&gt; | complexity (v/n), pagerank (v/n), embedding (v/x), weight (e/n),</span></span>
 <span><span class="co">#&gt; | edge_type (e/c)</span></span>
-<span><span class="co">#&gt; + edges from 9835a08 (vertex names):</span></span></code></pre></div>
+<span><span class="co">#&gt; + edges from 25ff66b (vertex names):</span></span></code></pre></div>
 <p><code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> draws a force-directed layout coloured by node
 type:</p>
 <ul>
@@ -242,14 +242,14 @@ files:</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── <span style="font-weight: bold;">Incremental graph update</span> ──</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Changed files: <span style="color: #0000BB;">/tmp/Rtmp2SSn7g/mypkg_demo/R/data_prep.R</span></span></span>
+<span><span class="co">#&gt; Changed files: <span style="color: #0000BB;">/tmp/Rtmp0uWZ55/mypkg_demo/R/data_prep.R</span></span></span>
 <span><span class="co">#&gt; Re-parsing 1 file(s).</span></span>
 <span><span class="co">#&gt; No new nodes; finalising graph.</span></span>
-<span><span class="co">#&gt; Persisting cache to <span style="color: #0000BB;">/tmp/Rtmp2SSn7g/mypkg_demo</span>.</span></span>
-<span><span class="co">#&gt; Graph cached at <span style="color: #0000BB;">/tmp/Rtmp2SSn7g/mypkg_demo/.rrlmgraph</span></span></span>
+<span><span class="co">#&gt; Persisting cache to <span style="color: #0000BB;">/tmp/Rtmp0uWZ55/mypkg_demo</span>.</span></span>
+<span><span class="co">#&gt; Graph cached at <span style="color: #0000BB;">/tmp/Rtmp0uWZ55/mypkg_demo/.rrlmgraph</span></span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">graph</span><span class="op">)</span></span>
-<span><span class="co">#&gt; IGRAPH 9835a08 DNW- 0 0 -- </span></span>
+<span><span class="co">#&gt; IGRAPH 25ff66b DNW- 0 0 -- </span></span>
 <span><span class="co">#&gt; + attr: project_name (g/c), project_root (g/c), project_type (g/c),</span></span>
 <span><span class="co">#&gt; | r_version (g/c), build_time (g/n), build_at (g/c), embed_method</span></span>
 <span><span class="co">#&gt; | (g/c), embed_model (g/x), cache_path (g/c), name (v/c), node_type</span></span>
