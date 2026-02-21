@@ -95,8 +95,11 @@ writing a temporary HTML file (requires both <strong>htmlwidgets</strong> and
 
 
 <dt id="arg-width-height">width, height<a class="anchor" aria-label="anchor" href="#arg-width-height"></a></dt>
-<dd><p>Integer(1).  Pixel dimensions for raster image export
-via <code>file</code>.  Defaults <code>1400L</code> x <code>900L</code>.</p></dd>
+<dd><p>Integer(1).  Used <strong>only</strong> when <code>file</code> is a raster or
+vector path (<code>.png</code>, <code>.pdf</code>, <code>.svg</code>): sets the viewport size in pixels
+that <code><a href="https://rstudio.github.io/webshot2/reference/webshot.html" class="external-link">webshot2::webshot()</a></code> renders.  Has no effect on the interactive
+widget, which fills 100\<!-- % of the container and provides its own -->
+pan-and-zoom via viz.js.  Defaults <code>1400L</code> x <code>900L</code>.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -107,7 +110,9 @@ via <code>file</code>.  Defaults <code>1400L</code> x <code>900L</code>.</p></dd
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>When <code>file</code> is <code>NULL</code> (default), an <code>htmlwidget</code> from
 <code><a href="https://rich-iannone.github.io/DiagrammeR/reference/grViz.html" class="external-link">DiagrammeR::grViz()</a></code> is returned visibly so it prints in the viewer.
-When <code>file</code> is supplied, <code>x</code> is returned invisibly.</p>
+The widget fills 100\<!-- % of its container and supports pan and zoom -->
+regardless of graph size.  When <code>file</code> is supplied, <code>x</code> is returned
+invisibly.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>

@@ -55,8 +55,11 @@ plot(
 
 - width, height:
 
-  Integer(1). Pixel dimensions for raster image export via `file`.
-  Defaults `1400L` x `900L`.
+  Integer(1). Used **only** when `file` is a raster or vector path
+  (`.png`, `.pdf`, `.svg`): sets the viewport size in pixels that
+  [`webshot2::webshot()`](https://rstudio.github.io/webshot2/reference/webshot.html)
+  renders. Has no effect on the interactive widget, which fills 100\\
+  pan-and-zoom via viz.js. Defaults `1400L` x `900L`.
 
 - ...:
 
@@ -66,8 +69,9 @@ plot(
 
 When `file` is `NULL` (default), an `htmlwidget` from
 [`DiagrammeR::grViz()`](https://rich-iannone.github.io/DiagrammeR/reference/grViz.html)
-is returned visibly so it prints in the viewer. When `file` is supplied,
-`x` is returned invisibly.
+is returned visibly so it prints in the viewer. The widget fills 100\\
+regardless of graph size. When `file` is supplied, `x` is returned
+invisibly.
 
 ## Details
 
