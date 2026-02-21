@@ -50,6 +50,7 @@ assembly into a typed knowledge graph.</p>
 <span>  embed_method <span class="op">=</span> <span class="st">"tfidf"</span>,</span>
 <span>  include_package_nodes <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  semantic_threshold <span class="op">=</span> <span class="fl">0.7</span>,</span>
+<span>  max_semantic_edges <span class="op">=</span> <span class="fl">5L</span>,</span>
 <span>  cache <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
@@ -77,6 +78,13 @@ per unique external package is added to the graph.</p></dd>
 <dt id="arg-semantic-threshold">semantic_threshold<a class="anchor" aria-label="anchor" href="#arg-semantic-threshold"></a></dt>
 <dd><p>Numeric(1).  Minimum cosine similarity for a
 <code>SEMANTIC</code> edge to be created.  Default <code>0.7</code>.</p></dd>
+
+
+<dt id="arg-max-semantic-edges">max_semantic_edges<a class="anchor" aria-label="anchor" href="#arg-max-semantic-edges"></a></dt>
+<dd><p>Integer(1).  Maximum SEMANTIC edges to create per
+node.  Capping at a small number (default <code>5L</code>) prevents dense graphs on
+large projects.  Semantic edges are disabled entirely when the graph has
+more than 300 function nodes.</p></dd>
 
 
 <dt id="arg-cache">cache<a class="anchor" aria-label="anchor" href="#arg-cache"></a></dt>

@@ -37,7 +37,7 @@ graph <- build_rrlm_graph(demo_dir, verbose = TRUE)
 #> Computing PageRank
 #> Embedding nodes with method 'tfidf'
 #> Computing semantic similarity edges (threshold 0.7)
-#> Done in 0.58s -- 22 nodes, 11 edges
+#> Done in 0.53s -- 22 nodes, 11 edges
 ```
 
 The function:
@@ -53,8 +53,8 @@ The function:
 summary(graph)
 #> === rrlm_graph: demo ===
 #> Root:  /home/runner/work/_temp/Library/rrlmgraph/extdata/demo
-#> Built: 2026-02-21 02:02:40
-#> Build time: 0.58 s
+#> Built: 2026-02-21 18:16:55
+#> Build time: 0.53 s
 #> 
 #> Nodes (22 total):
 #>   package: 13
@@ -64,11 +64,11 @@ summary(graph)
 #>   CALLS: 11
 #> 
 #> Top-5 nodes by PageRank:
-#>   1. data_prep::clean_data (0.140048)
-#>   2. data_prep::validate_inputs (0.060685)
-#>   3. data_prep::prepare_data (0.05684)
-#>   4. model::select_features (0.049078)
-#>   5. model::tune_hyperparams (0.049078)
+#>   1. demo/data_prep::clean_data (0.140048)
+#>   2. demo/data_prep::validate_inputs (0.060685)
+#>   3. demo/data_prep::prepare_data (0.05684)
+#>   4. demo/model::select_features (0.049078)
+#>   5. demo/model::tune_hyperparams (0.049078)
 #> 
 #> Metadata:
 #>   Embed method: tfidf
@@ -105,27 +105,15 @@ ctx <- query_context(
   budget_tokens = 400L,
   verbose = TRUE
 )
-#> Seed node: "data_prep::clean_data"
-#> + "data_prep::prepare_data" (score=0.219, tokens=8)
-#> + "predict::run_pipeline" (score=0.22, tokens=7)
-#> + "data_prep::validate_inputs" (score=0.19, tokens=10)
-#> + "model::fit_model" (score=0.169, tokens=8)
-#> + "model::tune_hyperparams" (score=0.186, tokens=8)
-#> + "model::select_features" (score=0.166, tokens=9)
-#> + "predict::predict_results" (score=0.153, tokens=9)
-#> + "predict::evaluate_predictions" (score=0.15, tokens=10)
+#> Seed node: "demo/data_prep::clean_data"
 
 # Nodes selected for the context window
 ctx$nodes
-#> [1] "data_prep::clean_data"         "data_prep::prepare_data"      
-#> [3] "predict::run_pipeline"         "data_prep::validate_inputs"   
-#> [5] "model::fit_model"              "model::tune_hyperparams"      
-#> [7] "model::select_features"        "predict::predict_results"     
-#> [9] "predict::evaluate_predictions"
+#> [1] "demo/data_prep::clean_data"
 
 # Number of tokens used
 ctx$tokens_used
-#> [1] 354
+#> [1] 93
 ```
 
 The assembled context string – ready to paste into a system prompt:
@@ -133,51 +121,13 @@ The assembled context string – ready to paste into a system prompt:
 ``` r
 cat(ctx$context_string)
 #> # rrlm_graph Context
-#> # Project: demo | R 4.5.2 | ~321 tokens
+#> # Project: demo | R 4.5.2 | ~60 tokens
 #> # Query: How does the data preparation and validation pipeline work?
 #> 
 #> ## CORE FUNCTIONS
 #> ---
-#> ### data_prep::clean_data
+#> ### demo/data_prep::clean_data
 #> clean_data(raw) {}
-#> 
-#> ## SUPPORTING FUNCTIONS
-#> ---
-#> ### data_prep::prepare_data
-#> prepare_data(raw, scale_x)
-#> Calls: data_prep::validate_inputs, data_prep::clean_data
-#> Called by: model::fit_model, predict::run_pipeline
-#> 
-#> ### predict::run_pipeline
-#> run_pipeline(raw, ...)
-#> Calls: data_prep::prepare_data, model::fit_model, predict::predict_results, predict::evaluate_predictions
-#> 
-#> ### data_prep::validate_inputs
-#> validate_inputs(raw, required_cols)
-#> Called by: data_prep::prepare_data
-#> 
-#> ### model::fit_model
-#> fit_model(raw, tune, select)
-#> Calls: data_prep::prepare_data, model::select_features, model::tune_hyperparams
-#> Called by: predict::run_pipeline
-#> 
-#> ### model::tune_hyperparams
-#> tune_hyperparams(df, lambdas)
-#> Called by: model::fit_model
-#> 
-#> ### model::select_features
-#> select_features(df, threshold)
-#> Calls: data_prep::clean_data
-#> Called by: model::fit_model
-#> 
-#> ### predict::predict_results
-#> predict_results(model, newdata)
-#> Calls: data_prep::clean_data
-#> Called by: predict::run_pipeline
-#> 
-#> ### predict::evaluate_predictions
-#> evaluate_predictions(preds, actuals)
-#> Called by: predict::run_pipeline
 #> 
 #> ## CONSTRAINTS
 #> ---
@@ -257,23 +207,23 @@ graph_small <- update_graph_incremental(
 #> 
 #> ── Incremental graph update ──
 #> 
-#> Changed files: /tmp/RtmpWgaAWM/mypkg_demo/R/data_prep.R
+#> Changed files: /tmp/Rtmp3ZIsLR/mypkg_demo/R/data_prep.R
 #> Removing 1 stale node(s).
 #> Re-parsing 1 file(s).
 #> Embedding 1 new node(s) using method 'tfidf'.
 #> Graph now has 2 nodes, 0 edges.
 #> Recomputing PageRank.
-#> Persisting cache to /tmp/RtmpWgaAWM/mypkg_demo.
-#> Graph cached at /tmp/RtmpWgaAWM/mypkg_demo/.rrlmgraph
+#> Persisting cache to /tmp/Rtmp3ZIsLR/mypkg_demo.
+#> Graph cached at /tmp/Rtmp3ZIsLR/mypkg_demo/.rrlmgraph
 
 summary(graph_small)
-#> IGRAPH e3a3d64 DNW- 2 0 -- 
+#> IGRAPH 3a44a83 DNW- 2 0 -- 
 #> + attr: project_name (g/c), project_root (g/c), project_type (g/c),
 #> | r_version (g/c), build_time (g/n), build_at (g/c), embed_method
 #> | (g/c), embed_model (g/x), cache_path (g/c), name (v/c), node_type
 #> | (v/c), file (v/c), line_start (v/n), line_end (v/n), signature (v/c),
-#> | complexity (v/n), pagerank (v/n), embedding (v/x), label (v/c), pkg
-#> | (v/c), doc (v/c), task_trace_weight (v/n), weight (e/n), edge_type
+#> | complexity (v/n), pagerank (v/n), task_trace_weight (v/n), embedding
+#> | (v/x), label (v/c), pkg (v/c), doc (v/c), weight (e/n), edge_type
 #> | (e/c)
 ```
 

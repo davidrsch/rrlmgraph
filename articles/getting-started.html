@@ -100,7 +100,7 @@ package, a scripts folder, or a Shiny app – and returns an
 <span><span class="co">#&gt; Computing PageRank</span></span>
 <span><span class="co">#&gt; Embedding nodes with method 'tfidf'</span></span>
 <span><span class="co">#&gt; Computing semantic similarity edges (threshold 0.7)</span></span>
-<span><span class="co">#&gt; Done in 0.58s -- 22 nodes, 11 edges</span></span></code></pre></div>
+<span><span class="co">#&gt; Done in 0.53s -- 22 nodes, 11 edges</span></span></code></pre></div>
 <p>The function:</p>
 <ol style="list-style-type: decimal">
 <li>Detects the project type (package / scripts / Shiny app)</li>
@@ -117,8 +117,8 @@ analysis</li>
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">graph</span><span class="op">)</span></span>
 <span><span class="co">#&gt; === rrlm_graph: demo ===</span></span>
 <span><span class="co">#&gt; Root:  /home/runner/work/_temp/Library/rrlmgraph/extdata/demo</span></span>
-<span><span class="co">#&gt; Built: 2026-02-21 02:02:40</span></span>
-<span><span class="co">#&gt; Build time: 0.58 s</span></span>
+<span><span class="co">#&gt; Built: 2026-02-21 18:16:55</span></span>
+<span><span class="co">#&gt; Build time: 0.53 s</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Nodes (22 total):</span></span>
 <span><span class="co">#&gt;   package: 13</span></span>
@@ -128,11 +128,11 @@ analysis</li>
 <span><span class="co">#&gt;   CALLS: 11</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Top-5 nodes by PageRank:</span></span>
-<span><span class="co">#&gt;   1. data_prep::clean_data (0.140048)</span></span>
-<span><span class="co">#&gt;   2. data_prep::validate_inputs (0.060685)</span></span>
-<span><span class="co">#&gt;   3. data_prep::prepare_data (0.05684)</span></span>
-<span><span class="co">#&gt;   4. model::select_features (0.049078)</span></span>
-<span><span class="co">#&gt;   5. model::tune_hyperparams (0.049078)</span></span>
+<span><span class="co">#&gt;   1. demo/data_prep::clean_data (0.140048)</span></span>
+<span><span class="co">#&gt;   2. demo/data_prep::validate_inputs (0.060685)</span></span>
+<span><span class="co">#&gt;   3. demo/data_prep::prepare_data (0.05684)</span></span>
+<span><span class="co">#&gt;   4. demo/model::select_features (0.049078)</span></span>
+<span><span class="co">#&gt;   5. demo/model::tune_hyperparams (0.049078)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Metadata:</span></span>
 <span><span class="co">#&gt;   Embed method: tfidf</span></span>
@@ -155,7 +155,7 @@ with PageRank)</li>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">graph</span><span class="op">)</span></span></code></pre></div>
 <div id="htmlwidget-ac96cb3ee4656e2e9ec3" style="width:100%;height:100%;" class="grViz html-widget"></div>
-<script type="application/json" data-for="htmlwidget-ac96cb3ee4656e2e9ec3">{"x":{"diagram":"digraph rrlmgraph {\n  graph [layout=dot, rankdir=LR, fontname=\"Helvetica\", label=\"demo  —  top 9 hubs\", labelloc=t, fontsize=14, splines=ortho, nodesep=0.5, ranksep=0.8];\n  node  [shape=box, style=\"rounded,filled\", fontname=\"Helvetica\", fontsize=10, penwidth=0.5, margin=0.1];\n  edge  [arrowsize=0.5];\n\n  subgraph cluster_data_prep {\n    label=\"data.prep.R\";\n    style=dashed;\n    color=\"#AAAAAA\";\n    fontcolor=\"#666666\";\n    fontsize=10;\n    n1; n2; n3;\n  }\n\n  subgraph cluster_model {\n    label=\"model.R\";\n    style=dashed;\n    color=\"#AAAAAA\";\n    fontcolor=\"#666666\";\n    fontsize=10;\n    n4; n5; n6;\n  }\n\n  subgraph cluster_predict {\n    label=\"predict.R\";\n    style=dashed;\n    color=\"#AAAAAA\";\n    fontcolor=\"#666666\";\n    fontsize=10;\n    n7; n8; n9;\n  }\n\n  n1 [label=\"validate_inputs\", fillcolor=\"#4682B4\", fontcolor=\"white\", width=0.77];\n  n2 [label=\"clean_data\", fillcolor=\"#4682B4\", fontcolor=\"white\", width=2.00];\n  n3 [label=\"prepare_data\", fillcolor=\"#4682B4\", fontcolor=\"white\", width=0.71];\n  n4 [label=\"select_features\", fillcolor=\"#4682B4\", fontcolor=\"white\", width=0.59];\n  n5 [label=\"tune_hyperparams\", fillcolor=\"#4682B4\", fontcolor=\"white\", width=0.59];\n  n6 [label=\"fit_model\", fillcolor=\"#4682B4\", fontcolor=\"white\", width=0.52];\n  n7 [label=\"predict_results\", fillcolor=\"#4682B4\", fontcolor=\"white\", width=0.52];\n  n8 [label=\"evaluate_predictions\", fillcolor=\"#4682B4\", fontcolor=\"white\", width=0.52];\n  n9 [label=\"run_pipeline\", fillcolor=\"#4682B4\", fontcolor=\"white\", width=0.40];\n\n  n3 -> n1 [color=\"#888888\"];\n  n3 -> n2 [color=\"#888888\"];\n  n4 -> n2 [color=\"#888888\"];\n  n6 -> n3 [color=\"#888888\"];\n  n6 -> n4 [color=\"#888888\"];\n  n6 -> n5 [color=\"#888888\"];\n  n7 -> n2 [color=\"#888888\"];\n  n9 -> n3 [color=\"#888888\"];\n  n9 -> n6 [color=\"#888888\"];\n  n9 -> n7 [color=\"#888888\"];\n  n9 -> n8 [color=\"#888888\"];\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":{"render":[{"code":"function(el) {\n    // viz.js renders the SVG asynchronously; poll until it appears\n    var MAX_WAIT = 3000, INTERVAL = 50, waited = 0;\n    var timer = setInterval(function() {\n      waited += INTERVAL;\n      var svg = el.querySelector('svg');\n      if (!svg && waited < MAX_WAIT) return;\n      clearInterval(timer);\n      if (!svg) return;\n\n      // --- Read Graphviz natural dimensions ----------------------------\n      var nw = parseFloat(svg.getAttribute('width'))  || svg.viewBox.baseVal.width  || 800;\n      var nh = parseFloat(svg.getAttribute('height')) || svg.viewBox.baseVal.height || 600;\n\n      // Remove fixed attrs so the SVG fills the container via CSS\n      svg.removeAttribute('width');\n      svg.removeAttribute('height');\n      svg.style.display  = 'block';\n      svg.style.width    = '100%';\n      svg.style.height   = '100%';\n      svg.style.cursor   = 'grab';\n      svg.style.userSelect = 'none';\n\n      // viewBox state: (ox, oy) = top-left corner; (vw, vh) = viewport size\n      var ox = 0, oy = 0, vw = nw, vh = nh;\n      function setVB() {\n        svg.setAttribute('viewBox', ox + ' ' + oy + ' ' + vw + ' ' + vh);\n      }\n      setVB();\n\n      // --- Mouse wheel zoom centred on cursor --------------------------\n      el.addEventListener('wheel', function(e) {\n        e.preventDefault();\n        var rect  = svg.getBoundingClientRect();\n        var px    = (e.clientX - rect.left)  / rect.width;   // 0-1 fraction\n        var py    = (e.clientY - rect.top)   / rect.height;\n        var factor = e.deltaY < 0 ? 0.85 : (1 / 0.85);\n        var nvw = vw * factor, nvh = vh * factor;\n        ox = ox + (vw - nvw) * px;\n        oy = oy + (vh - nvh) * py;\n        vw = nvw; vh = nvh;\n        setVB();\n      }, {passive: false});\n\n      // --- Click-drag pan ----------------------------------------------\n      var dragging = false, lastMX, lastMY;\n      el.addEventListener('mousedown', function(e) {\n        dragging = true;\n        lastMX = e.clientX; lastMY = e.clientY;\n        svg.style.cursor = 'grabbing';\n        e.preventDefault();\n      });\n      window.addEventListener('mousemove', function(e) {\n        if (!dragging) return;\n        var rect = svg.getBoundingClientRect();\n        ox -= (e.clientX - lastMX) / rect.width  * vw;\n        oy -= (e.clientY - lastMY) / rect.height * vh;\n        lastMX = e.clientX; lastMY = e.clientY;\n        setVB();\n      });\n      window.addEventListener('mouseup', function() {\n        if (dragging) { dragging = false; svg.style.cursor = 'grab'; }\n      });\n\n      // --- Touch: one-finger pan, two-finger pinch-zoom ----------------\n      var lastTouches = null;\n      el.addEventListener('touchstart', function(e) {\n        e.preventDefault();\n        lastTouches = Array.from(e.touches).map(function(t) {\n          return {x: t.clientX, y: t.clientY};\n        });\n      }, {passive: false});\n      el.addEventListener('touchmove', function(e) {\n        e.preventDefault();\n        var rect = svg.getBoundingClientRect();\n        var cur  = Array.from(e.touches).map(function(t) {\n          return {x: t.clientX, y: t.clientY};\n        });\n        if (cur.length === 1 && lastTouches && lastTouches.length >= 1) {\n          ox -= (cur[0].x - lastTouches[0].x) / rect.width  * vw;\n          oy -= (cur[0].y - lastTouches[0].y) / rect.height * vh;\n        } else if (cur.length === 2 && lastTouches && lastTouches.length === 2) {\n          var d0 = Math.hypot(lastTouches[1].x - lastTouches[0].x,\n                              lastTouches[1].y - lastTouches[0].y);\n          var d1 = Math.hypot(cur[1].x - cur[0].x, cur[1].y - cur[0].y);\n          if (d0 > 0) {\n            var factor = d0 / d1;\n            var cx = ((cur[0].x + cur[1].x) / 2 - rect.left)  / rect.width;\n            var cy = ((cur[0].y + cur[1].y) / 2 - rect.top)   / rect.height;\n            var nvw = vw * factor, nvh = vh * factor;\n            ox = ox + (vw - nvw) * cx;\n            oy = oy + (vh - nvh) * cy;\n            vw = nvw; vh = nvh;\n          }\n        }\n        lastTouches = cur;\n        setVB();\n      }, {passive: false});\n\n      // --- Double-click: reset to original fit-to-screen ---------------\n      el.addEventListener('dblclick', function() {\n        ox = 0; oy = 0; vw = nw; vh = nh;\n        setVB();\n      });\n    }, INTERVAL);\n  }","data":null}]}}</script>
+<script type="application/json" data-for="htmlwidget-ac96cb3ee4656e2e9ec3">{"x":{"diagram":"digraph rrlmgraph {\n  graph [layout=dot, rankdir=LR, fontname=\"Helvetica\", label=\"demo  —  top 9 hubs\", labelloc=t, fontsize=14, splines=ortho, nodesep=0.5, ranksep=0.8];\n  node  [shape=box, style=\"rounded,filled\", fontname=\"Helvetica\", fontsize=10, penwidth=0.5, margin=0.1];\n  edge  [arrowsize=0.5];\n\n  subgraph cluster_demo_data_prep {\n    label=\"demo.data.prep.R\";\n    style=dashed;\n    color=\"#AAAAAA\";\n    fontcolor=\"#666666\";\n    fontsize=10;\n    n1; n2; n3;\n  }\n\n  subgraph cluster_demo_model {\n    label=\"demo.model.R\";\n    style=dashed;\n    color=\"#AAAAAA\";\n    fontcolor=\"#666666\";\n    fontsize=10;\n    n4; n5; n6;\n  }\n\n  subgraph cluster_demo_predict {\n    label=\"demo.predict.R\";\n    style=dashed;\n    color=\"#AAAAAA\";\n    fontcolor=\"#666666\";\n    fontsize=10;\n    n7; n8; n9;\n  }\n\n  n1 [label=\"validate_inputs\", fillcolor=\"#4682B4\", fontcolor=\"white\", width=0.77];\n  n2 [label=\"clean_data\", fillcolor=\"#4682B4\", fontcolor=\"white\", width=2.00];\n  n3 [label=\"prepare_data\", fillcolor=\"#4682B4\", fontcolor=\"white\", width=0.71];\n  n4 [label=\"select_features\", fillcolor=\"#4682B4\", fontcolor=\"white\", width=0.59];\n  n5 [label=\"tune_hyperparams\", fillcolor=\"#4682B4\", fontcolor=\"white\", width=0.59];\n  n6 [label=\"fit_model\", fillcolor=\"#4682B4\", fontcolor=\"white\", width=0.52];\n  n7 [label=\"predict_results\", fillcolor=\"#4682B4\", fontcolor=\"white\", width=0.52];\n  n8 [label=\"evaluate_predictions\", fillcolor=\"#4682B4\", fontcolor=\"white\", width=0.52];\n  n9 [label=\"run_pipeline\", fillcolor=\"#4682B4\", fontcolor=\"white\", width=0.40];\n\n  n3 -> n1 [color=\"#888888\"];\n  n3 -> n2 [color=\"#888888\"];\n  n4 -> n2 [color=\"#888888\"];\n  n6 -> n3 [color=\"#888888\"];\n  n6 -> n4 [color=\"#888888\"];\n  n6 -> n5 [color=\"#888888\"];\n  n7 -> n2 [color=\"#888888\"];\n  n9 -> n3 [color=\"#888888\"];\n  n9 -> n6 [color=\"#888888\"];\n  n9 -> n7 [color=\"#888888\"];\n  n9 -> n8 [color=\"#888888\"];\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":{"render":[{"code":"function(el) {\n    // viz.js renders the SVG asynchronously; poll until it appears\n    var MAX_WAIT = 3000, INTERVAL = 50, waited = 0;\n    var timer = setInterval(function() {\n      waited += INTERVAL;\n      var svg = el.querySelector('svg');\n      if (!svg && waited < MAX_WAIT) return;\n      clearInterval(timer);\n      if (!svg) return;\n\n      // --- Read Graphviz natural dimensions ----------------------------\n      var nw = parseFloat(svg.getAttribute('width'))  || svg.viewBox.baseVal.width  || 800;\n      var nh = parseFloat(svg.getAttribute('height')) || svg.viewBox.baseVal.height || 600;\n\n      // Remove fixed attrs so the SVG fills the container via CSS\n      svg.removeAttribute('width');\n      svg.removeAttribute('height');\n      svg.style.display  = 'block';\n      svg.style.width    = '100%';\n      svg.style.height   = '100%';\n      svg.style.cursor   = 'grab';\n      svg.style.userSelect = 'none';\n\n      // viewBox state: (ox, oy) = top-left corner; (vw, vh) = viewport size\n      var ox = 0, oy = 0, vw = nw, vh = nh;\n      function setVB() {\n        svg.setAttribute('viewBox', ox + ' ' + oy + ' ' + vw + ' ' + vh);\n      }\n      setVB();\n\n      // --- Mouse wheel zoom centred on cursor --------------------------\n      el.addEventListener('wheel', function(e) {\n        e.preventDefault();\n        var rect  = svg.getBoundingClientRect();\n        var px    = (e.clientX - rect.left)  / rect.width;   // 0-1 fraction\n        var py    = (e.clientY - rect.top)   / rect.height;\n        var factor = e.deltaY < 0 ? 0.85 : (1 / 0.85);\n        var nvw = vw * factor, nvh = vh * factor;\n        ox = ox + (vw - nvw) * px;\n        oy = oy + (vh - nvh) * py;\n        vw = nvw; vh = nvh;\n        setVB();\n      }, {passive: false});\n\n      // --- Click-drag pan ----------------------------------------------\n      var dragging = false, lastMX, lastMY;\n      el.addEventListener('mousedown', function(e) {\n        dragging = true;\n        lastMX = e.clientX; lastMY = e.clientY;\n        svg.style.cursor = 'grabbing';\n        e.preventDefault();\n      });\n      window.addEventListener('mousemove', function(e) {\n        if (!dragging) return;\n        var rect = svg.getBoundingClientRect();\n        ox -= (e.clientX - lastMX) / rect.width  * vw;\n        oy -= (e.clientY - lastMY) / rect.height * vh;\n        lastMX = e.clientX; lastMY = e.clientY;\n        setVB();\n      });\n      window.addEventListener('mouseup', function() {\n        if (dragging) { dragging = false; svg.style.cursor = 'grab'; }\n      });\n\n      // --- Touch: one-finger pan, two-finger pinch-zoom ----------------\n      var lastTouches = null;\n      el.addEventListener('touchstart', function(e) {\n        e.preventDefault();\n        lastTouches = Array.from(e.touches).map(function(t) {\n          return {x: t.clientX, y: t.clientY};\n        });\n      }, {passive: false});\n      el.addEventListener('touchmove', function(e) {\n        e.preventDefault();\n        var rect = svg.getBoundingClientRect();\n        var cur  = Array.from(e.touches).map(function(t) {\n          return {x: t.clientX, y: t.clientY};\n        });\n        if (cur.length === 1 && lastTouches && lastTouches.length >= 1) {\n          ox -= (cur[0].x - lastTouches[0].x) / rect.width  * vw;\n          oy -= (cur[0].y - lastTouches[0].y) / rect.height * vh;\n        } else if (cur.length === 2 && lastTouches && lastTouches.length === 2) {\n          var d0 = Math.hypot(lastTouches[1].x - lastTouches[0].x,\n                              lastTouches[1].y - lastTouches[0].y);\n          var d1 = Math.hypot(cur[1].x - cur[0].x, cur[1].y - cur[0].y);\n          if (d0 > 0) {\n            var factor = d0 / d1;\n            var cx = ((cur[0].x + cur[1].x) / 2 - rect.left)  / rect.width;\n            var cy = ((cur[0].y + cur[1].y) / 2 - rect.top)   / rect.height;\n            var nvw = vw * factor, nvh = vh * factor;\n            ox = ox + (vw - nvw) * cx;\n            oy = oy + (vh - nvh) * cy;\n            vw = nvw; vh = nvh;\n          }\n        }\n        lastTouches = cur;\n        setVB();\n      }, {passive: false});\n\n      // --- Double-click: reset to original fit-to-screen ---------------\n      el.addEventListener('dblclick', function() {\n        ox = 0; oy = 0; vw = nw; vh = nh;\n        setVB();\n      });\n    }, INTERVAL);\n  }","data":null}]}}</script>
 </div>
 <div class="section level2">
 <h2 id="querying-context">3. Querying context<a class="anchor" aria-label="anchor" href="#querying-context"></a>
@@ -170,77 +170,27 @@ for LLM prompts.</p>
 <span>  budget_tokens <span class="op">=</span> <span class="fl">400L</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; Seed node: <span style="color: #0000BB;">"data_prep::clean_data"</span></span></span>
-<span><span class="co">#&gt; + <span style="color: #0000BB;">"data_prep::prepare_data"</span> (score=0.219, tokens=8)</span></span>
-<span><span class="co">#&gt; + <span style="color: #0000BB;">"predict::run_pipeline"</span> (score=0.22, tokens=7)</span></span>
-<span><span class="co">#&gt; + <span style="color: #0000BB;">"data_prep::validate_inputs"</span> (score=0.19, tokens=10)</span></span>
-<span><span class="co">#&gt; + <span style="color: #0000BB;">"model::fit_model"</span> (score=0.169, tokens=8)</span></span>
-<span><span class="co">#&gt; + <span style="color: #0000BB;">"model::tune_hyperparams"</span> (score=0.186, tokens=8)</span></span>
-<span><span class="co">#&gt; + <span style="color: #0000BB;">"model::select_features"</span> (score=0.166, tokens=9)</span></span>
-<span><span class="co">#&gt; + <span style="color: #0000BB;">"predict::predict_results"</span> (score=0.153, tokens=9)</span></span>
-<span><span class="co">#&gt; + <span style="color: #0000BB;">"predict::evaluate_predictions"</span> (score=0.15, tokens=10)</span></span>
+<span><span class="co">#&gt; Seed node: <span style="color: #0000BB;">"demo/data_prep::clean_data"</span></span></span>
 <span></span>
 <span><span class="co"># Nodes selected for the context window</span></span>
 <span><span class="va">ctx</span><span class="op">$</span><span class="va">nodes</span></span>
-<span><span class="co">#&gt; [1] "data_prep::clean_data"         "data_prep::prepare_data"      </span></span>
-<span><span class="co">#&gt; [3] "predict::run_pipeline"         "data_prep::validate_inputs"   </span></span>
-<span><span class="co">#&gt; [5] "model::fit_model"              "model::tune_hyperparams"      </span></span>
-<span><span class="co">#&gt; [7] "model::select_features"        "predict::predict_results"     </span></span>
-<span><span class="co">#&gt; [9] "predict::evaluate_predictions"</span></span>
+<span><span class="co">#&gt; [1] "demo/data_prep::clean_data"</span></span>
 <span></span>
 <span><span class="co"># Number of tokens used</span></span>
 <span><span class="va">ctx</span><span class="op">$</span><span class="va">tokens_used</span></span>
-<span><span class="co">#&gt; [1] 354</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] 93</span></span></code></pre></div>
 <p>The assembled context string – ready to paste into a system
 prompt:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="va">ctx</span><span class="op">$</span><span class="va">context_string</span><span class="op">)</span></span>
 <span><span class="co">#&gt; # rrlm_graph Context</span></span>
-<span><span class="co">#&gt; # Project: demo | R 4.5.2 | ~321 tokens</span></span>
+<span><span class="co">#&gt; # Project: demo | R 4.5.2 | ~60 tokens</span></span>
 <span><span class="co">#&gt; # Query: How does the data preparation and validation pipeline work?</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ## CORE FUNCTIONS</span></span>
 <span><span class="co">#&gt; ---</span></span>
-<span><span class="co">#&gt; ### data_prep::clean_data</span></span>
+<span><span class="co">#&gt; ### demo/data_prep::clean_data</span></span>
 <span><span class="co">#&gt; clean_data(raw) {}</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ## SUPPORTING FUNCTIONS</span></span>
-<span><span class="co">#&gt; ---</span></span>
-<span><span class="co">#&gt; ### data_prep::prepare_data</span></span>
-<span><span class="co">#&gt; prepare_data(raw, scale_x)</span></span>
-<span><span class="co">#&gt; Calls: data_prep::validate_inputs, data_prep::clean_data</span></span>
-<span><span class="co">#&gt; Called by: model::fit_model, predict::run_pipeline</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ### predict::run_pipeline</span></span>
-<span><span class="co">#&gt; run_pipeline(raw, ...)</span></span>
-<span><span class="co">#&gt; Calls: data_prep::prepare_data, model::fit_model, predict::predict_results, predict::evaluate_predictions</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ### data_prep::validate_inputs</span></span>
-<span><span class="co">#&gt; validate_inputs(raw, required_cols)</span></span>
-<span><span class="co">#&gt; Called by: data_prep::prepare_data</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ### model::fit_model</span></span>
-<span><span class="co">#&gt; fit_model(raw, tune, select)</span></span>
-<span><span class="co">#&gt; Calls: data_prep::prepare_data, model::select_features, model::tune_hyperparams</span></span>
-<span><span class="co">#&gt; Called by: predict::run_pipeline</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ### model::tune_hyperparams</span></span>
-<span><span class="co">#&gt; tune_hyperparams(df, lambdas)</span></span>
-<span><span class="co">#&gt; Called by: model::fit_model</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ### model::select_features</span></span>
-<span><span class="co">#&gt; select_features(df, threshold)</span></span>
-<span><span class="co">#&gt; Calls: data_prep::clean_data</span></span>
-<span><span class="co">#&gt; Called by: model::fit_model</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ### predict::predict_results</span></span>
-<span><span class="co">#&gt; predict_results(model, newdata)</span></span>
-<span><span class="co">#&gt; Calls: data_prep::clean_data</span></span>
-<span><span class="co">#&gt; Called by: predict::run_pipeline</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ### predict::evaluate_predictions</span></span>
-<span><span class="co">#&gt; evaluate_predictions(preds, actuals)</span></span>
-<span><span class="co">#&gt; Called by: predict::run_pipeline</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ## CONSTRAINTS</span></span>
 <span><span class="co">#&gt; ---</span></span>
@@ -315,23 +265,23 @@ files:</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── <span style="font-weight: bold;">Incremental graph update</span> ──</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Changed files: <span style="color: #0000BB;">/tmp/RtmpWgaAWM/mypkg_demo/R/data_prep.R</span></span></span>
+<span><span class="co">#&gt; Changed files: <span style="color: #0000BB;">/tmp/Rtmp3ZIsLR/mypkg_demo/R/data_prep.R</span></span></span>
 <span><span class="co">#&gt; Removing 1 stale node(s).</span></span>
 <span><span class="co">#&gt; Re-parsing 1 file(s).</span></span>
 <span><span class="co">#&gt; Embedding 1 new node(s) using method 'tfidf'.</span></span>
 <span><span class="co">#&gt; Graph now has 2 nodes, 0 edges.</span></span>
 <span><span class="co">#&gt; Recomputing PageRank.</span></span>
-<span><span class="co">#&gt; Persisting cache to <span style="color: #0000BB;">/tmp/RtmpWgaAWM/mypkg_demo</span>.</span></span>
-<span><span class="co">#&gt; Graph cached at <span style="color: #0000BB;">/tmp/RtmpWgaAWM/mypkg_demo/.rrlmgraph</span></span></span>
+<span><span class="co">#&gt; Persisting cache to <span style="color: #0000BB;">/tmp/Rtmp3ZIsLR/mypkg_demo</span>.</span></span>
+<span><span class="co">#&gt; Graph cached at <span style="color: #0000BB;">/tmp/Rtmp3ZIsLR/mypkg_demo/.rrlmgraph</span></span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">graph_small</span><span class="op">)</span></span>
-<span><span class="co">#&gt; IGRAPH e3a3d64 DNW- 2 0 -- </span></span>
+<span><span class="co">#&gt; IGRAPH 3a44a83 DNW- 2 0 -- </span></span>
 <span><span class="co">#&gt; + attr: project_name (g/c), project_root (g/c), project_type (g/c),</span></span>
 <span><span class="co">#&gt; | r_version (g/c), build_time (g/n), build_at (g/c), embed_method</span></span>
 <span><span class="co">#&gt; | (g/c), embed_model (g/x), cache_path (g/c), name (v/c), node_type</span></span>
 <span><span class="co">#&gt; | (v/c), file (v/c), line_start (v/n), line_end (v/n), signature (v/c),</span></span>
-<span><span class="co">#&gt; | complexity (v/n), pagerank (v/n), embedding (v/x), label (v/c), pkg</span></span>
-<span><span class="co">#&gt; | (v/c), doc (v/c), task_trace_weight (v/n), weight (e/n), edge_type</span></span>
+<span><span class="co">#&gt; | complexity (v/n), pagerank (v/n), task_trace_weight (v/n), embedding</span></span>
+<span><span class="co">#&gt; | (v/x), label (v/c), pkg (v/c), doc (v/c), weight (e/n), edge_type</span></span>
 <span><span class="co">#&gt; | (e/c)</span></span></code></pre></div>
 </div>
 <div class="section level2">

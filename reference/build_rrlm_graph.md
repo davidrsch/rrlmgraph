@@ -12,6 +12,7 @@ build_rrlm_graph(
   embed_method = "tfidf",
   include_package_nodes = TRUE,
   semantic_threshold = 0.7,
+  max_semantic_edges = 5L,
   cache = TRUE,
   verbose = FALSE
 )
@@ -37,6 +38,13 @@ build_rrlm_graph(
 
   Numeric(1). Minimum cosine similarity for a `SEMANTIC` edge to be
   created. Default `0.7`.
+
+- max_semantic_edges:
+
+  Integer(1). Maximum SEMANTIC edges to create per node. Capping at a
+  small number (default `5L`) prevents dense graphs on large projects.
+  Semantic edges are disabled entirely when the graph has more than 300
+  function nodes.
 
 - cache:
 
