@@ -38,3 +38,4 @@ test_widget.html
 check_subgraph.R
 run_key_tests.R
 run_tests.R
+tests/testthat/Rplots.pdf
