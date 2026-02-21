@@ -1,4 +1,4 @@
-﻿# R/graph_traverse.R
+# R/graph_traverse.R
 # Traversal and relevance-scoring helpers for rrlm_graph objects.
 # Covers rrlmgraph issue #10 (Sprint 2).
 
@@ -112,7 +112,7 @@ compute_relevance <- function(
     NA_real_
   }
   if (is.null(ttw) || length(ttw) == 0L || is.na(ttw)) {
-    ttw <- 0.0   # neutral / no prior history (not 0.5, which adds constant bias)
+    ttw <- 0.0 # neutral / no prior history (not 0.5, which adds constant bias)
   }
   ttw <- max(0, min(1, ttw))
 
@@ -130,6 +130,30 @@ compute_relevance <- function(
 }
 
 # ---- internal helpers ------------------------------------------------
+
+#' @keywords internal
+#' Estimate the number of language-model tokens in \code{text}.
+#' Uses \pkg{tokenizers} word-level splitting (×1.3 for subword expansion)
+#' when available; otherwise falls back to \code{nchar(text) / 4}.
+.count_tokens <- function(text) {
+  if (!nzchar(text)) {
+    return(0L)
+  }
+  if (requireNamespace("tokenizers", quietly = TRUE)) {
+    # Word-level tokenisation with punctuation preserved is a better proxy
+    # for GPT/Claude subword tokenisation than raw character count.
+    words <- tokenizers::tokenize_words(
+      text,
+      lowercase = FALSE,
+      simplify = TRUE
+    )
+    # Subword tokenisers create ~1.3 tokens per word on average for code
+    as.integer(ceiling(length(words) * 1.3))
+  } else {
+    # Fallback: empirically R source code averages ~3.5 chars/subword token
+    as.integer(ceiling(nchar(text) / 3.5))
+  }
+}
 
 #' @keywords internal
 .relevance_weights <- function(weights) {
@@ -225,7 +249,7 @@ compute_relevance <- function(
 #'           \item Score every frontier node with \code{compute_relevance()}.
 #'           \item Select the best-scoring node with score
 #'                 \code{>= min_relevance}.
-#'           \item Compute its token cost (\code{nchar / 4}).
+#'           \item Compute its token cost (\code{.count_tokens()}).
 #'           \item Accept the node only if adding it stays within the
 #'                 budget; otherwise skip and try the next-best.
 #'           \item Mark as visited; expand its neighbours into the
@@ -343,7 +367,7 @@ query_context <- function(
 
   # ---- seed context ---------------------------------------------------
   seed_ctx <- build_node_context(seed_node, graph, mode = "full")
-  seed_tokens <- as.integer(ceiling(nchar(seed_ctx) / 4L))
+  seed_tokens <- .count_tokens(seed_ctx)
 
   if (seed_tokens > budget_tokens) {
     seed_ctx <- substr(seed_ctx, 1L, budget_tokens * 4L)
@@ -397,8 +421,8 @@ query_context <- function(
       # "full" here (the previous behaviour) over-counted by ~3x, causing
       # the BFS to terminate far too early.  See issue #48.
       cost_mode <- if (nodes_added == 0L) "full" else "compressed"
-      node_ctx    <- build_node_context(fn, graph, mode = cost_mode)
-      node_tokens <- as.integer(ceiling(nchar(node_ctx) / 4L))
+      node_ctx <- build_node_context(fn, graph, mode = cost_mode)
+      node_tokens <- .count_tokens(node_ctx)
 
       if (tokens_used + node_tokens <= budget_tokens) {
         tokens_used <- tokens_used + node_tokens
@@ -440,7 +464,7 @@ query_context <- function(
 
   # ---- assemble context string ----------------------------------------
   context_string <- assemble_context_string(hits, graph, query)
-  final_tokens <- as.integer(ceiling(nchar(context_string) / 4L))
+  final_tokens <- .count_tokens(context_string)
 
   # Hard-enforce the budget on the final assembled output. assemble_context_string
   # adds section headers / formatting beyond the raw node contexts counted during
@@ -448,15 +472,17 @@ query_context <- function(
   # Truncate at the last newline before the limit so we never split mid-line
   # (which could produce malformed code blocks / invalid UTF-8 sequences).
   if (final_tokens > budget_tokens) {
-    char_limit  <- budget_tokens * 4L
-    truncated   <- substr(context_string, 1L, char_limit)
-    last_nl     <- max(c(0L, gregexpr("\n", truncated, fixed = TRUE)[[1L]]))
+    char_limit <- budget_tokens * 4L
+    truncated <- substr(context_string, 1L, char_limit)
+    last_nl <- max(c(0L, gregexpr("\n", truncated, fixed = TRUE)[[1L]]))
     context_string <- if (last_nl > 0L) {
       substr(context_string, 1L, last_nl)
     } else {
       truncated
     }
-    cli::cli_warn("Context truncated to {last_nl} chars to fit budget ({budget_tokens} tokens).")
+    cli::cli_warn(
+      "Context truncated to {last_nl} chars to fit budget ({budget_tokens} tokens)."
+    )
     final_tokens <- budget_tokens
   }
 

@@ -1,4 +1,4 @@
-﻿# R/cache.R
+# R/cache.R
 # Graph caching and SQLite export for rrlmgraph.
 # Covers rrlmgraph issues #14 (cache) and #15 (SQLite bridge).
 
@@ -179,21 +179,35 @@ is_cache_stale <- function(project_path = ".") {
 
 #' Export an rrlm_graph to a SQLite database
 #'
-#' Writes nodes, edges, graph metadata, and task traces to a SQLite file
-#' readable directly by \pkg{better-sqlite3} in the TypeScript MCP server.
-#' All operations are idempotent (upsert via \code{INSERT OR REPLACE}).
+#' Writes nodes, edges, graph metadata, task traces, and the TF-IDF vocabulary
+#' to a SQLite file readable directly by \pkg{better-sqlite3} in the TypeScript
+#' MCP server.  All operations are idempotent: nodes/edges/metadata are
+#' replaced on each call; task-trace rows are inserted with
+#' \code{INSERT OR IGNORE} (deduplication on \code{query}, \code{session_id},
+#' \code{created_at}).
 #'
 #' @section Schema:
 #' \describe{
 #'   \item{\code{nodes}}{node_id (PK), name, file, node_type, signature,
 #'     body_text, roxygen_text, complexity, pagerank, task_weight,
-#'     embedding (JSON), pkg_name, pkg_version}
+#'     embedding (JSON text array of floats), pkg_name, pkg_version}
 #'   \item{\code{edges}}{edge_id (PK AUTOINCREMENT), source_id, target_id,
 #'     edge_type, weight, metadata (JSON)}
 #'   \item{\code{task_traces}}{trace_id (PK AUTOINCREMENT), query,
-#'     nodes_json, polarity, session_id, created_at}
+#'     nodes_json, polarity, session_id, created_at.  Unique on
+#'     (query, session_id, created_at) to prevent duplicate imports.}
+#'   \item{\code{tfidf_vocab}}{term (PK), idf, doc_count, term_count.
+#'     Only populated when \code{embed_method = "tfidf"}.  Allows the
+#'     TypeScript MCP server to encode queries in the same vector space
+#'     without calling back into R.}
 #'   \item{\code{graph_metadata}}{key (PK), value}
 #' }
+#'
+#' @section Embedding format:
+#' The \code{embedding} column in \code{nodes} is stored as a JSON text
+#' array of floating-point numbers, e.g.\  \code{[0.12, -0.34, ...]}.
+#' In TypeScript (\pkg{better-sqlite3}):
+#' \preformatted{const emb: number[] = JSON.parse(row.embedding ?? "[]");}
 #'
 #' @param graph An \code{rrlm_graph} / \code{igraph} object.
 #' @param db_path Character(1).  Path to the \file{.sqlite} file to
@@ -248,6 +262,9 @@ export_to_sqlite <- function(graph, db_path) {
     trace_file <- file.path(project_root, ".rrlmgraph", "task_trace.jsonl")
     .import_task_traces(con, trace_file)
   }
+
+  # ---- tfidf_vocab --------------------------------------------------
+  .upsert_tfidf_vocab(con, graph)
 
   cli::cli_inform("Graph exported to {.path {db_path}}")
   invisible(db_path)
@@ -333,6 +350,27 @@ export_to_sqlite <- function(graph, db_path) {
   DBI::dbExecute(
     con,
     "CREATE INDEX IF NOT EXISTS idx_nodes_name   ON nodes(name)"
+  )
+
+  # TF-IDF vocabulary (used by TypeScript MCP server to encode queries)
+  DBI::dbExecute(
+    con,
+    "
+    CREATE TABLE IF NOT EXISTS tfidf_vocab (
+      term        TEXT PRIMARY KEY,
+      idf         REAL,
+      doc_count   INTEGER,
+      term_count  INTEGER
+    )
+  "
+  )
+
+  # Unique index on task_traces prevents duplicate rows when export_to_sqlite()
+  # is called repeatedly (JSONL → SQLite migration is idempotent).
+  DBI::dbExecute(
+    con,
+    "CREATE UNIQUE INDEX IF NOT EXISTS idx_trace_dedup
+       ON task_traces(query, session_id, created_at)"
   )
 }
 
@@ -436,6 +474,61 @@ export_to_sqlite <- function(graph, db_path) {
 }
 
 #' @keywords internal
+.upsert_tfidf_vocab <- function(con, graph) {
+  model <- tryCatch(
+    igraph::graph_attr(graph, "embed_model"),
+    error = function(e) NULL
+  )
+  if (is.null(model) || !is.list(model)) {
+    return(invisible(NULL))
+  }
+
+  vocab <- model$vocab
+  if (is.null(vocab) || !is.data.frame(vocab)) {
+    return(invisible(NULL))
+  }
+  if (!all(c("term", "doc_count", "term_count") %in% names(vocab))) {
+    return(invisible(NULL))
+  }
+
+  # Extract IDF weights from the fitted TF-IDF transformer.
+  # text2vec TfIdf exposes idf_vector as a public active binding after fit.
+  idf_weights <- tryCatch(
+    as.numeric(model$tfidf$idf_vector),
+    error = function(e) {
+      # Fallback: compute smoothed IDF from doc_count
+      n <- max(as.integer(vocab$doc_count), na.rm = TRUE)
+      log((n + 1) / (as.integer(vocab$doc_count) + 1)) + 1
+    }
+  )
+
+  n_terms <- nrow(vocab)
+  if (length(idf_weights) != n_terms) {
+    # Truncate or pad to match vocab size
+    if (length(idf_weights) > n_terms) {
+      idf_weights <- idf_weights[seq_len(n_terms)]
+    } else {
+      idf_weights <- c(
+        idf_weights,
+        rep(NA_real_, n_terms - length(idf_weights))
+      )
+    }
+  }
+
+  rows <- data.frame(
+    term = as.character(vocab$term),
+    idf = as.numeric(idf_weights),
+    doc_count = as.integer(vocab$doc_count),
+    term_count = as.integer(vocab$term_count),
+    stringsAsFactors = FALSE
+  )
+
+  DBI::dbExecute(con, "DELETE FROM tfidf_vocab")
+  DBI::dbWriteTable(con, "tfidf_vocab", rows, append = TRUE, row.names = FALSE)
+  invisible(NULL)
+}
+
+#' @keywords internal
 .upsert_graph_metadata <- function(con, graph) {
   meta <- .graph_metadata_list(graph)
   keys <- names(meta)
@@ -489,13 +582,29 @@ export_to_sqlite <- function(graph, db_path) {
 
   rows <- do.call(rbind, Filter(Negate(is.null), rows))
   if (!is.null(rows) && nrow(rows) > 0L) {
-    DBI::dbWriteTable(
-      con,
-      "task_traces",
-      rows,
-      append = TRUE,
-      row.names = FALSE
+    # INSERT OR IGNORE respects the unique index on (query, session_id, created_at)
+    # so repeated calls to export_to_sqlite() never create duplicate trace rows.
+    sql <- paste0(
+      "INSERT OR IGNORE INTO task_traces ",
+      "(query, nodes_json, polarity, session_id, created_at) ",
+      "VALUES (?, ?, ?, ?, ?)"
     )
+    for (i in seq_len(nrow(rows))) {
+      tryCatch(
+        DBI::dbExecute(
+          con,
+          sql,
+          params = list(
+            rows$query[[i]],
+            rows$nodes_json[[i]],
+            as.numeric(rows$polarity[[i]]),
+            rows$session_id[[i]],
+            rows$created_at[[i]]
+          )
+        ),
+        error = function(e) NULL
+      )
+    }
   }
   invisible(NULL)
 }
