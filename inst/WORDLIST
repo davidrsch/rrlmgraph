@@ -41,7 +41,9 @@ Fruchterman
 github
 GITHUB
 GitHub
+Graphviz
 grey
+htmlwidgets
 httr2
 IDF
 igraph
@@ -100,6 +102,7 @@ roxygen2
 rrlm
 rrlmgraph
 RSQLite
+RStudio
 seagreen
 serialise
 serialised
@@ -120,7 +123,9 @@ tokeniser
 tokenisers
 TypeScript
 ubuntu
+unresolvable
 upsert
 UTF
 walkthrough
+webshot
 withr

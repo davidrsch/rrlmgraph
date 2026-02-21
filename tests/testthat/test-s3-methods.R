@@ -172,33 +172,24 @@ test_that("plot.rrlm_graph is a function", {
   expect_true(existsFunction("plot.rrlm_graph"))
 })
 
-test_that("plot.rrlm_graph returns object invisibly", {
+test_that("plot.rrlm_graph returns a DiagrammeR htmlwidget", {
   g <- make_minimal_rrlm()
-  grDevices::pdf(NULL)
-  on.exit(grDevices::dev.off(), add = TRUE)
-  ret <- withVisible(plot(g))
-  expect_false(ret$visible)
-  expect_s3_class(ret$value, "rrlm_graph")
+  widget <- plot(g)
+  expect_s3_class(widget, "htmlwidget")
 })
 
 test_that("plot.rrlm_graph does not error with default n_hubs", {
   g <- make_minimal_rrlm()
-  grDevices::pdf(NULL)
-  on.exit(grDevices::dev.off(), add = TRUE)
   expect_no_error(plot(g))
 })
 
 test_that("plot.rrlm_graph respects n_hubs smaller than vcount", {
   g <- make_minimal_rrlm() # 4 nodes
-  grDevices::pdf(NULL)
-  on.exit(grDevices::dev.off(), add = TRUE)
   expect_no_error(plot(g, n_hubs = 2L))
 })
 
 test_that("plot.rrlm_graph handles n_hubs larger than vcount", {
   g <- make_minimal_rrlm() # 4 nodes
-  grDevices::pdf(NULL)
-  on.exit(grDevices::dev.off(), add = TRUE)
   expect_no_error(plot(g, n_hubs = 9999L))
 })
 
@@ -207,8 +198,6 @@ test_that("plot.rrlm_graph handles zero-node graph without error", {
   igraph::graph_attr(g, "project_name") <- "empty"
   igraph::graph_attr(g, "embed_method") <- "tfidf"
   class(g) <- c("rrlm_graph", class(g))
-  grDevices::pdf(NULL)
-  on.exit(grDevices::dev.off(), add = TRUE)
   expect_no_warning(plot(g))
 })
 
@@ -222,9 +211,14 @@ test_that("plot.rrlm_graph handles package and testfile node types", {
     node_type = "package",
     pagerank = 0.05
   )
-  grDevices::pdf(NULL)
-  on.exit(grDevices::dev.off(), add = TRUE)
   expect_no_error(plot(g, n_hubs = 3L))
+})
+
+test_that("plot.rrlm_graph accepts all layout options", {
+  g <- make_minimal_rrlm()
+  for (lay in c("dot", "neato", "fdp", "sfdp", "circo")) {
+    expect_no_error(plot(g, layout = lay))
+  }
 })
 
 # ---- S3 dispatch (UseMethod) ----------------------------------------

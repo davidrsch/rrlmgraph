@@ -23,23 +23,27 @@ Imports:
     codetools,
     cli,
     DBI,
+    DiagrammeR,
     fs,
     httr2,
     igraph,
     rlang,
     RSQLite,
-    text2vec
+    text2vec,
+    tools
 Suggests:
     covr,
     digest,
     dplyr,
     ellmer,
+    htmlwidgets,
     jsonlite,
     knitr,
     mockery,
     rmarkdown,
     spelling,
     testthat (>= 3.0.0),
+    webshot2,
     withr
 VignetteBuilder: knitr
 Config/testthat/edition: 3

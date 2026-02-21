@@ -21,8 +21,13 @@ print.rrlm_graph <- function(x, ...) {
   n_e <- igraph::ecount(x)
   pn <- igraph::graph_attr(x, "project_name") %||% "?"
   em <- igraph::graph_attr(x, "embed_method") %||% "?"
-  cat(sprintf("<rrlm_graph> %s | %d nodes | %d edges | embed: %s\n",
-              pn, n_v, n_e, em))
+  cat(sprintf(
+    "<rrlm_graph> %s | %d nodes | %d edges | embed: %s\n",
+    pn,
+    n_v,
+    n_e,
+    em
+  ))
   invisible(x)
 }
 
@@ -112,63 +117,71 @@ summary.rrlm_graph <- function(object, ...) {
 
 #' Plot an rrlm_graph
 #'
-#' Renders the top-`n_hubs` function nodes (by PageRank) using
-#' [igraph::plot.igraph()].  Package and test-file nodes are included only
-#' when they are connected to the selected hubs; their labels are suppressed
-#' to avoid clutter.  Vertex size scales with relative PageRank importance.
+#' Renders the top-`n_hubs` function nodes (by PageRank) and their
+#' one-hop neighbours as an interactive **Graphviz** widget via
+#' [DiagrammeR::grViz()].  Nodes are grouped into dashed sub-graph boxes by
+#' source file and coloured by node type; node width scales with relative
+#' PageRank importance.  In an interactive session the widget appears in the
+#' RStudio Viewer or a browser tab, supporting pan and zoom.
 #'
 #' Node colours:
-#' * User functions -- `"steelblue"`
+#' * User functions -- `"#4682B4"` (steelblue)
 #' * Package nodes  -- `"#C8D8E8"` (pale blue, smaller)
-#' * Test files     -- `"seagreen3"`
-#' * Other/unknown  -- `"lightyellow"`
+#' * Test files     -- `"#3CB371"` (seagreen3)
 #'
 #' @param x An `rrlm_graph` object.
 #' @param n_hubs Integer(1).  Number of top-PageRank *function* hub nodes to
-#'   show.  Default `15`.
-#' @param layout Function.  igraph layout function.  Defaults to
-#'   [igraph::layout_with_kk] when `NULL` (Kamada-Kawai; gives good node
-#'   separation on sparse graphs for readable labels).
-#' @param vertex.label.cex Numeric(1).  Label size for function nodes.
-#'   Default `0.85`.
-#' @param vertex.label.dist Numeric(1).  Distance of labels from node
-#'   centres, in units of vertex size.  Default `1.5` places labels just
-#'   outside the node circles so they don't overlap the node fill.
-#' @param edge.arrow.size Numeric(1).  Arrow size.  Default `0.35`.
-#' @param ... Additional arguments forwarded to [igraph::plot.igraph()].
-#' @return `x` invisibly.
+#'   show.  Default `15L`.
+#' @param layout Character(1).  Graphviz layout engine passed to the DOT
+#'   `layout` attribute.  One of `"dot"` (hierarchical, default), `"neato"`,
+#'   `"fdp"`, `"sfdp"`, or `"circo"`.
+#' @param file Character(1) or `NULL`.  Optional output file path.
+#'   * `.html` -- saved via [htmlwidgets::saveWidget()] (requires the
+#'     **htmlwidgets** package).
+#'   * `.png`, `.pdf`, `.svg` -- rendered by [webshot2::webshot()] after
+#'     writing a temporary HTML file (requires both **htmlwidgets** and
+#'     **webshot2**).
+#' @param width,height Integer(1).  Pixel dimensions for raster image export
+#'   via `file`.  Defaults `1400L` x `900L`.
+#' @param ... Ignored; kept for S3 dispatch compatibility.
+#' @return When `file` is `NULL` (default), an `htmlwidget` from
+#'   [DiagrammeR::grViz()] is returned visibly so it prints in the viewer.
+#'   When `file` is supplied, `x` is returned invisibly.
 #' @seealso [print.rrlm_graph()], [summary.rrlm_graph()], [build_rrlm_graph()]
 #' @examples
 #' \dontrun{
 #' g <- build_rrlm_graph("mypkg")
 #' plot(g)
-#' plot(g, n_hubs = 10L)
+#' plot(g, n_hubs = 10L, layout = "neato")
+#' plot(g, file = "graph.html")
+#' plot(g, file = "graph.png", width = 1600L, height = 1000L)
 #' }
 #' @export
 plot.rrlm_graph <- function(
   x,
   n_hubs = 15L,
-  layout = NULL,
-  vertex.label.cex = 0.85,
-  vertex.label.dist = 1.5,
-  edge.arrow.size = 0.35,
+  layout = c("dot", "neato", "fdp", "sfdp", "circo"),
+  file = NULL,
+  width = 1400L,
+  height = 900L,
   ...
 ) {
   g <- x
+  layout <- match.arg(layout)
 
   if (igraph::vcount(g) == 0L) {
     cli::cli_inform("Graph has no nodes -- nothing to plot.")
-    return(invisible(g))
+    return(invisible(x))
   }
 
   # -- Select top n_hubs *function* nodes by PageRank -------------------
-  nt_all <- igraph::V(g)$node_type
+  nt_all <- igraph::vertex_attr(g, "node_type")
   if (is.null(nt_all)) {
     nt_all <- rep("function", igraph::vcount(g))
   }
   fn_idx <- which(nt_all == "function")
 
-  pr <- igraph::V(g)$pagerank
+  pr <- igraph::vertex_attr(g, "pagerank")
   if (is.null(pr)) {
     pr <- rep(1 / igraph::vcount(g), igraph::vcount(g))
   }
@@ -176,13 +189,9 @@ plot.rrlm_graph <- function(
 
   k <- min(as.integer(n_hubs), length(fn_idx))
   top_fn <- fn_idx[order(pr[fn_idx], decreasing = TRUE)[seq_len(k)]]
-
-  # Include neighbour nodes (one hop) so edges have both endpoints
   nbrs <- unique(unlist(igraph::neighborhood(g, order = 1L, nodes = top_fn)))
-  keep_idx <- unique(c(top_fn, nbrs))
-  sub <- igraph::induced_subgraph(g, keep_idx)
+  sub <- igraph::induced_subgraph(g, unique(c(top_fn, nbrs)))
 
-  # Need at least 2 nodes to produce a layout with non-zero extent.
   if (igraph::vcount(sub) <= 1L) {
     cli::cli_inform(c(
       "i" = "Sub-graph has only {igraph::vcount(sub)} node(s) -- skipping plot."
@@ -190,112 +199,224 @@ plot.rrlm_graph <- function(
     return(invisible(x))
   }
 
-  # -- Node colours by type ---------------------------------------------
-  type_map <- c(
-    "function" = "#4682B4", # steelblue
-    "package" = "#C8D8E8", # pale blue -- unobtrusive
-    "testfile" = "#3CB371" # seagreen3
-  )
-  nt_sub <- igraph::V(sub)$node_type
+  # -- Build DOT string and render widget -------------------------------
+  project_nm <- igraph::graph_attr(g, "project_name") %||% "rrlm_graph"
+  dot <- .rrlmgraph_to_dot(sub, k, project_nm, layout)
+  widget <- DiagrammeR::grViz(dot)
+
+  # -- Export / return --------------------------------------------------
+  if (!is.null(file)) {
+    ext <- tolower(tools::file_ext(file))
+    rlang::check_installed(
+      "htmlwidgets",
+      reason = "to save an rrlm_graph plot to a file"
+    )
+    if (ext == "html") {
+      htmlwidgets::saveWidget(
+        widget,
+        normalizePath(file, mustWork = FALSE),
+        selfcontained = TRUE
+      )
+    } else if (ext %in% c("png", "pdf", "svg")) {
+      rlang::check_installed(
+        "webshot2",
+        reason = "to export an rrlm_graph plot as an image"
+      )
+      tmp <- tempfile(fileext = ".html")
+      on.exit(unlink(tmp), add = TRUE)
+      htmlwidgets::saveWidget(widget, tmp, selfcontained = TRUE)
+      webshot2::webshot(
+        tmp,
+        file = file,
+        vwidth = width,
+        vheight = height,
+        delay = 0.5
+      )
+    } else {
+      cli::cli_abort(c(
+        "Unsupported file extension {.val {ext}}.",
+        "i" = "Use one of: .html, .png, .pdf, .svg"
+      ))
+    }
+    return(invisible(x))
+  }
+
+  widget
+}
+
+# ---- internal: Graphviz DOT string builder ---------------------------
+
+#' Build a Graphviz DOT string from an rrlm_graph subgraph
+#'
+#' @param sub          igraph subgraph (already filtered to hubs + neighbours)
+#' @param k            Number of hub nodes shown (used in title)
+#' @param project_name Character(1) project name for the graph title
+#' @param layout       Character(1) Graphviz layout engine
+#' @return Character(1) DOT language string
+#' @noRd
+.rrlmgraph_to_dot <- function(sub, k, project_name, layout = "dot") {
+  nt_sub <- igraph::vertex_attr(sub, "node_type")
+  pr_sub <- as.numeric(igraph::vertex_attr(sub, "pagerank"))
+  names_sub <- igraph::vertex_attr(sub, "name")
+
   if (is.null(nt_sub)) {
     nt_sub <- rep("function", igraph::vcount(sub))
   }
-  colours <- ifelse(nt_sub %in% names(type_map), type_map[nt_sub], "#FFFACD")
-
-  # -- Vertex sizes: scale by PageRank, pkg/test nodes smaller ----------
-  pr_sub <- as.numeric(igraph::V(sub)$pagerank)
+  if (is.null(names_sub)) {
+    names_sub <- paste0("n", seq_len(igraph::vcount(sub)))
+  }
   pr_sub[is.na(pr_sub)] <- 0
+
+  # -- Type-to-colour maps -----------------------------------------------
+  type_fill <- c(
+    "function" = "#4682B4",
+    "package" = "#C8D8E8",
+    "testfile" = "#3CB371"
+  )
+  type_font <- c(
+    "function" = "white",
+    "package" = "#444444",
+    "testfile" = "white"
+  )
+
+  # -- Node width scaled by PageRank (0.4 - 2.0 in); pkg/test fixed -----
   pr_range <- range(pr_sub)
-  if (diff(pr_range) > 0) {
-    scaled <- 6 + 14 * (pr_sub - pr_range[[1L]]) / diff(pr_range)
+  widths <- if (diff(pr_range) > 0) {
+    0.4 + 1.6 * (pr_sub - pr_range[[1L]]) / diff(pr_range)
   } else {
-    scaled <- rep(8, igraph::vcount(sub))
+    rep(0.8, length(pr_sub))
   }
-  # shrink package/testfile nodes
-  scaled[nt_sub %in% c("package", "testfile")] <-
-    scaled[nt_sub %in% c("package", "testfile")] * 0.55
+  widths[nt_sub %in% c("package", "testfile")] <- 0.3
 
-  # -- Labels: only for function nodes, bare name only ------------------
-  labels <- ifelse(
-    nt_sub == "function",
-    vapply(
-      igraph::V(sub)$name,
-      function(nm) {
-        tail(strsplit(nm, "::", fixed = TRUE)[[1L]], 1L)
-      },
-      character(1L)
+  # -- Bare labels (strip "file::" prefix) + DOT escaping ---------------
+  bare_labels <- vapply(
+    names_sub,
+    function(nm) {
+      lbl <- tail(strsplit(nm, "::", fixed = TRUE)[[1L]], 1L)
+      lbl <- gsub("\\", "\\\\", lbl, fixed = TRUE)
+      gsub('"', '\\"', lbl, fixed = TRUE)
+    },
+    character(1L)
+  )
+
+  # -- Safe DOT node IDs (n1, n2, ...) ----------------------------------
+  node_ids <- paste0("n", seq_along(names_sub))
+  name_to_id <- stats::setNames(node_ids, names_sub)
+
+  # -- Source-file prefix for cluster grouping (function nodes only) ----
+  file_group <- vapply(
+    names_sub,
+    function(nm) {
+      parts <- strsplit(nm, "::", fixed = TRUE)[[1L]]
+      fg <- if (length(parts) >= 2L) parts[[1L]] else "other"
+      gsub("[^A-Za-z0-9_]", "_", fg) # valid DOT subgraph id
+    },
+    character(1L)
+  )
+
+  # -- Node attribute lines ---------------------------------------------
+  node_defs <- vapply(
+    seq_along(names_sub),
+    function(i) {
+      nt <- nt_sub[[i]]
+      fill <- type_fill[[nt]]
+      if (is.na(fill) || is.null(fill)) {
+        fill <- "#FFFACD"
+      }
+      fc <- type_font[[nt]]
+      if (is.na(fc) || is.null(fc)) {
+        fc <- "#222222"
+      }
+      sprintf(
+        '  %s [label="%s", fillcolor="%s", fontcolor="%s", width=%.2f];',
+        node_ids[[i]],
+        bare_labels[[i]],
+        fill,
+        fc,
+        round(widths[[i]], 2L)
+      )
+    },
+    character(1L)
+  )
+
+  # -- Edge lines (edge_type is UPPERCASE in rrlmgraph) -----------------
+  el <- igraph::as_data_frame(sub, what = "edges")
+  edge_defs <- character(0L)
+  if (nrow(el) > 0L) {
+    et <- if ("edge_type" %in% names(el)) {
+      toupper(el$edge_type)
+    } else {
+      rep("CALLS", nrow(el))
+    }
+    ec <- ifelse(
+      et == "CALLS",
+      "#888888",
+      ifelse(
+        et == "IMPORTS",
+        "#4682B4",
+        ifelse(et == "TESTS", "#3CB371", "#888888")
+      )
+    )
+    fids <- ifelse(
+      el$from %in% names(name_to_id),
+      name_to_id[el$from],
+      NA_character_
+    )
+    tids <- ifelse(
+      el$to %in% names(name_to_id),
+      name_to_id[el$to],
+      NA_character_
+    )
+    ok <- !is.na(fids) & !is.na(tids)
+    if (any(ok)) {
+      edge_defs <- sprintf(
+        '  %s -> %s [color="%s"];',
+        fids[ok],
+        tids[ok],
+        ec[ok]
+      )
+    }
+  }
+
+  # -- Cluster subgraphs (function nodes only, grouped by source file) --
+  fn_mask <- nt_sub == "function"
+  clusters <- split(which(fn_mask), file_group[fn_mask])
+  cluster_blocks <- vapply(
+    names(clusters),
+    function(fg) {
+      idxs <- clusters[[fg]]
+      inner <- paste(node_ids[idxs], collapse = "; ")
+      fg_lbl <- gsub("_", ".", fg, fixed = TRUE) # restore . for display
+      sprintf(
+        '  subgraph cluster_%s {\n    label="%s.R";\n    style=dashed;\n    color="#AAAAAA";\n    fontcolor="#666666";\n    fontsize=10;\n    %s;\n  }',
+        fg,
+        fg_lbl,
+        inner
+      )
+    },
+    character(1L)
+  )
+
+  # -- Assemble ---------------------------------------------------------
+  title <- paste0(project_name, "  \u2014  top ", k, " hubs")
+  title <- gsub("\\", "\\\\", title, fixed = TRUE)
+  title <- gsub('"', '\\"', title, fixed = TRUE)
+
+  paste0(
+    'digraph rrlmgraph {\n',
+    sprintf(
+      '  graph [layout=%s, rankdir=LR, fontname="Helvetica", label="%s", labelloc=t, fontsize=14, splines=ortho, nodesep=0.5, ranksep=0.8];\n',
+      layout,
+      title
     ),
-    NA_character_
+    '  node  [shape=box, style="rounded,filled", fontname="Helvetica", fontsize=10, penwidth=0.5, margin=0.1];\n',
+    '  edge  [arrowsize=0.5];\n\n',
+    paste(cluster_blocks, collapse = "\n\n"),
+    "\n\n",
+    paste(node_defs, collapse = "\n"),
+    "\n\n",
+    paste(edge_defs, collapse = "\n"),
+    "\n",
+    '}\n'
   )
-
-  # -- Layout -----------------------------------------------------------
-  # layout_with_kk (Kamada-Kawai) is used by default because it gives better
-  # node separation on sparse graphs, making labels easier to read.
-  # Falls back to layout_in_circle if KK fails or produces degenerate coords.
-  if (is.null(layout)) {
-    layout <- igraph::layout_with_kk
-  }
-  coords <- tryCatch(
-    layout(sub),
-    error = function(e) igraph::layout_in_circle(sub)
-  )
-  # Guard against degenerate coordinates: non-finite OR zero range on either
-  # axis (would cause plot.window() to fail with 'need finite xlim values').
-  degenerate <- !is.matrix(coords) ||
-    any(!is.finite(coords)) ||
-    diff(range(coords[, 1L])) < .Machine$double.eps ||
-    diff(range(coords[, 2L])) < .Machine$double.eps
-  if (degenerate) {
-    # layout_in_circle places n nodes evenly on the unit circle;
-    # always gives distinct finite coordinates for n >= 2.
-    coords <- igraph::layout_in_circle(sub)
-  }
-
-  # -- Plot -------------------------------------------------------------
-  op <- graphics::par(mar = c(2, 2, 3, 2))
-  on.exit(graphics::par(op), add = TRUE)
-
-  igraph::plot.igraph(
-    sub,
-    layout = coords,
-    vertex.color = colours,
-    vertex.size = scaled,
-    vertex.label = labels,
-    vertex.label.cex = vertex.label.cex,
-    vertex.label.dist = vertex.label.dist,
-    vertex.label.color = "gray15",
-    vertex.label.font = 2L, # bold
-    vertex.frame.color = "white",
-    edge.arrow.size = edge.arrow.size,
-    edge.color = "#88888866", # semi-transparent grey
-    edge.curved = 0.15,
-    main = paste0(
-      igraph::graph_attr(g, "project_name") %||% "rrlm_graph",
-      "  \u2014  top ",
-      k,
-      " hubs"
-    ),
-    ...
-  )
-
-  # -- Legend -----------------------------------------------------------
-  present_types <- intersect(c("function", "package", "testfile"), nt_sub)
-  legend_labels <- c(
-    "function" = "user function",
-    "package" = "package dep.",
-    "testfile" = "test file"
-  )
-  graphics::legend(
-    "bottomleft",
-    legend = legend_labels[present_types],
-    pch = 21L,
-    pt.bg = type_map[present_types],
-    col = "white",
-    pt.cex = 1.4,
-    cex = 0.75,
-    bty = "n",
-    text.col = "grey30"
-  )
-
-  invisible(g)
 }

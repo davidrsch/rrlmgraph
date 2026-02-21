@@ -34,6 +34,7 @@ packrat/bundles/
 debug*.R
 test_plot.R
 test_plot.png
+test_widget.html
 check_subgraph.R
 run_key_tests.R
 run_tests.R
