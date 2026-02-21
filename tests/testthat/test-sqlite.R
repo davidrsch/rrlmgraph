@@ -86,7 +86,10 @@ test_that("DBI can list all expected tables", {
   # tfidf_vocab added in Phase 2; sqlite_sequence is an internal SQLite table
   # created whenever AUTOINCREMENT is used — check for required tables only
   expect_true(
-    all(c("nodes", "edges", "task_traces", "graph_metadata", "tfidf_vocab") %in% tables)
+    all(
+      c("nodes", "edges", "task_traces", "graph_metadata", "tfidf_vocab") %in%
+        tables
+    )
   )
 })
 

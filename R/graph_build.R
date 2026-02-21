@@ -832,6 +832,9 @@ build_dispatch_edges <- function(func_nodes, r_files) {
 #' | `"IMPORTS"` | File/project imports a package |
 #' | `"TESTS"` | Test file covers a user function |
 #' | `"SEMANTIC"` | Cosine similarity >= `semantic_threshold` |
+#' | `"CO_CHANGES"` | Two functions co-edited in >= `min_cochanges` commits (from `build_co_change_edges()`) |
+#' | `"DISPATCHES_ON"` | S4/R5 generic dispatches on a class (from `build_dispatch_edges()`) |
+#' | `"EXTENDS"` | Class inherits from another class (from `build_dispatch_edges()`) |
 #'
 #' @param project_path Character(1).  Path to the R project root.
 #'   Defaults to `"."`.
