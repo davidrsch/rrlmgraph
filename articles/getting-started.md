@@ -37,7 +37,7 @@ graph <- build_rrlm_graph(demo_dir, verbose = TRUE)
 #> Computing PageRank
 #> Embedding nodes with method 'tfidf'
 #> Computing semantic similarity edges (threshold 0.7)
-#> Done in 0.61s -- 22 nodes, 11 edges
+#> Done in 0.58s -- 22 nodes, 11 edges
 ```
 
 The function:
@@ -53,8 +53,8 @@ The function:
 summary(graph)
 #> === rrlm_graph: demo ===
 #> Root:  /home/runner/work/_temp/Library/rrlmgraph/extdata/demo
-#> Built: 2026-02-21 01:33:05
-#> Build time: 0.61 s
+#> Built: 2026-02-21 02:02:40
+#> Build time: 0.58 s
 #> 
 #> Nodes (22 total):
 #>   package: 13
@@ -257,17 +257,17 @@ graph_small <- update_graph_incremental(
 #> 
 #> ── Incremental graph update ──
 #> 
-#> Changed files: /tmp/Rtmp7q06I6/mypkg_demo/R/data_prep.R
+#> Changed files: /tmp/RtmpWgaAWM/mypkg_demo/R/data_prep.R
 #> Removing 1 stale node(s).
 #> Re-parsing 1 file(s).
 #> Embedding 1 new node(s) using method 'tfidf'.
 #> Graph now has 2 nodes, 0 edges.
 #> Recomputing PageRank.
-#> Persisting cache to /tmp/Rtmp7q06I6/mypkg_demo.
-#> Graph cached at /tmp/Rtmp7q06I6/mypkg_demo/.rrlmgraph
+#> Persisting cache to /tmp/RtmpWgaAWM/mypkg_demo.
+#> Graph cached at /tmp/RtmpWgaAWM/mypkg_demo/.rrlmgraph
 
 summary(graph_small)
-#> IGRAPH 5f555fa DNW- 2 0 -- 
+#> IGRAPH e3a3d64 DNW- 2 0 -- 
 #> + attr: project_name (g/c), project_root (g/c), project_type (g/c),
 #> | r_version (g/c), build_time (g/n), build_at (g/c), embed_method
 #> | (g/c), embed_model (g/x), cache_path (g/c), name (v/c), node_type
