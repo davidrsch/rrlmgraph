@@ -112,7 +112,7 @@ compute_relevance <- function(
     NA_real_
   }
   if (is.null(ttw) || length(ttw) == 0L || is.na(ttw)) {
-    ttw <- 0.5
+    ttw <- 0.0   # neutral / no prior history (not 0.5, which adds constant bias)
   }
   ttw <- max(0, min(1, ttw))
 
@@ -391,7 +391,13 @@ query_context <- function(
         break
       } # all remaining are below threshold
 
-      node_ctx <- build_node_context(fn, graph, mode = "full")
+      # Estimate token cost using the same rendering mode that
+      # assemble_context_string() will use: "full" for the seed only,
+      # "compressed" (>=3x smaller) for all supporting nodes.  Using
+      # "full" here (the previous behaviour) over-counted by ~3x, causing
+      # the BFS to terminate far too early.  See issue #48.
+      cost_mode <- if (nodes_added == 0L) "full" else "compressed"
+      node_ctx    <- build_node_context(fn, graph, mode = cost_mode)
       node_tokens <- as.integer(ceiling(nchar(node_ctx) / 4L))
 
       if (tokens_used + node_tokens <= budget_tokens) {
@@ -439,8 +445,18 @@ query_context <- function(
   # Hard-enforce the budget on the final assembled output. assemble_context_string
   # adds section headers / formatting beyond the raw node contexts counted during
   # the BFS loop, so the assembled string can slightly exceed budget_tokens.
+  # Truncate at the last newline before the limit so we never split mid-line
+  # (which could produce malformed code blocks / invalid UTF-8 sequences).
   if (final_tokens > budget_tokens) {
-    context_string <- substr(context_string, 1L, budget_tokens * 4L)
+    char_limit  <- budget_tokens * 4L
+    truncated   <- substr(context_string, 1L, char_limit)
+    last_nl     <- max(c(0L, gregexpr("\n", truncated, fixed = TRUE)[[1L]]))
+    context_string <- if (last_nl > 0L) {
+      substr(context_string, 1L, last_nl)
+    } else {
+      truncated
+    }
+    cli::cli_warn("Context truncated to {last_nl} chars to fit budget ({budget_tokens} tokens).")
     final_tokens <- budget_tokens
   }
 

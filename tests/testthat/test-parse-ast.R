@@ -38,7 +38,7 @@ test_that("finds multiple functions in one file", {
   expect_setequal(names_found, c("f1", "f2", "f3"))
 })
 
-test_that("node_id format is file_stem::fn_name", {
+test_that("node_id format is dir/file_stem::fn_name", {
   f <- write_r_file("calculate <- function(x) sqrt(x)")
   nodes <- extract_function_nodes(f)
 

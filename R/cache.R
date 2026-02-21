@@ -155,6 +155,22 @@ is_cache_stale <- function(project_path = ".") {
     return(FALSE)
   }
 
+  # Exclude non-source directories that contain .R files but should not
+  # invalidate the cache: renv/, packrat/, _targets/, .rrlmgraph/, and
+  # the auto-generated test snapshot dirs.
+  exclude_rx <- paste(
+    c(
+      "/renv/",
+      "/packrat/",
+      "/_targets/",
+      "/\\.rrlmgraph/",
+      "/node_modules/",
+      "/\\.git/"
+    ),
+    collapse = "|"
+  )
+  r_files <- r_files[!grepl(exclude_rx, r_files, perl = TRUE)]
+
   r_mtimes <- file.info(as.character(r_files))$mtime
   any(!is.na(r_mtimes) & r_mtimes > cache_mtime)
 }

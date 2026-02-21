@@ -194,7 +194,16 @@ extract_function_nodes <- function(r_files) {
     error = function(e) character(0)
   )
 
-  file_stem <- as.character(fs::path_ext_remove(fs::path_file(file_path)))
+  # Include the immediate parent directory in the stem to disambiguate
+  # files with the same name in different directories (e.g. R/utils.R vs
+  # tests/utils.R), which would otherwise produce colliding node_ids.
+  dir_part  <- basename(dirname(as.character(file_path)))
+  stem_part <- as.character(fs::path_ext_remove(fs::path_file(file_path)))
+  file_stem <- if (nzchar(dir_part) && dir_part != ".") {
+    paste0(dir_part, "/", stem_part)
+  } else {
+    stem_part
+  }
   node_id <- paste0(file_stem, "::", fn_name)
 
   list(

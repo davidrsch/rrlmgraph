@@ -43,8 +43,9 @@ build_call_edges <- function(func_nodes) {
   node_names <- vapply(func_nodes, `[[`, character(1), "name")
   name_to_ids <- split(node_ids, node_names)
 
-  from_vec <- character(0)
-  to_vec <- character(0)
+  # Use list accumulation to avoid O(n²) c() copying inside loops.
+  rows <- list()
+  k <- 0L
 
   for (node in func_nodes) {
     calls <- unique(node$calls_list)
@@ -62,19 +63,19 @@ build_call_edges <- function(func_nodes) {
 
       # Self-calls are valid edges (recursion)
       for (target_id in candidates) {
-        from_vec <- c(from_vec, node$node_id)
-        to_vec <- c(to_vec, target_id)
+        k <- k + 1L
+        rows[[k]] <- list(from = node$node_id, to = target_id)
       }
     }
   }
 
-  if (length(from_vec) == 0L) {
+  if (k == 0L) {
     return(.empty_edge_df())
   }
 
   unique(data.frame(
-    from = from_vec,
-    to = to_vec,
+    from   = vapply(rows, `[[`, character(1L), "from"),
+    to     = vapply(rows, `[[`, character(1L), "to"),
     weight = 1,
     stringsAsFactors = FALSE
   ))
@@ -299,8 +300,9 @@ build_test_edges <- function(func_nodes, test_files) {
     "require"
   )
 
-  from_vec <- character(0)
-  to_vec <- character(0)
+  # Use list accumulation to avoid O(n²) c() copying.
+  rows <- list()
+  k <- 0L
 
   for (tpath in test_files) {
     parsed <- tryCatch(
@@ -331,19 +333,19 @@ build_test_edges <- function(func_nodes, test_files) {
       }
       nid <- name_to_id[[bare]]
       if (!is.null(nid)) {
-        from_vec <- c(from_vec, fstem)
-        to_vec <- c(to_vec, nid)
+        k <- k + 1L
+        rows[[k]] <- list(from = fstem, to = nid)
       }
     }
   }
 
-  if (length(from_vec) == 0L) {
+  if (k == 0L) {
     return(.empty_edge_df())
   }
 
   unique(data.frame(
-    from = from_vec,
-    to = to_vec,
+    from   = vapply(rows, `[[`, character(1L), "from"),
+    to     = vapply(rows, `[[`, character(1L), "to"),
     weight = 1,
     stringsAsFactors = FALSE
   ))
@@ -453,6 +455,10 @@ build_test_edges <- function(func_nodes, test_files) {
 #'   per unique external package is added to the graph.
 #' @param semantic_threshold Numeric(1).  Minimum cosine similarity for a
 #'   `SEMANTIC` edge to be created.  Default `0.7`.
+#' @param max_semantic_edges Integer(1).  Maximum SEMANTIC edges to create per
+#'   node.  Capping at a small number (default `5L`) prevents dense graphs on
+#'   large projects.  Semantic edges are disabled entirely when the graph has
+#'   more than 300 function nodes.
 #' @param cache Logical(1).  When `TRUE` (default), the graph is serialised
 #'   to `<project_root>/.rrlmgraph/graph.rds`.
 #' @param verbose Logical(1).  When `TRUE`, progress messages are printed via
@@ -474,6 +480,7 @@ build_rrlm_graph <- function(
   embed_method = "tfidf",
   include_package_nodes = TRUE,
   semantic_threshold = 0.7,
+  max_semantic_edges = 5L,
   cache = TRUE,
   verbose = FALSE
 ) {
@@ -611,6 +618,11 @@ build_rrlm_graph <- function(
   )
   igraph::V(g)$pagerank <- as.numeric(pr_scores)
 
+  # Initialise task_trace_weight to 0.0 (neutral / no prior history).
+  # Using 0.0 instead of 0.5 keeps the relevance formula unbiased on fresh
+  # graphs and ensures compute_relevance() returns 0 when all signals are 0.
+  igraph::V(g)$task_trace_weight <- 0.0
+
   # ---- 6. Embeddings --------------------------------------------------
   .vlog("Embedding nodes with method '{embed_method}'")
   fn_only <- Filter(function(n) n$node_id %in% fn_vertex_df$name, func_nodes)
@@ -635,7 +647,8 @@ build_rrlm_graph <- function(
   .vlog("Computing semantic similarity edges (threshold {semantic_threshold})")
   sem_edges <- .build_semantic_edges(
     embed_result$embeddings,
-    semantic_threshold
+    semantic_threshold,
+    max_per_node = as.integer(max_semantic_edges)
   )
   if (nrow(sem_edges) > 0L) {
     vertex_names <- igraph::V(g)$name
@@ -805,40 +818,102 @@ build_rrlm_graph <- function(
 }
 
 #' @keywords internal
-.build_semantic_edges <- function(embeddings, threshold) {
+.build_semantic_edges <- function(embeddings, threshold, max_per_node = 5L) {
   ids <- names(embeddings)
-  n <- length(ids)
+  n   <- length(ids)
+
+  empty_df <- data.frame(
+    from = character(0), to = character(0),
+    similarity = numeric(0), stringsAsFactors = FALSE
+  )
+
   if (n < 2L) {
-    return(data.frame(
-      from = character(0),
-      to = character(0),
-      similarity = numeric(0),
-      stringsAsFactors = FALSE
-    ))
+    return(empty_df)
   }
 
-  from_v <- character(0)
-  to_v <- character(0)
-  sim_v <- numeric(0)
+  # For very large graphs (> 300 nodes) the O(n²) pairwise loop is infeasible.
+  # Disable semantic edges in that case; users can opt in by reducing
+  # max_semantic_edges or by post-processing with an ANN index.
+  if (n > 300L) {
+    cli::cli_warn(c(
+      "!
+" = "Semantic edge computation skipped: {n} nodes > 300 limit.",
+      "i" = "Set {.arg semantic_threshold = 1.1} to suppress this warning."
+    ))
+    return(empty_df)
+  }
 
-  for (i in seq_len(n - 1L)) {
-    for (j in seq(i + 1L, n)) {
-      sim <- tryCatch(
-        cosine_similarity(embeddings[[i]], embeddings[[j]]),
-        error = function(e) 0
-      )
-      if (sim >= threshold) {
-        from_v <- c(from_v, ids[[i]])
-        to_v <- c(to_v, ids[[j]])
-        sim_v <- c(sim_v, sim)
+  # For dense embeddings (same-length numeric vectors) use matrix multiply to
+  # compute all pairwise cosines in one operation, which is much faster than
+  # iterating over pairs.
+  first_emb <- embeddings[[1L]]
+  is_dense  <- is.numeric(first_emb) && length(first_emb) > 1L &&
+    all(vapply(embeddings, function(e) {
+      is.numeric(e) && length(e) == length(first_emb)
+    }, logical(1L)))
+
+  if (is_dense) {
+    # Build normalised matrix (rows = nodes, cols = dims)
+    mat   <- do.call(rbind, embeddings)
+    norms <- sqrt(rowSums(mat^2))
+    # Avoid division by zero for zero-norm rows (empty documents)
+    norms[norms == 0] <- 1
+    mat   <- mat / norms                    # L2-normalise
+    sims  <- mat %*% t(mat)                 # n x n cosine similarities
+    diag(sims) <- 0                         # exclude self-similarity
+
+    # Collect index pairs above threshold, capped per node
+    per_node_count <- integer(n)
+    rows <- list()
+    k    <- 0L
+    # Iterate columns in descending similarity order for consistent top-k
+    for (i in seq_len(n)) {
+      if (per_node_count[[i]] >= max_per_node) next
+      order_j <- order(sims[i, ], decreasing = TRUE)
+      for (j in order_j) {
+        if (j <= i) next                    # emit each pair only once
+        if (per_node_count[[i]] >= max_per_node) break
+        if (per_node_count[[j]] >= max_per_node) next
+        s <- sims[i, j]
+        if (s < threshold) break            # rows are sorted descending
+        k <- k + 1L
+        rows[[k]] <- list(from = ids[[i]], to = ids[[j]], similarity = s)
+        per_node_count[[i]] <- per_node_count[[i]] + 1L
+        per_node_count[[j]] <- per_node_count[[j]] + 1L
+      }
+    }
+  } else {
+    # Sparse / variable-length embeddings (e.g. TF-IDF bags): fall back to
+    # explicit pairwise loop with list accumulation and per-node cap.
+    per_node_count <- integer(n)
+    rows <- list()
+    k    <- 0L
+    for (i in seq_len(n - 1L)) {
+      if (per_node_count[[i]] >= max_per_node) next
+      for (j in seq(i + 1L, n)) {
+        if (per_node_count[[j]] >= max_per_node) next
+        s <- tryCatch(
+          cosine_similarity(embeddings[[i]], embeddings[[j]]),
+          error = function(e) 0
+        )
+        if (s >= threshold) {
+          k <- k + 1L
+          rows[[k]] <- list(from = ids[[i]], to = ids[[j]], similarity = s)
+          per_node_count[[i]] <- per_node_count[[i]] + 1L
+          per_node_count[[j]] <- per_node_count[[j]] + 1L
+        }
       }
     }
   }
 
+  if (k == 0L) {
+    return(empty_df)
+  }
+
   data.frame(
-    from = from_v,
-    to = to_v,
-    similarity = sim_v,
+    from       = vapply(rows[seq_len(k)], `[[`, character(1L), "from"),
+    to         = vapply(rows[seq_len(k)], `[[`, character(1L), "to"),
+    similarity = vapply(rows[seq_len(k)], `[[`, numeric(1L),   "similarity"),
     stringsAsFactors = FALSE
   )
 }
