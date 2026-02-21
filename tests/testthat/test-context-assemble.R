@@ -91,15 +91,14 @@ test_that("full mode contains roxygen text when present", {
 
 # ---- build_node_context: compressed mode ----------------------------
 
-test_that("compressed mode is not longer than full mode (compression ratio)", {
+test_that("compressed mode omits the function body text", {
   g <- make_ctx_graph()
-  full_nc <- nchar(build_node_context("pkg::clean_data", g, mode = "full"))
-  comp_nc <- nchar(build_node_context(
-    "pkg::clean_data",
-    g,
-    mode = "compressed"
-  ))
-  expect_lte(comp_nc, full_nc)
+  v_idx <- match("pkg::clean_data", igraph::V(g)$name)
+  body_text <- igraph::V(g)$body_text[[v_idx]]
+  comp_out <- build_node_context("pkg::clean_data", g, mode = "compressed")
+  # Compressed omits the body regardless of overall length.
+  # (Compressed can be longer than full for small functions with many edges.)
+  expect_false(grepl(body_text, comp_out, fixed = TRUE))
 })
 
 test_that("compressed mode contains the signature", {

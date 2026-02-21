@@ -326,7 +326,7 @@ build_test_edges <- function(func_nodes, test_files) {
 
     for (sym in calls) {
       bare <- sub("^.*:::?", "", sym)
-      if (!bare %in% names(name_to_id)) {
+      if (!nzchar(bare) || !bare %in% names(name_to_id)) {
         next
       }
       nid <- name_to_id[[bare]]

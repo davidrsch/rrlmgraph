@@ -436,6 +436,14 @@ query_context <- function(
   context_string <- assemble_context_string(hits, graph, query)
   final_tokens <- as.integer(ceiling(nchar(context_string) / 4L))
 
+  # Hard-enforce the budget on the final assembled output. assemble_context_string
+  # adds section headers / formatting beyond the raw node contexts counted during
+  # the BFS loop, so the assembled string can slightly exceed budget_tokens.
+  if (final_tokens > budget_tokens) {
+    context_string <- substr(context_string, 1L, budget_tokens * 4L)
+    final_tokens <- budget_tokens
+  }
+
   structure(
     list(
       nodes = hits,
