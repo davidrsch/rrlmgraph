@@ -141,12 +141,17 @@ summary.rrlm_graph <- function(object, ...) {
 #'   * `.png`, `.pdf`, `.svg` -- rendered by [webshot2::webshot()] after
 #'     writing a temporary HTML file (requires both **htmlwidgets** and
 #'     **webshot2**).
-#' @param width,height Integer(1).  Pixel dimensions for raster image export
-#'   via `file`.  Defaults `1400L` x `900L`.
+#' @param width,height Integer(1).  Used **only** when `file` is a raster or
+#'   vector path (`.png`, `.pdf`, `.svg`): sets the viewport size in pixels
+#'   that [webshot2::webshot()] renders.  Has no effect on the interactive
+#'   widget, which fills 100\% of the container and provides its own
+#'   pan-and-zoom via viz.js.  Defaults `1400L` x `900L`.
 #' @param ... Ignored; kept for S3 dispatch compatibility.
 #' @return When `file` is `NULL` (default), an `htmlwidget` from
 #'   [DiagrammeR::grViz()] is returned visibly so it prints in the viewer.
-#'   When `file` is supplied, `x` is returned invisibly.
+#'   The widget fills 100\% of its container and supports pan and zoom
+#'   regardless of graph size.  When `file` is supplied, `x` is returned
+#'   invisibly.
 #' @seealso [print.rrlm_graph()], [summary.rrlm_graph()], [build_rrlm_graph()]
 #' @examples
 #' \dontrun{
@@ -200,9 +205,13 @@ plot.rrlm_graph <- function(
   }
 
   # -- Build DOT string and render widget -------------------------------
+  # width = "100%" / height = "100%" make the widget fill its container
+  # (RStudio Viewer pane, browser tab, knitr output chunk) without
+  # overflowing.  Pan-and-zoom is provided by the viz.js runtime embedded
+  # inside the widget and is NOT affected by these container dimensions.
   project_nm <- igraph::graph_attr(g, "project_name") %||% "rrlm_graph"
-  dot <- .rrlmgraph_to_dot(sub, k, project_nm, layout)
-  widget <- DiagrammeR::grViz(dot)
+  dot    <- .rrlmgraph_to_dot(sub, k, project_nm, layout)
+  widget <- DiagrammeR::grViz(dot, width = "100%", height = "100%")
 
   # -- Export / return --------------------------------------------------
   if (!is.null(file)) {
