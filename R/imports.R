@@ -10,6 +10,7 @@
 #' @importFrom igraph E V add_edges add_vertices delete_vertices as_data_frame
 #' @importFrom igraph ecount ends graph_attr "graph_attr<-" graph_from_data_frame
 #' @importFrom DiagrammeR grViz
+#' @importFrom htmlwidgets onRender
 #' @importFrom igraph incident induced_subgraph make_empty_graph neighborhood neighbors page_rank
 #' @importFrom igraph vcount vertex_attr
 #' @importFrom tools file_ext

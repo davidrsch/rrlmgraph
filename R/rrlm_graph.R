@@ -122,7 +122,13 @@ summary.rrlm_graph <- function(object, ...) {
 #' [DiagrammeR::grViz()].  Nodes are grouped into dashed sub-graph boxes by
 #' source file and coloured by node type; node width scales with relative
 #' PageRank importance.  In an interactive session the widget appears in the
-#' RStudio Viewer or a browser tab, supporting pan and zoom.
+#' RStudio Viewer or a browser tab.
+#'
+#' **Interaction (no plugins required)**
+#' * **Scroll** -- zoom in / out centred on the cursor.
+#' * **Click-drag** -- pan the graph.
+#' * **Pinch** (touch) -- zoom on mobile/tablet.
+#' * **Double-click** -- reset to the original fit-to-screen view.
 #'
 #' Node colours:
 #' * User functions -- `"#4682B4"` (steelblue)
@@ -145,13 +151,13 @@ summary.rrlm_graph <- function(object, ...) {
 #'   vector path (`.png`, `.pdf`, `.svg`): sets the viewport size in pixels
 #'   that [webshot2::webshot()] renders.  Has no effect on the interactive
 #'   widget, which fills 100\% of the container and provides its own
-#'   pan-and-zoom via viz.js.  Defaults `1400L` x `900L`.
+#'   pan-and-zoom via injected vanilla JS.  Defaults `1400L` x `900L`.
 #' @param ... Ignored; kept for S3 dispatch compatibility.
 #' @return When `file` is `NULL` (default), an `htmlwidget` from
 #'   [DiagrammeR::grViz()] is returned visibly so it prints in the viewer.
-#'   The widget fills 100\% of its container and supports pan and zoom
-#'   regardless of graph size.  When `file` is supplied, `x` is returned
-#'   invisibly.
+#'   The widget fills 100\% of its container; scroll to zoom (centred on
+#'   cursor), drag to pan, double-click to reset.  When `file` is supplied,
+#'   `x` is returned invisibly.
 #' @seealso [print.rrlm_graph()], [summary.rrlm_graph()], [build_rrlm_graph()]
 #' @examples
 #' \dontrun{
@@ -205,13 +211,17 @@ plot.rrlm_graph <- function(
   }
 
   # -- Build DOT string and render widget -------------------------------
-  # width = "100%" / height = "100%" make the widget fill its container
-  # (RStudio Viewer pane, browser tab, knitr output chunk) without
-  # overflowing.  Pan-and-zoom is provided by the viz.js runtime embedded
-  # inside the widget and is NOT affected by these container dimensions.
+  # width = "100%" / height = "100%" make the widget fill its container.
+  # Pan-and-zoom is injected as vanilla JS (no CDN) via htmlwidgets::onRender:
+  # - scroll (wheel) zooms centred on the cursor
+  # - click-drag pans
+  # - pinch-zoom works on touch devices
+  # - double-click resets to the original fit-to-screen view
+  # All implemented by manipulating the SVG viewBox -- no external libraries.
   project_nm <- igraph::graph_attr(g, "project_name") %||% "rrlm_graph"
   dot    <- .rrlmgraph_to_dot(sub, k, project_nm, layout)
   widget <- DiagrammeR::grViz(dot, width = "100%", height = "100%")
+  widget <- htmlwidgets::onRender(widget, .rrlmgraph_pan_zoom_js())
 
   # -- Export / return --------------------------------------------------
   if (!is.null(file)) {
@@ -428,4 +438,128 @@ plot.rrlm_graph <- function(
     "\n",
     '}\n'
   )
+}
+# ---- internal: pan/zoom JS injected via htmlwidgets::onRender ---------
+
+#' Vanilla-JS pan/zoom handler for the grViz SVG widget
+#'
+#' Returns a JS function string for use with [htmlwidgets::onRender()].
+#' Works by manipulating the SVG `viewBox` attribute -- no CDN, no external
+#' library, no browser plugin.
+#'
+#' Interactions:
+#'  * Mouse wheel -- zoom in/out centred on cursor position
+#'  * Click-drag  -- pan
+#'  * Pinch       -- zoom on touch devices
+#'  * Double-click -- reset to the initial fit-to-screen view
+#'
+#' @return Character(1) JS function source accepted by [htmlwidgets::onRender()]
+#' @noRd
+.rrlmgraph_pan_zoom_js <- function() {
+  "function(el) {
+    // viz.js renders the SVG asynchronously; poll until it appears
+    var MAX_WAIT = 3000, INTERVAL = 50, waited = 0;
+    var timer = setInterval(function() {
+      waited += INTERVAL;
+      var svg = el.querySelector('svg');
+      if (!svg && waited < MAX_WAIT) return;
+      clearInterval(timer);
+      if (!svg) return;
+
+      // --- Read Graphviz natural dimensions ----------------------------
+      var nw = parseFloat(svg.getAttribute('width'))  || svg.viewBox.baseVal.width  || 800;
+      var nh = parseFloat(svg.getAttribute('height')) || svg.viewBox.baseVal.height || 600;
+
+      // Remove fixed attrs so the SVG fills the container via CSS
+      svg.removeAttribute('width');
+      svg.removeAttribute('height');
+      svg.style.display  = 'block';
+      svg.style.width    = '100%';
+      svg.style.height   = '100%';
+      svg.style.cursor   = 'grab';
+      svg.style.userSelect = 'none';
+
+      // viewBox state: (ox, oy) = top-left corner; (vw, vh) = viewport size
+      var ox = 0, oy = 0, vw = nw, vh = nh;
+      function setVB() {
+        svg.setAttribute('viewBox', ox + ' ' + oy + ' ' + vw + ' ' + vh);
+      }
+      setVB();
+
+      // --- Mouse wheel zoom centred on cursor --------------------------
+      el.addEventListener('wheel', function(e) {
+        e.preventDefault();
+        var rect  = svg.getBoundingClientRect();
+        var px    = (e.clientX - rect.left)  / rect.width;   // 0-1 fraction
+        var py    = (e.clientY - rect.top)   / rect.height;
+        var factor = e.deltaY < 0 ? 0.85 : (1 / 0.85);
+        var nvw = vw * factor, nvh = vh * factor;
+        ox = ox + (vw - nvw) * px;
+        oy = oy + (vh - nvh) * py;
+        vw = nvw; vh = nvh;
+        setVB();
+      }, {passive: false});
+
+      // --- Click-drag pan ----------------------------------------------
+      var dragging = false, lastMX, lastMY;
+      el.addEventListener('mousedown', function(e) {
+        dragging = true;
+        lastMX = e.clientX; lastMY = e.clientY;
+        svg.style.cursor = 'grabbing';
+        e.preventDefault();
+      });
+      window.addEventListener('mousemove', function(e) {
+        if (!dragging) return;
+        var rect = svg.getBoundingClientRect();
+        ox -= (e.clientX - lastMX) / rect.width  * vw;
+        oy -= (e.clientY - lastMY) / rect.height * vh;
+        lastMX = e.clientX; lastMY = e.clientY;
+        setVB();
+      });
+      window.addEventListener('mouseup', function() {
+        if (dragging) { dragging = false; svg.style.cursor = 'grab'; }
+      });
+
+      // --- Touch: one-finger pan, two-finger pinch-zoom ----------------
+      var lastTouches = null;
+      el.addEventListener('touchstart', function(e) {
+        e.preventDefault();
+        lastTouches = Array.from(e.touches).map(function(t) {
+          return {x: t.clientX, y: t.clientY};
+        });
+      }, {passive: false});
+      el.addEventListener('touchmove', function(e) {
+        e.preventDefault();
+        var rect = svg.getBoundingClientRect();
+        var cur  = Array.from(e.touches).map(function(t) {
+          return {x: t.clientX, y: t.clientY};
+        });
+        if (cur.length === 1 && lastTouches && lastTouches.length >= 1) {
+          ox -= (cur[0].x - lastTouches[0].x) / rect.width  * vw;
+          oy -= (cur[0].y - lastTouches[0].y) / rect.height * vh;
+        } else if (cur.length === 2 && lastTouches && lastTouches.length === 2) {
+          var d0 = Math.hypot(lastTouches[1].x - lastTouches[0].x,
+                              lastTouches[1].y - lastTouches[0].y);
+          var d1 = Math.hypot(cur[1].x - cur[0].x, cur[1].y - cur[0].y);
+          if (d0 > 0) {
+            var factor = d0 / d1;
+            var cx = ((cur[0].x + cur[1].x) / 2 - rect.left)  / rect.width;
+            var cy = ((cur[0].y + cur[1].y) / 2 - rect.top)   / rect.height;
+            var nvw = vw * factor, nvh = vh * factor;
+            ox = ox + (vw - nvw) * cx;
+            oy = oy + (vh - nvh) * cy;
+            vw = nvw; vh = nvh;
+          }
+        }
+        lastTouches = cur;
+        setVB();
+      }, {passive: false});
+
+      // --- Double-click: reset to original fit-to-screen ---------------
+      el.addEventListener('dblclick', function() {
+        ox = 0; oy = 0; vw = nw; vh = nh;
+        setVB();
+      });
+    }, INTERVAL);
+  }"
 }
