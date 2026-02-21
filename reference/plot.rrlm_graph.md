@@ -6,7 +6,7 @@ neighbours as an interactive **Graphviz** widget via
 Nodes are grouped into dashed sub-graph boxes by source file and
 coloured by node type; node width scales with relative PageRank
 importance. In an interactive session the widget appears in the RStudio
-Viewer or a browser tab, supporting pan and zoom.
+Viewer or a browser tab.
 
 ## Usage
 
@@ -59,7 +59,7 @@ plot(
   (`.png`, `.pdf`, `.svg`): sets the viewport size in pixels that
   [`webshot2::webshot()`](https://rstudio.github.io/webshot2/reference/webshot.html)
   renders. Has no effect on the interactive widget, which fills 100\\
-  pan-and-zoom via viz.js. Defaults `1400L` x `900L`.
+  pan-and-zoom via injected vanilla JS. Defaults `1400L` x `900L`.
 
 - ...:
 
@@ -70,10 +70,20 @@ plot(
 When `file` is `NULL` (default), an `htmlwidget` from
 [`DiagrammeR::grViz()`](https://rich-iannone.github.io/DiagrammeR/reference/grViz.html)
 is returned visibly so it prints in the viewer. The widget fills 100\\
-regardless of graph size. When `file` is supplied, `x` is returned
-invisibly.
+cursor), drag to pan, double-click to reset. When `file` is supplied,
+`x` is returned invisibly.
 
 ## Details
+
+**Interaction (no plugins required)**
+
+- **Scroll** – zoom in / out centred on the cursor.
+
+- **Click-drag** – pan the graph.
+
+- **Pinch** (touch) – zoom on mobile/tablet.
+
+- **Double-click** – reset to the original fit-to-screen view.
 
 Node colours:
 

@@ -13,8 +13,10 @@ First release.
   [`DiagrammeR::grViz()`](https://rich-iannone.github.io/DiagrammeR/reference/grViz.html).
   Nodes are grouped into dashed sub-graph boxes by source file, coloured
   by node type, and sized by PageRank. The widget renders in the RStudio
-  Viewer or any browser with full pan-and-zoom support. A new `layout`
-  parameter selects the Graphviz engine (`"dot"` hierarchical,
+  Viewer or any browser with full pan-and-zoom support (scroll to zoom
+  centred on cursor, drag to pan, pinch on touch devices, double-click
+  to reset) via injected vanilla JS – no CDN or plugin required. A new
+  `layout` parameter selects the Graphviz engine (`"dot"` hierarchical,
   `"neato"`, `"fdp"`, `"sfdp"`, `"circo"`); a new `file` parameter saves
   to `.html` (via **htmlwidgets**) or to `.png`/`.pdf`/`.svg` (via
   **webshot2**).

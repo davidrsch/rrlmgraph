@@ -4,12 +4,12 @@ one-hop neighbours as an interactive Graphviz widget via
 DiagrammeR::grViz().  Nodes are grouped into dashed sub-graph boxes by
 source file and coloured by node type; node width scales with relative
 PageRank importance.  In an interactive session the widget appears in the
-RStudio Viewer or a browser tab, supporting pan and zoom."><meta property="og:description" content="Renders the top-n_hubs function nodes (by PageRank) and their
+RStudio Viewer or a browser tab."><meta property="og:description" content="Renders the top-n_hubs function nodes (by PageRank) and their
 one-hop neighbours as an interactive Graphviz widget via
 DiagrammeR::grViz().  Nodes are grouped into dashed sub-graph boxes by
 source file and coloured by node type; node width scales with relative
 PageRank importance.  In an interactive session the widget appears in the
-RStudio Viewer or a browser tab, supporting pan and zoom."><meta property="og:image" content="https://davidrsch.github.io/rrlmgraph/logo.svg"></head><body>
+RStudio Viewer or a browser tab."><meta property="og:image" content="https://davidrsch.github.io/rrlmgraph/logo.svg"></head><body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
@@ -49,7 +49,7 @@ one-hop neighbours as an interactive <strong>Graphviz</strong> widget via
 <code><a href="https://rich-iannone.github.io/DiagrammeR/reference/grViz.html" class="external-link">DiagrammeR::grViz()</a></code>.  Nodes are grouped into dashed sub-graph boxes by
 source file and coloured by node type; node width scales with relative
 PageRank importance.  In an interactive session the widget appears in the
-RStudio Viewer or a browser tab, supporting pan and zoom.</p>
+RStudio Viewer or a browser tab.</p>
     </div>
 
     <div class="section level2">
@@ -99,7 +99,7 @@ writing a temporary HTML file (requires both <strong>htmlwidgets</strong> and
 vector path (<code>.png</code>, <code>.pdf</code>, <code>.svg</code>): sets the viewport size in pixels
 that <code><a href="https://rstudio.github.io/webshot2/reference/webshot.html" class="external-link">webshot2::webshot()</a></code> renders.  Has no effect on the interactive
 widget, which fills 100\<!-- % of the container and provides its own -->
-pan-and-zoom via viz.js.  Defaults <code>1400L</code> x <code>900L</code>.</p></dd>
+pan-and-zoom via injected vanilla JS.  Defaults <code>1400L</code> x <code>900L</code>.</p></dd>
 
 
 <dt id="arg--">...<a class="anchor" aria-label="anchor" href="#arg--"></a></dt>
@@ -110,13 +110,17 @@ pan-and-zoom via viz.js.  Defaults <code>1400L</code> x <code>900L</code>.</p></
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
     <p>When <code>file</code> is <code>NULL</code> (default), an <code>htmlwidget</code> from
 <code><a href="https://rich-iannone.github.io/DiagrammeR/reference/grViz.html" class="external-link">DiagrammeR::grViz()</a></code> is returned visibly so it prints in the viewer.
-The widget fills 100\<!-- % of its container and supports pan and zoom -->
-regardless of graph size.  When <code>file</code> is supplied, <code>x</code> is returned
-invisibly.</p>
+The widget fills 100\<!-- % of its container; scroll to zoom (centred on -->
+cursor), drag to pan, double-click to reset.  When <code>file</code> is supplied,
+<code>x</code> is returned invisibly.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>Node colours:</p><ul><li><p>User functions – <code>"#4682B4"</code> (steelblue)</p></li>
+    <p><strong>Interaction (no plugins required)</strong></p><ul><li><p><strong>Scroll</strong> – zoom in / out centred on the cursor.</p></li>
+<li><p><strong>Click-drag</strong> – pan the graph.</p></li>
+<li><p><strong>Pinch</strong> (touch) – zoom on mobile/tablet.</p></li>
+<li><p><strong>Double-click</strong> – reset to the original fit-to-screen view.</p></li>
+</ul><p>Node colours:</p><ul><li><p>User functions – <code>"#4682B4"</code> (steelblue)</p></li>
 <li><p>Package nodes  – <code>"#C8D8E8"</code> (pale blue, smaller)</p></li>
 <li><p>Test files     – <code>"#3CB371"</code> (seagreen3)</p></li>
 </ul></div>
