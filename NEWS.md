@@ -38,6 +38,36 @@ First release.
   `POST /api/embed` directly via `httr2`, removing the `ollamar` dependency
   entirely (#40).
 
+### Bug fixes
+
+* `R/parse_ast.R`: `as.character(expr[[1L]])` now guarded with an extra
+  `[[1L]]` so that namespace-qualified calls (`pkg::fn`) no longer produce a
+  length-3 character vector, which previously caused a "condition has length > 1"
+  crash when building the graph.  Same guard added in `.collect_nse_symbols()`
+  and `.find_qualified_calls()`.  R6Class detection changed to use `%in%` rather
+  than `==` for robustness against multi-element vectors.
+* `R/graph_build.R`: `build_test_edges()` now skips unresolvable bare names
+  instead of throwing "subscript out of bounds" when a called symbol does not
+  appear in the function-node index.
+* `NAMESPACE`: restored `S3method()` registrations for `plot.rrlm_graph`,
+  `print.rrlm_graph`, `summary.rrlm_graph`, `print.rrlm_context`, and
+  `summary.rrlm_context`.  Previously the file listed plain `export()` entries,
+  which broke S3 dispatch so igraph methods were called instead.  A new
+  `R/imports.R` carrying all `@importFrom` roxygen tags ensures
+  `devtools::document()` regenerates the full `importFrom()` block.
+* `print.rrlm_graph()`, `summary.rrlm_graph()`: replaced `cli::cli_*()` calls
+  with `cat()` so output is captured by `capture.output()` in tests and pipe
+  operators work correctly.
+* `inst/WORDLIST`: added `centres`, `cex`, `Kamada`, `Kawai` to silence
+  `spelling::spell_check_package()` failures in CI.
+* `tests/testthat/test-parse-ast.R`: fixed `write_r_file()` helper so the
+  temporary file outlives the helper call (was deleted immediately by
+  `withr::local_tempfile()`; now uses `tempfile()` +
+  `withr::defer(..., envir = parent.frame())`).
+* `tests/testthat/test-s3-methods.R`: replaced `igraph::V(g)$attr <- NULL`
+  with `igraph::delete_vertex_attr()` / `igraph::delete_edge_attr()` to match
+  the igraph 2.x API.
+
 ### New features
 
 **Graph construction**

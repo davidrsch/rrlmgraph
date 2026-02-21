@@ -27,3 +27,13 @@ packrat/bundles/
 
 # vscode
 .vscode/
+# rrlmgraph runtime cache
+.rrlmgraph/
+
+# ad-hoc debug / exploration scripts (not part of the package)
+debug*.R
+test_plot.R
+test_plot.png
+check_subgraph.R
+run_key_tests.R
+run_tests.R

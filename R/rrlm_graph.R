@@ -21,9 +21,8 @@ print.rrlm_graph <- function(x, ...) {
   n_e <- igraph::ecount(x)
   pn <- igraph::graph_attr(x, "project_name") %||% "?"
   em <- igraph::graph_attr(x, "embed_method") %||% "?"
-  cli::cli_text(
-    "<rrlm_graph> {.val {pn}} | {n_v} nodes | {n_e} edges | embed: {em}"
-  )
+  cat(sprintf("<rrlm_graph> %s | %d nodes | %d edges | embed: %s\n",
+              pn, n_v, n_e, em))
   invisible(x)
 }
 
@@ -55,37 +54,37 @@ summary.rrlm_graph <- function(object, ...) {
   bt <- igraph::graph_attr(g, "build_time") %||% NA_real_
   ba <- igraph::graph_attr(g, "build_at") %||% "?"
 
-  cli::cli_h1("rrlm_graph: {pn}")
-  cli::cli_text("Root: {.path {root}}")
-  cli::cli_text("Built: {ba}")
+  cat(sprintf("=== rrlm_graph: %s ===\n", pn))
+  cat(sprintf("Root:  %s\n", root))
+  cat(sprintf("Built: %s\n", ba))
   if (!is.na(bt)) {
-    cli::cli_text("Build time: {round(bt, 2)} s")
+    cat(sprintf("Build time: %s s\n", round(bt, 2)))
   }
 
   # -- Node counts by type -----------------------------------------------
-  cli::cli_h2("Nodes ({igraph::vcount(g)} total)")
+  cat(sprintf("\nNodes (%d total):\n", igraph::vcount(g)))
   if (igraph::vcount(g) > 0L) {
     nt <- igraph::V(g)$node_type
     nt <- if (is.null(nt)) rep(NA_character_, igraph::vcount(g)) else nt
     tbl <- sort(table(nt), decreasing = TRUE)
     for (nm in names(tbl)) {
-      cli::cli_bullets(c(" " = "{nm}: {tbl[[nm]]}"))
+      cat(sprintf("  %s: %d\n", nm, tbl[[nm]]))
     }
   }
 
   # -- Edge counts by type -----------------------------------------------
-  cli::cli_h2("Edges ({igraph::ecount(g)} total)")
+  cat(sprintf("\nEdges (%d total):\n", igraph::ecount(g)))
   if (igraph::ecount(g) > 0L) {
     et <- igraph::E(g)$edge_type
     et <- if (is.null(et)) rep(NA_character_, igraph::ecount(g)) else et
     tbl <- sort(table(et), decreasing = TRUE)
     for (nm in names(tbl)) {
-      cli::cli_bullets(c(" " = "{nm}: {tbl[[nm]]}"))
+      cat(sprintf("  %s: %d\n", nm, tbl[[nm]]))
     }
   }
 
   # -- Top-5 PageRank ----------------------------------------------------
-  cli::cli_h2("Top-5 nodes by PageRank")
+  cat("\nTop-5 nodes by PageRank:\n")
   if (igraph::vcount(g) > 0L) {
     pr <- igraph::V(g)$pagerank
     if (is.null(pr)) {
@@ -97,16 +96,14 @@ summary.rrlm_graph <- function(object, ...) {
     nms <- igraph::V(g)$name[idx]
     vals <- round(pr[idx], 6)
     for (i in seq_len(k)) {
-      cli::cli_bullets(c(" " = "{i}. {nms[[i]]} ({vals[[i]]})"))
+      cat(sprintf("  %d. %s (%s)\n", i, nms[[i]], vals[[i]]))
     }
   }
 
   # -- Metadata ----------------------------------------------------------
-  cli::cli_h2("Metadata")
-  cli::cli_bullets(c(
-    " " = "Embed method: {em}",
-    " " = "Cache path:   {cp}"
-  ))
+  cat(sprintf("\nMetadata:\n"))
+  cat(sprintf("  Embed method: %s\n", em))
+  cat(sprintf("  Cache path:   %s\n", cp))
 
   invisible(g)
 }
@@ -160,7 +157,7 @@ plot.rrlm_graph <- function(
   g <- x
 
   if (igraph::vcount(g) == 0L) {
-    cli::cli_warn("Graph has no nodes -- nothing to plot.")
+    cli::cli_inform("Graph has no nodes -- nothing to plot.")
     return(invisible(g))
   }
 

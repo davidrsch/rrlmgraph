@@ -137,13 +137,13 @@ test_that("summary.rrlm_graph handles mixed node types correctly", {
 
 test_that("summary.rrlm_graph handles graph with no pagerank attribute", {
   g <- make_minimal_rrlm()
-  igraph::V(g)$pagerank <- NULL
+  g <- igraph::delete_vertex_attr(g, "pagerank")
   expect_no_error(summary(g))
 })
 
 test_that("summary.rrlm_graph handles graph with no edge_type attribute", {
   g <- make_minimal_rrlm()
-  igraph::E(g)$edge_type <- NULL
+  g <- igraph::delete_edge_attr(g, "edge_type")
   expect_no_error(summary(g))
 })
 

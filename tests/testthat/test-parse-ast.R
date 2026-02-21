@@ -1,7 +1,8 @@
 # ---- helpers --------------------------------------------------------
 
 write_r_file <- function(content) {
-  f <- withr::local_tempfile(fileext = ".R")
+  f <- tempfile(fileext = ".R")
+  withr::defer(unlink(f), envir = parent.frame())
   writeLines(content, f)
   f
 }

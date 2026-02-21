@@ -83,7 +83,7 @@ extract_function_nodes <- function(r_files) {
     if (!is.call(expr)) {
       next
     }
-    head <- tryCatch(as.character(expr[[1L]]), error = function(e) "")
+    head <- tryCatch(as.character(expr[[1L]])[[1L]], error = function(e) "")
 
     # ---- Standard assignment: `name <- function(args) body`  ---------
     if (
@@ -119,7 +119,7 @@ extract_function_nodes <- function(r_files) {
       length(expr) == 3L &&
         is.call(expr[[3L]]) &&
         tryCatch(
-          as.character(expr[[3L]][[1L]]) == "R6Class",
+          "R6Class" %in% as.character(expr[[3L]][[1L]]),
           error = function(e) FALSE
         )
     ) {
@@ -450,7 +450,7 @@ find_calls_in_body <- function(fn_body) {
     if (!is.call(e)) {
       return()
     }
-    head <- tryCatch(as.character(e[[1L]]), error = function(x) "")
+    head <- tryCatch(as.character(e[[1L]])[[1L]], error = function(x) "")
     bare_head <- sub("^.*:::", "", sub("^.*::", "", head))
 
     # NSE verb arguments
@@ -506,7 +506,7 @@ find_calls_in_body <- function(fn_body) {
     if (!is.call(e)) {
       return()
     }
-    head <- tryCatch(as.character(e[[1L]]), error = function(x) "")
+    head <- tryCatch(as.character(e[[1L]])[[1L]], error = function(x) "")
 
     if (head %in% c("::", ":::") && length(e) == 3L) {
       pkg_name <- tryCatch(as.character(e[[2L]]), error = function(x) NULL)
@@ -531,8 +531,8 @@ find_calls_in_body <- function(fn_body) {
       }
     }
 
-    lapply(as.list(e)[-1L], walk)
-  }
+    # Walk all elements including e[[1L]] so that pkg::fn(arg) is found
+    lapply(as.list(e), walk)  }
 
   walk(expr)
   unique(results)
