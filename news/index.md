@@ -54,6 +54,50 @@ First release.
   dependency entirely
   ([\#40](https://github.com/davidrsch/rrlmgraph/issues/40)).
 
+#### Bug fixes
+
+- `R/parse_ast.R`: `as.character(expr[[1L]])` now guarded with an extra
+  `[[1L]]` so that namespace-qualified calls (`pkg::fn`) no longer
+  produce a length-3 character vector, which previously caused a
+  “condition has length \> 1” crash when building the graph. Same guard
+  added in `.collect_nse_symbols()` and `.find_qualified_calls()`.
+  R6Class detection changed to use `%in%` rather than `==` for
+  robustness against multi-element vectors.
+- `R/graph_build.R`:
+  [`build_test_edges()`](https://davidrsch.github.io/rrlmgraph/reference/build_test_edges.md)
+  now skips unresolvable bare names instead of throwing “subscript out
+  of bounds” when a called symbol does not appear in the function-node
+  index.
+- `NAMESPACE`: restored `S3method()` registrations for
+  `plot.rrlm_graph`, `print.rrlm_graph`, `summary.rrlm_graph`,
+  `print.rrlm_context`, and `summary.rrlm_context`. Previously the file
+  listed plain `export()` entries, which broke S3 dispatch so igraph
+  methods were called instead. A new `R/imports.R` carrying all
+  `@importFrom` roxygen tags ensures
+  [`devtools::document()`](https://devtools.r-lib.org/reference/document.html)
+  regenerates the full `importFrom()` block.
+- [`print.rrlm_graph()`](https://davidrsch.github.io/rrlmgraph/reference/print.rrlm_graph.md),
+  [`summary.rrlm_graph()`](https://davidrsch.github.io/rrlmgraph/reference/summary.rrlm_graph.md):
+  replaced `cli::cli_*()` calls with
+  [`cat()`](https://rdrr.io/r/base/cat.html) so output is captured by
+  [`capture.output()`](https://rdrr.io/r/utils/capture.output.html) in
+  tests and pipe operators work correctly.
+- `inst/WORDLIST`: added `centres`, `cex`, `Kamada`, `Kawai` to silence
+  [`spelling::spell_check_package()`](https://docs.ropensci.org/spelling//reference/spell_check_package.html)
+  failures in CI.
+- `tests/testthat/test-parse-ast.R`: fixed `write_r_file()` helper so
+  the temporary file outlives the helper call (was deleted immediately
+  by
+  [`withr::local_tempfile()`](https://withr.r-lib.org/reference/with_tempfile.html);
+  now uses [`tempfile()`](https://rdrr.io/r/base/tempfile.html) +
+  `withr::defer(..., envir = parent.frame())`).
+- `tests/testthat/test-s3-methods.R`: replaced
+  `igraph::V(g)$attr <- NULL` with
+  [`igraph::delete_vertex_attr()`](https://r.igraph.org/reference/delete_vertex_attr.html)
+  /
+  [`igraph::delete_edge_attr()`](https://r.igraph.org/reference/delete_edge_attr.html)
+  to match the igraph 2.x API.
+
 #### New features
 
 **Graph construction**

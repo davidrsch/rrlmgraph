@@ -37,7 +37,7 @@ graph <- build_rrlm_graph(demo_dir, verbose = TRUE)
 #> Computing PageRank
 #> Embedding nodes with method 'tfidf'
 #> Computing semantic similarity edges (threshold 0.7)
-#> Done in 0.6s -- 19 nodes, 6 edges
+#> Done in 0.6s -- 19 nodes, 11 edges
 ```
 
 The function:
@@ -51,29 +51,33 @@ The function:
 
 ``` r
 summary(graph)
-#> IGRAPH 76a7fd0 DNW- 19 6 -- 
-#> + attr: project_name (g/c), project_root (g/c), project_type (g/c),
-#> | r_version (g/c), build_time (g/n), build_at (g/c), embed_method
-#> | (g/c), embed_model (g/x), cache_path (g/c), name (v/c), node_type
-#> | (v/c), file (v/c), line_start (v/n), line_end (v/n), signature (v/c),
-#> | complexity (v/n), pagerank (v/n), embedding (v/x), weight (e/n),
-#> | edge_type (e/c)
+#> === rrlm_graph: demo ===
+#> Root:  /home/runner/work/_temp/Library/rrlmgraph/extdata/demo
+#> Built: 2026-02-21 00:52:04
+#> Build time: 0.6 s
+#> 
+#> Nodes (19 total):
+#>   package: 10
+#>   function: 9
+#> 
+#> Edges (11 total):
+#>   CALLS: 11
+#> 
+#> Top-5 nodes by PageRank:
+#>   1. data_prep::clean_data (0.157285)
+#>   2. data_prep::validate_inputs (0.068154)
+#>   3. data_prep::prepare_data (0.063835)
+#>   4. model::select_features (0.055118)
+#>   5. model::tune_hyperparams (0.055118)
+#> 
+#> Metadata:
+#>   Embed method: tfidf
+#>   Cache path:   /home/runner/work/_temp/Library/rrlmgraph/extdata/demo/.rrlmgraph/graph.rds
 ```
 
 ``` r
 print(graph)
-#> IGRAPH 76a7fd0 DNW- 19 6 -- 
-#> + attr: project_name (g/c), project_root (g/c), project_type (g/c),
-#> | r_version (g/c), build_time (g/n), build_at (g/c), embed_method
-#> | (g/c), embed_model (g/x), cache_path (g/c), name (v/c), node_type
-#> | (v/c), file (v/c), line_start (v/n), line_end (v/n), signature (v/c),
-#> | complexity (v/n), pagerank (v/n), embedding (v/x), weight (e/n),
-#> | edge_type (e/c)
-#> + edges from 76a7fd0 (vertex names):
-#> [1] data_prep::prepare_data->data_prep::clean_data        
-#> [2] data_prep::prepare_data->data_prep::validate_inputs   
-#> [3] predict::run_pipeline  ->predict::evaluate_predictions
-#> + ... omitted several edges
+#> <rrlm_graph> demo | 19 nodes | 11 edges | embed: tfidf
 ```
 
 [`plot()`](https://rdrr.io/r/graphics/plot.default.html) draws a
@@ -103,24 +107,27 @@ ctx <- query_context(
   budget_tokens = 400L,
   verbose = TRUE
 )
-#> Seed node: "data_prep::validate_inputs"
-#> + "data_prep::prepare_data" (score=0.273, tokens=8)
-#> + "data_prep::clean_data" (score=0.401, tokens=5)
+#> Seed node: "data_prep::clean_data"
+#> + "data_prep::prepare_data" (score=0.219, tokens=8)
 #> + "predict::run_pipeline" (score=0.22, tokens=7)
-#> + "model::fit_model" (score=0.253, tokens=8)
-#> + "predict::predict_results" (score=0.237, tokens=9)
-#> + "predict::evaluate_predictions" (score=0.234, tokens=10)
+#> + "data_prep::validate_inputs" (score=0.19, tokens=10)
+#> + "model::fit_model" (score=0.169, tokens=8)
+#> + "model::tune_hyperparams" (score=0.186, tokens=8)
+#> + "model::select_features" (score=0.166, tokens=9)
+#> + "predict::predict_results" (score=0.153, tokens=9)
+#> + "predict::evaluate_predictions" (score=0.15, tokens=10)
 
 # Nodes selected for the context window
 ctx$nodes
-#> [1] "data_prep::validate_inputs"    "data_prep::prepare_data"      
-#> [3] "data_prep::clean_data"         "predict::run_pipeline"        
-#> [5] "model::fit_model"              "predict::predict_results"     
-#> [7] "predict::evaluate_predictions"
+#> [1] "data_prep::clean_data"         "data_prep::prepare_data"      
+#> [3] "predict::run_pipeline"         "data_prep::validate_inputs"   
+#> [5] "model::fit_model"              "model::tune_hyperparams"      
+#> [7] "model::select_features"        "predict::predict_results"     
+#> [9] "predict::evaluate_predictions"
 
 # Number of tokens used
 ctx$tokens_used
-#> [1] 271
+#> [1] 354
 ```
 
 The assembled context string – ready to paste into a system prompt:
@@ -128,35 +135,46 @@ The assembled context string – ready to paste into a system prompt:
 ``` r
 cat(ctx$context_string)
 #> # rrlm_graph Context
-#> # Project: demo | R 4.5.2 | ~238 tokens
+#> # Project: demo | R 4.5.2 | ~321 tokens
 #> # Query: How does the data preparation and validation pipeline work?
 #> 
 #> ## CORE FUNCTIONS
 #> ---
-#> ### data_prep::validate_inputs
-#> validate_inputs(raw, required_cols) {}
+#> ### data_prep::clean_data
+#> clean_data(raw) {}
 #> 
 #> ## SUPPORTING FUNCTIONS
 #> ---
 #> ### data_prep::prepare_data
 #> prepare_data(raw, scale_x)
 #> Calls: data_prep::validate_inputs, data_prep::clean_data
-#> Called by: predict::run_pipeline
-#> 
-#> ### data_prep::clean_data
-#> clean_data(raw)
-#> Called by: data_prep::prepare_data
+#> Called by: model::fit_model, predict::run_pipeline
 #> 
 #> ### predict::run_pipeline
 #> run_pipeline(raw, ...)
 #> Calls: data_prep::prepare_data, model::fit_model, predict::predict_results, predict::evaluate_predictions
 #> 
+#> ### data_prep::validate_inputs
+#> validate_inputs(raw, required_cols)
+#> Called by: data_prep::prepare_data
+#> 
 #> ### model::fit_model
 #> fit_model(raw, tune, select)
+#> Calls: data_prep::prepare_data, model::select_features, model::tune_hyperparams
 #> Called by: predict::run_pipeline
+#> 
+#> ### model::tune_hyperparams
+#> tune_hyperparams(df, lambdas)
+#> Called by: model::fit_model
+#> 
+#> ### model::select_features
+#> select_features(df, threshold)
+#> Calls: data_prep::clean_data
+#> Called by: model::fit_model
 #> 
 #> ### predict::predict_results
 #> predict_results(model, newdata)
+#> Calls: data_prep::clean_data
 #> Called by: predict::run_pipeline
 #> 
 #> ### predict::evaluate_predictions
@@ -241,17 +259,17 @@ graph_small <- update_graph_incremental(
 #> 
 #> ── Incremental graph update ──
 #> 
-#> Changed files: /tmp/Rtmp30Gysn/mypkg_demo/R/data_prep.R
+#> Changed files: /tmp/RtmpuTjE6l/mypkg_demo/R/data_prep.R
 #> Removing 1 stale node(s).
 #> Re-parsing 1 file(s).
 #> Embedding 1 new node(s) using method 'tfidf'.
 #> Graph now has 2 nodes, 0 edges.
 #> Recomputing PageRank.
-#> Persisting cache to /tmp/Rtmp30Gysn/mypkg_demo.
-#> Graph cached at /tmp/Rtmp30Gysn/mypkg_demo/.rrlmgraph
+#> Persisting cache to /tmp/RtmpuTjE6l/mypkg_demo.
+#> Graph cached at /tmp/RtmpuTjE6l/mypkg_demo/.rrlmgraph
 
 summary(graph_small)
-#> IGRAPH a2093a2 DNW- 2 0 -- 
+#> IGRAPH f7e34d0 DNW- 2 0 -- 
 #> + attr: project_name (g/c), project_root (g/c), project_type (g/c),
 #> | r_version (g/c), build_time (g/n), build_at (g/c), embed_method
 #> | (g/c), embed_model (g/x), cache_path (g/c), name (v/c), node_type

@@ -100,7 +100,7 @@ package, a scripts folder, or a Shiny app – and returns an
 <span><span class="co">#&gt; Computing PageRank</span></span>
 <span><span class="co">#&gt; Embedding nodes with method 'tfidf'</span></span>
 <span><span class="co">#&gt; Computing semantic similarity edges (threshold 0.7)</span></span>
-<span><span class="co">#&gt; Done in 0.6s -- 19 nodes, 6 edges</span></span></code></pre></div>
+<span><span class="co">#&gt; Done in 0.6s -- 19 nodes, 11 edges</span></span></code></pre></div>
 <p>The function:</p>
 <ol style="list-style-type: decimal">
 <li>Detects the project type (package / scripts / Shiny app)</li>
@@ -115,27 +115,31 @@ analysis</li>
 </h2>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">graph</span><span class="op">)</span></span>
-<span><span class="co">#&gt; IGRAPH 76a7fd0 DNW- 19 6 -- </span></span>
-<span><span class="co">#&gt; + attr: project_name (g/c), project_root (g/c), project_type (g/c),</span></span>
-<span><span class="co">#&gt; | r_version (g/c), build_time (g/n), build_at (g/c), embed_method</span></span>
-<span><span class="co">#&gt; | (g/c), embed_model (g/x), cache_path (g/c), name (v/c), node_type</span></span>
-<span><span class="co">#&gt; | (v/c), file (v/c), line_start (v/n), line_end (v/n), signature (v/c),</span></span>
-<span><span class="co">#&gt; | complexity (v/n), pagerank (v/n), embedding (v/x), weight (e/n),</span></span>
-<span><span class="co">#&gt; | edge_type (e/c)</span></span></code></pre></div>
+<span><span class="co">#&gt; === rrlm_graph: demo ===</span></span>
+<span><span class="co">#&gt; Root:  /home/runner/work/_temp/Library/rrlmgraph/extdata/demo</span></span>
+<span><span class="co">#&gt; Built: 2026-02-21 00:52:04</span></span>
+<span><span class="co">#&gt; Build time: 0.6 s</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Nodes (19 total):</span></span>
+<span><span class="co">#&gt;   package: 10</span></span>
+<span><span class="co">#&gt;   function: 9</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Edges (11 total):</span></span>
+<span><span class="co">#&gt;   CALLS: 11</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Top-5 nodes by PageRank:</span></span>
+<span><span class="co">#&gt;   1. data_prep::clean_data (0.157285)</span></span>
+<span><span class="co">#&gt;   2. data_prep::validate_inputs (0.068154)</span></span>
+<span><span class="co">#&gt;   3. data_prep::prepare_data (0.063835)</span></span>
+<span><span class="co">#&gt;   4. model::select_features (0.055118)</span></span>
+<span><span class="co">#&gt;   5. model::tune_hyperparams (0.055118)</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; Metadata:</span></span>
+<span><span class="co">#&gt;   Embed method: tfidf</span></span>
+<span><span class="co">#&gt;   Cache path:   /home/runner/work/_temp/Library/rrlmgraph/extdata/demo/.rrlmgraph/graph.rds</span></span></code></pre></div>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">graph</span><span class="op">)</span></span>
-<span><span class="co">#&gt; IGRAPH 76a7fd0 DNW- 19 6 -- </span></span>
-<span><span class="co">#&gt; + attr: project_name (g/c), project_root (g/c), project_type (g/c),</span></span>
-<span><span class="co">#&gt; | r_version (g/c), build_time (g/n), build_at (g/c), embed_method</span></span>
-<span><span class="co">#&gt; | (g/c), embed_model (g/x), cache_path (g/c), name (v/c), node_type</span></span>
-<span><span class="co">#&gt; | (v/c), file (v/c), line_start (v/n), line_end (v/n), signature (v/c),</span></span>
-<span><span class="co">#&gt; | complexity (v/n), pagerank (v/n), embedding (v/x), weight (e/n),</span></span>
-<span><span class="co">#&gt; | edge_type (e/c)</span></span>
-<span><span class="co">#&gt; + edges from 76a7fd0 (vertex names):</span></span>
-<span><span class="co">#&gt; [1] data_prep::prepare_data-&gt;data_prep::clean_data        </span></span>
-<span><span class="co">#&gt; [2] data_prep::prepare_data-&gt;data_prep::validate_inputs   </span></span>
-<span><span class="co">#&gt; [3] predict::run_pipeline  -&gt;predict::evaluate_predictions</span></span>
-<span><span class="co">#&gt; + ... omitted several edges</span></span></code></pre></div>
+<span><span class="co">#&gt; &lt;rrlm_graph&gt; demo | 19 nodes | 11 edges | embed: tfidf</span></span></code></pre></div>
 <p><code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> draws a force-directed layout coloured by node
 type:</p>
 <ul>
@@ -165,58 +169,72 @@ for LLM prompts.</p>
 <span>  budget_tokens <span class="op">=</span> <span class="fl">400L</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; Seed node: <span style="color: #0000BB;">"data_prep::validate_inputs"</span></span></span>
-<span><span class="co">#&gt; + <span style="color: #0000BB;">"data_prep::prepare_data"</span> (score=0.273, tokens=8)</span></span>
-<span><span class="co">#&gt; + <span style="color: #0000BB;">"data_prep::clean_data"</span> (score=0.401, tokens=5)</span></span>
+<span><span class="co">#&gt; Seed node: <span style="color: #0000BB;">"data_prep::clean_data"</span></span></span>
+<span><span class="co">#&gt; + <span style="color: #0000BB;">"data_prep::prepare_data"</span> (score=0.219, tokens=8)</span></span>
 <span><span class="co">#&gt; + <span style="color: #0000BB;">"predict::run_pipeline"</span> (score=0.22, tokens=7)</span></span>
-<span><span class="co">#&gt; + <span style="color: #0000BB;">"model::fit_model"</span> (score=0.253, tokens=8)</span></span>
-<span><span class="co">#&gt; + <span style="color: #0000BB;">"predict::predict_results"</span> (score=0.237, tokens=9)</span></span>
-<span><span class="co">#&gt; + <span style="color: #0000BB;">"predict::evaluate_predictions"</span> (score=0.234, tokens=10)</span></span>
+<span><span class="co">#&gt; + <span style="color: #0000BB;">"data_prep::validate_inputs"</span> (score=0.19, tokens=10)</span></span>
+<span><span class="co">#&gt; + <span style="color: #0000BB;">"model::fit_model"</span> (score=0.169, tokens=8)</span></span>
+<span><span class="co">#&gt; + <span style="color: #0000BB;">"model::tune_hyperparams"</span> (score=0.186, tokens=8)</span></span>
+<span><span class="co">#&gt; + <span style="color: #0000BB;">"model::select_features"</span> (score=0.166, tokens=9)</span></span>
+<span><span class="co">#&gt; + <span style="color: #0000BB;">"predict::predict_results"</span> (score=0.153, tokens=9)</span></span>
+<span><span class="co">#&gt; + <span style="color: #0000BB;">"predict::evaluate_predictions"</span> (score=0.15, tokens=10)</span></span>
 <span></span>
 <span><span class="co"># Nodes selected for the context window</span></span>
 <span><span class="va">ctx</span><span class="op">$</span><span class="va">nodes</span></span>
-<span><span class="co">#&gt; [1] "data_prep::validate_inputs"    "data_prep::prepare_data"      </span></span>
-<span><span class="co">#&gt; [3] "data_prep::clean_data"         "predict::run_pipeline"        </span></span>
-<span><span class="co">#&gt; [5] "model::fit_model"              "predict::predict_results"     </span></span>
-<span><span class="co">#&gt; [7] "predict::evaluate_predictions"</span></span>
+<span><span class="co">#&gt; [1] "data_prep::clean_data"         "data_prep::prepare_data"      </span></span>
+<span><span class="co">#&gt; [3] "predict::run_pipeline"         "data_prep::validate_inputs"   </span></span>
+<span><span class="co">#&gt; [5] "model::fit_model"              "model::tune_hyperparams"      </span></span>
+<span><span class="co">#&gt; [7] "model::select_features"        "predict::predict_results"     </span></span>
+<span><span class="co">#&gt; [9] "predict::evaluate_predictions"</span></span>
 <span></span>
 <span><span class="co"># Number of tokens used</span></span>
 <span><span class="va">ctx</span><span class="op">$</span><span class="va">tokens_used</span></span>
-<span><span class="co">#&gt; [1] 271</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] 354</span></span></code></pre></div>
 <p>The assembled context string – ready to paste into a system
 prompt:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="va">ctx</span><span class="op">$</span><span class="va">context_string</span><span class="op">)</span></span>
 <span><span class="co">#&gt; # rrlm_graph Context</span></span>
-<span><span class="co">#&gt; # Project: demo | R 4.5.2 | ~238 tokens</span></span>
+<span><span class="co">#&gt; # Project: demo | R 4.5.2 | ~321 tokens</span></span>
 <span><span class="co">#&gt; # Query: How does the data preparation and validation pipeline work?</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ## CORE FUNCTIONS</span></span>
 <span><span class="co">#&gt; ---</span></span>
-<span><span class="co">#&gt; ### data_prep::validate_inputs</span></span>
-<span><span class="co">#&gt; validate_inputs(raw, required_cols) {}</span></span>
+<span><span class="co">#&gt; ### data_prep::clean_data</span></span>
+<span><span class="co">#&gt; clean_data(raw) {}</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ## SUPPORTING FUNCTIONS</span></span>
 <span><span class="co">#&gt; ---</span></span>
 <span><span class="co">#&gt; ### data_prep::prepare_data</span></span>
 <span><span class="co">#&gt; prepare_data(raw, scale_x)</span></span>
 <span><span class="co">#&gt; Calls: data_prep::validate_inputs, data_prep::clean_data</span></span>
-<span><span class="co">#&gt; Called by: predict::run_pipeline</span></span>
-<span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ### data_prep::clean_data</span></span>
-<span><span class="co">#&gt; clean_data(raw)</span></span>
-<span><span class="co">#&gt; Called by: data_prep::prepare_data</span></span>
+<span><span class="co">#&gt; Called by: model::fit_model, predict::run_pipeline</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ### predict::run_pipeline</span></span>
 <span><span class="co">#&gt; run_pipeline(raw, ...)</span></span>
 <span><span class="co">#&gt; Calls: data_prep::prepare_data, model::fit_model, predict::predict_results, predict::evaluate_predictions</span></span>
 <span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; ### data_prep::validate_inputs</span></span>
+<span><span class="co">#&gt; validate_inputs(raw, required_cols)</span></span>
+<span><span class="co">#&gt; Called by: data_prep::prepare_data</span></span>
+<span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ### model::fit_model</span></span>
 <span><span class="co">#&gt; fit_model(raw, tune, select)</span></span>
+<span><span class="co">#&gt; Calls: data_prep::prepare_data, model::select_features, model::tune_hyperparams</span></span>
 <span><span class="co">#&gt; Called by: predict::run_pipeline</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; ### model::tune_hyperparams</span></span>
+<span><span class="co">#&gt; tune_hyperparams(df, lambdas)</span></span>
+<span><span class="co">#&gt; Called by: model::fit_model</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; ### model::select_features</span></span>
+<span><span class="co">#&gt; select_features(df, threshold)</span></span>
+<span><span class="co">#&gt; Calls: data_prep::clean_data</span></span>
+<span><span class="co">#&gt; Called by: model::fit_model</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ### predict::predict_results</span></span>
 <span><span class="co">#&gt; predict_results(model, newdata)</span></span>
+<span><span class="co">#&gt; Calls: data_prep::clean_data</span></span>
 <span><span class="co">#&gt; Called by: predict::run_pipeline</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ### predict::evaluate_predictions</span></span>
@@ -296,17 +314,17 @@ files:</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── <span style="font-weight: bold;">Incremental graph update</span> ──</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Changed files: <span style="color: #0000BB;">/tmp/Rtmp30Gysn/mypkg_demo/R/data_prep.R</span></span></span>
+<span><span class="co">#&gt; Changed files: <span style="color: #0000BB;">/tmp/RtmpuTjE6l/mypkg_demo/R/data_prep.R</span></span></span>
 <span><span class="co">#&gt; Removing 1 stale node(s).</span></span>
 <span><span class="co">#&gt; Re-parsing 1 file(s).</span></span>
 <span><span class="co">#&gt; Embedding 1 new node(s) using method 'tfidf'.</span></span>
 <span><span class="co">#&gt; Graph now has 2 nodes, 0 edges.</span></span>
 <span><span class="co">#&gt; Recomputing PageRank.</span></span>
-<span><span class="co">#&gt; Persisting cache to <span style="color: #0000BB;">/tmp/Rtmp30Gysn/mypkg_demo</span>.</span></span>
-<span><span class="co">#&gt; Graph cached at <span style="color: #0000BB;">/tmp/Rtmp30Gysn/mypkg_demo/.rrlmgraph</span></span></span>
+<span><span class="co">#&gt; Persisting cache to <span style="color: #0000BB;">/tmp/RtmpuTjE6l/mypkg_demo</span>.</span></span>
+<span><span class="co">#&gt; Graph cached at <span style="color: #0000BB;">/tmp/RtmpuTjE6l/mypkg_demo/.rrlmgraph</span></span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">graph_small</span><span class="op">)</span></span>
-<span><span class="co">#&gt; IGRAPH a2093a2 DNW- 2 0 -- </span></span>
+<span><span class="co">#&gt; IGRAPH f7e34d0 DNW- 2 0 -- </span></span>
 <span><span class="co">#&gt; + attr: project_name (g/c), project_root (g/c), project_type (g/c),</span></span>
 <span><span class="co">#&gt; | r_version (g/c), build_time (g/n), build_at (g/c), embed_method</span></span>
 <span><span class="co">#&gt; | (g/c), embed_model (g/x), cache_path (g/c), name (v/c), node_type</span></span>

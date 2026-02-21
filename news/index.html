@@ -65,6 +65,23 @@
 <li>Ollama embedding calls (<code><a href="../reference/embed_nodes.html">embed_nodes()</a></code>, <code><a href="../reference/embed_query.html">embed_query()</a></code>) now hit <code>POST /api/embed</code> directly via <code>httr2</code>, removing the <code>ollamar</code> dependency entirely (<a href="https://github.com/davidrsch/rrlmgraph/issues/40" class="external-link">#40</a>).</li>
 </ul></div>
 <div class="section level4">
+<h4 id="bug-fixes-0-1-0">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-1-0"></a></h4>
+<ul><li>
+<code>R/parse_ast.R</code>: <code>as.character(expr[[1L]])</code> now guarded with an extra <code>[[1L]]</code> so that namespace-qualified calls (<code>pkg::fn</code>) no longer produce a length-3 character vector, which previously caused a “condition has length &gt; 1” crash when building the graph. Same guard added in <code>.collect_nse_symbols()</code> and <code>.find_qualified_calls()</code>. R6Class detection changed to use <code>%in%</code> rather than <code>==</code> for robustness against multi-element vectors.</li>
+<li>
+<code>R/graph_build.R</code>: <code><a href="../reference/build_test_edges.html">build_test_edges()</a></code> now skips unresolvable bare names instead of throwing “subscript out of bounds” when a called symbol does not appear in the function-node index.</li>
+<li>
+<code>NAMESPACE</code>: restored <code>S3method()</code> registrations for <code>plot.rrlm_graph</code>, <code>print.rrlm_graph</code>, <code>summary.rrlm_graph</code>, <code>print.rrlm_context</code>, and <code>summary.rrlm_context</code>. Previously the file listed plain <code>export()</code> entries, which broke S3 dispatch so igraph methods were called instead. A new <code>R/imports.R</code> carrying all <code>@importFrom</code> roxygen tags ensures <code><a href="https://devtools.r-lib.org/reference/document.html" class="external-link">devtools::document()</a></code> regenerates the full <code>importFrom()</code> block.</li>
+<li>
+<code><a href="../reference/print.rrlm_graph.html">print.rrlm_graph()</a></code>, <code><a href="../reference/summary.rrlm_graph.html">summary.rrlm_graph()</a></code>: replaced <code>cli::cli_*()</code> calls with <code><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat()</a></code> so output is captured by <code><a href="https://rdrr.io/r/utils/capture.output.html" class="external-link">capture.output()</a></code> in tests and pipe operators work correctly.</li>
+<li>
+<code>inst/WORDLIST</code>: added <code>centres</code>, <code>cex</code>, <code>Kamada</code>, <code>Kawai</code> to silence <code><a href="https://docs.ropensci.org/spelling//reference/spell_check_package.html" class="external-link">spelling::spell_check_package()</a></code> failures in CI.</li>
+<li>
+<code>tests/testthat/test-parse-ast.R</code>: fixed <code>write_r_file()</code> helper so the temporary file outlives the helper call (was deleted immediately by <code><a href="https://withr.r-lib.org/reference/with_tempfile.html" class="external-link">withr::local_tempfile()</a></code>; now uses <code><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile()</a></code> + <code>withr::defer(..., envir = parent.frame())</code>).</li>
+<li>
+<code>tests/testthat/test-s3-methods.R</code>: replaced <code>igraph::V(g)$attr &lt;- NULL</code> with <code><a href="https://r.igraph.org/reference/delete_vertex_attr.html" class="external-link">igraph::delete_vertex_attr()</a></code> / <code><a href="https://r.igraph.org/reference/delete_edge_attr.html" class="external-link">igraph::delete_edge_attr()</a></code> to match the igraph 2.x API.</li>
+</ul></div>
+<div class="section level4">
 <h4 id="new-features-0-1-0">New features<a class="anchor" aria-label="anchor" href="#new-features-0-1-0"></a></h4>
 <p><strong>Graph construction</strong></p>
 <ul><li>
