@@ -37,7 +37,7 @@ graph <- build_rrlm_graph(demo_dir, verbose = TRUE)
 #> Computing PageRank
 #> Embedding nodes with method 'tfidf'
 #> Computing semantic similarity edges (threshold 0.7)
-#> Done in 0.6s -- 19 nodes, 11 edges
+#> Done in 0.58s -- 21 nodes, 11 edges
 ```
 
 The function:
@@ -53,22 +53,22 @@ The function:
 summary(graph)
 #> === rrlm_graph: demo ===
 #> Root:  /home/runner/work/_temp/Library/rrlmgraph/extdata/demo
-#> Built: 2026-02-21 00:52:04
-#> Build time: 0.6 s
+#> Built: 2026-02-21 01:13:32
+#> Build time: 0.58 s
 #> 
-#> Nodes (19 total):
-#>   package: 10
+#> Nodes (21 total):
+#>   package: 12
 #>   function: 9
 #> 
 #> Edges (11 total):
 #>   CALLS: 11
 #> 
 #> Top-5 nodes by PageRank:
-#>   1. data_prep::clean_data (0.157285)
-#>   2. data_prep::validate_inputs (0.068154)
-#>   3. data_prep::prepare_data (0.063835)
-#>   4. model::select_features (0.055118)
-#>   5. model::tune_hyperparams (0.055118)
+#>   1. data_prep::clean_data (0.145358)
+#>   2. data_prep::validate_inputs (0.062986)
+#>   3. data_prep::prepare_data (0.058995)
+#>   4. model::select_features (0.050938)
+#>   5. model::tune_hyperparams (0.050938)
 #> 
 #> Metadata:
 #>   Embed method: tfidf
@@ -77,7 +77,7 @@ summary(graph)
 
 ``` r
 print(graph)
-#> <rrlm_graph> demo | 19 nodes | 11 edges | embed: tfidf
+#> <rrlm_graph> demo | 21 nodes | 11 edges | embed: tfidf
 ```
 
 [`plot()`](https://rdrr.io/r/graphics/plot.default.html) draws a
@@ -91,8 +91,6 @@ force-directed layout coloured by node type:
 ``` r
 plot(graph)
 ```
-
-![](getting-started_files/figure-html/plot-1.png)
 
 ## 3. Querying context
 
@@ -259,17 +257,17 @@ graph_small <- update_graph_incremental(
 #> 
 #> ── Incremental graph update ──
 #> 
-#> Changed files: /tmp/RtmpuTjE6l/mypkg_demo/R/data_prep.R
+#> Changed files: /tmp/RtmpsyS0Wg/mypkg_demo/R/data_prep.R
 #> Removing 1 stale node(s).
 #> Re-parsing 1 file(s).
 #> Embedding 1 new node(s) using method 'tfidf'.
 #> Graph now has 2 nodes, 0 edges.
 #> Recomputing PageRank.
-#> Persisting cache to /tmp/RtmpuTjE6l/mypkg_demo.
-#> Graph cached at /tmp/RtmpuTjE6l/mypkg_demo/.rrlmgraph
+#> Persisting cache to /tmp/RtmpsyS0Wg/mypkg_demo.
+#> Graph cached at /tmp/RtmpsyS0Wg/mypkg_demo/.rrlmgraph
 
 summary(graph_small)
-#> IGRAPH f7e34d0 DNW- 2 0 -- 
+#> IGRAPH e1ecabc DNW- 2 0 -- 
 #> + attr: project_name (g/c), project_root (g/c), project_type (g/c),
 #> | r_version (g/c), build_time (g/n), build_at (g/c), embed_method
 #> | (g/c), embed_model (g/x), cache_path (g/c), name (v/c), node_type

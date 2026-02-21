@@ -38,7 +38,7 @@
 <div class="section level4">
 <h4 id="improvements-0-1-0">Improvements<a class="anchor" aria-label="anchor" href="#improvements-0-1-0"></a></h4>
 <ul><li>
-<code><a href="../reference/plot.rrlm_graph.html">plot.rrlm_graph()</a></code>: labels now placed <strong>outside</strong> nodes (<code>vertex.label.dist = 1.5</code>), colour changed to <code>"gray15"</code> (was white) for readability on all backgrounds, cex increased to <code>0.85</code>, default layout changed to Kamada-Kawai (<code>layout_with_kk</code>) for better node separation on sparse graphs (<a href="https://github.com/davidrsch/rrlmgraph/issues/29" class="external-link">#29</a>).</li>
+<code><a href="../reference/plot.rrlm_graph.html">plot.rrlm_graph()</a></code>: replaced the static <code><a href="https://r.igraph.org/reference/plot.igraph.html" class="external-link">igraph::plot.igraph()</a></code> backend with an interactive <strong>Graphviz</strong> widget via <code><a href="https://rich-iannone.github.io/DiagrammeR/reference/grViz.html" class="external-link">DiagrammeR::grViz()</a></code>. Nodes are grouped into dashed sub-graph boxes by source file, coloured by node type, and sized by PageRank. The widget renders in the RStudio Viewer or any browser with full pan-and-zoom support. A new <code>layout</code> parameter selects the Graphviz engine (<code>"dot"</code> hierarchical, <code>"neato"</code>, <code>"fdp"</code>, <code>"sfdp"</code>, <code>"circo"</code>); a new <code>file</code> parameter saves to <code>.html</code> (via <strong>htmlwidgets</strong>) or to <code>.png</code>/<code>.pdf</code>/<code>.svg</code> (via <strong>webshot2</strong>).</li>
 <li>Vignette figure size increased to 10 × 8 inches.</li>
 </ul></div>
 <div class="section level4">

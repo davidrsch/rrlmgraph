@@ -52,8 +52,9 @@
 
 
 
-
-<div class="row">
+<link href="getting-started_files/htmltools-fill-0.5.9/fill.css" rel="stylesheet">
+<script src="getting-started_files/htmlwidgets-1.6.4/htmlwidgets.js"></script><script src="getting-started_files/viz-1.8.2/viz.js"></script><link href="getting-started_files/DiagrammeR-styles-0.2/styles.css" rel="stylesheet">
+<script src="getting-started_files/grViz-binding-1.0.11/grViz.js"></script><div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.svg" class="logo" alt=""><h1>Getting Started with rrlmgraph</h1>
             
@@ -100,7 +101,7 @@ package, a scripts folder, or a Shiny app – and returns an
 <span><span class="co">#&gt; Computing PageRank</span></span>
 <span><span class="co">#&gt; Embedding nodes with method 'tfidf'</span></span>
 <span><span class="co">#&gt; Computing semantic similarity edges (threshold 0.7)</span></span>
-<span><span class="co">#&gt; Done in 0.6s -- 19 nodes, 11 edges</span></span></code></pre></div>
+<span><span class="co">#&gt; Done in 0.58s -- 21 nodes, 11 edges</span></span></code></pre></div>
 <p>The function:</p>
 <ol style="list-style-type: decimal">
 <li>Detects the project type (package / scripts / Shiny app)</li>
@@ -117,29 +118,29 @@ analysis</li>
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">graph</span><span class="op">)</span></span>
 <span><span class="co">#&gt; === rrlm_graph: demo ===</span></span>
 <span><span class="co">#&gt; Root:  /home/runner/work/_temp/Library/rrlmgraph/extdata/demo</span></span>
-<span><span class="co">#&gt; Built: 2026-02-21 00:52:04</span></span>
-<span><span class="co">#&gt; Build time: 0.6 s</span></span>
+<span><span class="co">#&gt; Built: 2026-02-21 01:13:32</span></span>
+<span><span class="co">#&gt; Build time: 0.58 s</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Nodes (19 total):</span></span>
-<span><span class="co">#&gt;   package: 10</span></span>
+<span><span class="co">#&gt; Nodes (21 total):</span></span>
+<span><span class="co">#&gt;   package: 12</span></span>
 <span><span class="co">#&gt;   function: 9</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Edges (11 total):</span></span>
 <span><span class="co">#&gt;   CALLS: 11</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Top-5 nodes by PageRank:</span></span>
-<span><span class="co">#&gt;   1. data_prep::clean_data (0.157285)</span></span>
-<span><span class="co">#&gt;   2. data_prep::validate_inputs (0.068154)</span></span>
-<span><span class="co">#&gt;   3. data_prep::prepare_data (0.063835)</span></span>
-<span><span class="co">#&gt;   4. model::select_features (0.055118)</span></span>
-<span><span class="co">#&gt;   5. model::tune_hyperparams (0.055118)</span></span>
+<span><span class="co">#&gt;   1. data_prep::clean_data (0.145358)</span></span>
+<span><span class="co">#&gt;   2. data_prep::validate_inputs (0.062986)</span></span>
+<span><span class="co">#&gt;   3. data_prep::prepare_data (0.058995)</span></span>
+<span><span class="co">#&gt;   4. model::select_features (0.050938)</span></span>
+<span><span class="co">#&gt;   5. model::tune_hyperparams (0.050938)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Metadata:</span></span>
 <span><span class="co">#&gt;   Embed method: tfidf</span></span>
 <span><span class="co">#&gt;   Cache path:   /home/runner/work/_temp/Library/rrlmgraph/extdata/demo/.rrlmgraph/graph.rds</span></span></code></pre></div>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/print.html" class="external-link">print</a></span><span class="op">(</span><span class="va">graph</span><span class="op">)</span></span>
-<span><span class="co">#&gt; &lt;rrlm_graph&gt; demo | 19 nodes | 11 edges | embed: tfidf</span></span></code></pre></div>
+<span><span class="co">#&gt; &lt;rrlm_graph&gt; demo | 21 nodes | 11 edges | embed: tfidf</span></span></code></pre></div>
 <p><code><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot()</a></code> draws a force-directed layout coloured by node
 type:</p>
 <ul>
@@ -154,7 +155,8 @@ with PageRank)</li>
 </ul>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="va">graph</span><span class="op">)</span></span></code></pre></div>
-<p><img src="getting-started_files/figure-html/plot-1.png" class="r-plt" alt="" width="960"></p>
+<div class="grViz html-widget html-fill-item" id="htmlwidget-ac96cb3ee4656e2e9ec3" style="width:960px;height:768px;"></div>
+<script type="application/json" data-for="htmlwidget-ac96cb3ee4656e2e9ec3">{"x":{"diagram":"digraph rrlmgraph {\n  graph [layout=dot, rankdir=LR, fontname=\"Helvetica\", label=\"demo  —  top 9 hubs\", labelloc=t, fontsize=14, splines=ortho, nodesep=0.5, ranksep=0.8];\n  node  [shape=box, style=\"rounded,filled\", fontname=\"Helvetica\", fontsize=10, penwidth=0.5, margin=0.1];\n  edge  [arrowsize=0.5];\n\n  subgraph cluster_data_prep {\n    label=\"data.prep.R\";\n    style=dashed;\n    color=\"#AAAAAA\";\n    fontcolor=\"#666666\";\n    fontsize=10;\n    n1; n2; n3;\n  }\n\n  subgraph cluster_model {\n    label=\"model.R\";\n    style=dashed;\n    color=\"#AAAAAA\";\n    fontcolor=\"#666666\";\n    fontsize=10;\n    n4; n5; n6;\n  }\n\n  subgraph cluster_predict {\n    label=\"predict.R\";\n    style=dashed;\n    color=\"#AAAAAA\";\n    fontcolor=\"#666666\";\n    fontsize=10;\n    n7; n8; n9;\n  }\n\n  n1 [label=\"validate_inputs\", fillcolor=\"#4682B4\", fontcolor=\"white\", width=0.77];\n  n2 [label=\"clean_data\", fillcolor=\"#4682B4\", fontcolor=\"white\", width=2.00];\n  n3 [label=\"prepare_data\", fillcolor=\"#4682B4\", fontcolor=\"white\", width=0.71];\n  n4 [label=\"select_features\", fillcolor=\"#4682B4\", fontcolor=\"white\", width=0.59];\n  n5 [label=\"tune_hyperparams\", fillcolor=\"#4682B4\", fontcolor=\"white\", width=0.59];\n  n6 [label=\"fit_model\", fillcolor=\"#4682B4\", fontcolor=\"white\", width=0.52];\n  n7 [label=\"predict_results\", fillcolor=\"#4682B4\", fontcolor=\"white\", width=0.52];\n  n8 [label=\"evaluate_predictions\", fillcolor=\"#4682B4\", fontcolor=\"white\", width=0.52];\n  n9 [label=\"run_pipeline\", fillcolor=\"#4682B4\", fontcolor=\"white\", width=0.40];\n\n  n3 -> n1 [color=\"#888888\"];\n  n3 -> n2 [color=\"#888888\"];\n  n4 -> n2 [color=\"#888888\"];\n  n6 -> n3 [color=\"#888888\"];\n  n6 -> n4 [color=\"#888888\"];\n  n6 -> n5 [color=\"#888888\"];\n  n7 -> n2 [color=\"#888888\"];\n  n9 -> n3 [color=\"#888888\"];\n  n9 -> n6 [color=\"#888888\"];\n  n9 -> n7 [color=\"#888888\"];\n  n9 -> n8 [color=\"#888888\"];\n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
 </div>
 <div class="section level2">
 <h2 id="querying-context">3. Querying context<a class="anchor" aria-label="anchor" href="#querying-context"></a>
@@ -314,17 +316,17 @@ files:</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── <span style="font-weight: bold;">Incremental graph update</span> ──</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Changed files: <span style="color: #0000BB;">/tmp/RtmpuTjE6l/mypkg_demo/R/data_prep.R</span></span></span>
+<span><span class="co">#&gt; Changed files: <span style="color: #0000BB;">/tmp/RtmpsyS0Wg/mypkg_demo/R/data_prep.R</span></span></span>
 <span><span class="co">#&gt; Removing 1 stale node(s).</span></span>
 <span><span class="co">#&gt; Re-parsing 1 file(s).</span></span>
 <span><span class="co">#&gt; Embedding 1 new node(s) using method 'tfidf'.</span></span>
 <span><span class="co">#&gt; Graph now has 2 nodes, 0 edges.</span></span>
 <span><span class="co">#&gt; Recomputing PageRank.</span></span>
-<span><span class="co">#&gt; Persisting cache to <span style="color: #0000BB;">/tmp/RtmpuTjE6l/mypkg_demo</span>.</span></span>
-<span><span class="co">#&gt; Graph cached at <span style="color: #0000BB;">/tmp/RtmpuTjE6l/mypkg_demo/.rrlmgraph</span></span></span>
+<span><span class="co">#&gt; Persisting cache to <span style="color: #0000BB;">/tmp/RtmpsyS0Wg/mypkg_demo</span>.</span></span>
+<span><span class="co">#&gt; Graph cached at <span style="color: #0000BB;">/tmp/RtmpsyS0Wg/mypkg_demo/.rrlmgraph</span></span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">graph_small</span><span class="op">)</span></span>
-<span><span class="co">#&gt; IGRAPH f7e34d0 DNW- 2 0 -- </span></span>
+<span><span class="co">#&gt; IGRAPH e1ecabc DNW- 2 0 -- </span></span>
 <span><span class="co">#&gt; + attr: project_name (g/c), project_root (g/c), project_type (g/c),</span></span>
 <span><span class="co">#&gt; | r_version (g/c), build_time (g/n), build_at (g/c), embed_method</span></span>
 <span><span class="co">#&gt; | (g/c), embed_model (g/x), cache_path (g/c), name (v/c), node_type</span></span>

@@ -7,11 +7,17 @@ First release.
 #### Improvements
 
 - [`plot.rrlm_graph()`](https://davidrsch.github.io/rrlmgraph/reference/plot.rrlm_graph.md):
-  labels now placed **outside** nodes (`vertex.label.dist = 1.5`),
-  colour changed to `"gray15"` (was white) for readability on all
-  backgrounds, cex increased to `0.85`, default layout changed to
-  Kamada-Kawai (`layout_with_kk`) for better node separation on sparse
-  graphs ([\#29](https://github.com/davidrsch/rrlmgraph/issues/29)).
+  replaced the static
+  [`igraph::plot.igraph()`](https://r.igraph.org/reference/plot.igraph.html)
+  backend with an interactive **Graphviz** widget via
+  [`DiagrammeR::grViz()`](https://rich-iannone.github.io/DiagrammeR/reference/grViz.html).
+  Nodes are grouped into dashed sub-graph boxes by source file, coloured
+  by node type, and sized by PageRank. The widget renders in the RStudio
+  Viewer or any browser with full pan-and-zoom support. A new `layout`
+  parameter selects the Graphviz engine (`"dot"` hierarchical,
+  `"neato"`, `"fdp"`, `"sfdp"`, `"circo"`); a new `file` parameter saves
+  to `.html` (via **htmlwidgets**) or to `.png`/`.pdf`/`.svg` (via
+  **webshot2**).
 - Vignette figure size increased to 10 × 8 inches.
 
 #### Original first-release notes
