@@ -93,7 +93,7 @@ test_that("chat_with_context returns character(1) with mocked backend", {
   # Mock both paths so the test passes regardless of whether ellmer is installed
   with_mocked_bindings(
     .llm_via_ellmer = function(sp, msg, provider, model, ...) "mocked response",
-    .llm_via_httr2  = function(sp, msg, model) "mocked response",
+    .llm_via_httr2 = function(sp, msg, model) "mocked response",
     .package = "rrlmgraph",
     {
       result <- chat_with_context(g, "What does fit_model do?")
@@ -109,8 +109,10 @@ test_that("chat_with_context returns error string when LLM fails", {
   g <- make_llm_graph()
 
   with_mocked_bindings(
-    .llm_via_ellmer = function(sp, msg, provider, model, ...) stop("connection timeout"),
-    .llm_via_httr2  = function(sp, msg, model) stop("connection timeout"),
+    .llm_via_ellmer = function(sp, msg, provider, model, ...) {
+      stop("connection timeout")
+    },
+    .llm_via_httr2 = function(sp, msg, model) stop("connection timeout"),
     .package = "rrlmgraph",
     {
       result <- suppressWarnings(
@@ -130,14 +132,13 @@ test_that("chat_with_context dispatches correct provider to .llm_via_ellmer", {
   with_mocked_bindings(
     .llm_via_ellmer = function(sp, msg, provider, model, ...) {
       captured$provider <<- provider
-      captured$model   <<- model
+      captured$model <<- model
       "ok"
     },
     .llm_via_httr2 = function(sp, msg, model) "ok",
     .package = "rrlmgraph",
     {
-      chat_with_context(g, "test", provider = "github",
-                        model = "gpt-4o")
+      chat_with_context(g, "test", provider = "github", model = "gpt-4o")
     }
   )
 

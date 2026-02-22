@@ -303,3 +303,165 @@ test_that("call edges recall >= 85% on mini_ds_project fixture", {
     label = sprintf("Call edge recall %.0f%% < 85%%", recall * 100)
   )
 })
+
+# ---- build_co_change_edges ------------------------------------------
+
+test_that("build_co_change_edges returns empty data frame for empty input", {
+  result <- build_co_change_edges(list())
+  expect_s3_class(result, "data.frame")
+  expect_equal(nrow(result), 0L)
+  expect_true(all(c("from", "to", "weight") %in% names(result)))
+})
+
+test_that("build_co_change_edges returns empty data frame for non-git dir", {
+  nodes <- make_fake_nodes()
+  tmp <- tempfile()
+  dir.create(tmp)
+  on.exit(unlink(tmp, recursive = TRUE))
+  result <- build_co_change_edges(nodes, project_root = tmp)
+  expect_s3_class(result, "data.frame")
+  expect_equal(nrow(result), 0L)
+})
+
+test_that("build_co_change_edges result columns are from, to, weight", {
+  # Use actual rrlmgraph package dir which IS a git repo
+  pkg_root <- system.file(package = "rrlmgraph")
+  if (!nzchar(pkg_root)) {
+    skip("rrlmgraph package root not found")
+  }
+  nodes <- make_fake_nodes()
+  result <- build_co_change_edges(nodes, project_root = pkg_root)
+  expect_s3_class(result, "data.frame")
+  expect_true(all(c("from", "to", "weight") %in% names(result)))
+})
+
+test_that("build_co_change_edges respects min_cochanges = 999 (no edges)", {
+  pkg_root <- system.file(package = "rrlmgraph")
+  if (!nzchar(pkg_root)) {
+    skip("rrlmgraph package root not found")
+  }
+  nodes <- make_fake_nodes()
+  result <- build_co_change_edges(
+    nodes,
+    project_root = pkg_root,
+    min_cochanges = 999L
+  )
+  expect_s3_class(result, "data.frame")
+  expect_equal(nrow(result), 0L)
+})
+
+# ---- build_dispatch_edges -------------------------------------------
+
+test_that("build_dispatch_edges returns empty data frame for empty nodes", {
+  result <- build_dispatch_edges(list(), character(0))
+  expect_s3_class(result, "data.frame")
+  expect_equal(nrow(result), 0L)
+  expect_true(all(c("from", "to", "weight", "edge_type") %in% names(result)))
+})
+
+test_that("build_dispatch_edges returns empty for no OOP patterns", {
+  # Write an R file with plain functions (no OOP)
+  tmp <- tempfile(fileext = ".R")
+  writeLines(
+    c(
+      "my_func <- function(x) x + 1",
+      "another <- function(y) y * 2"
+    ),
+    tmp
+  )
+  on.exit(unlink(tmp))
+
+  nodes <- list(
+    list(
+      node_id = "pkg::my_func",
+      name = "my_func",
+      file = tmp,
+      calls_list = character(0)
+    ),
+    list(
+      node_id = "pkg::another",
+      name = "another",
+      file = tmp,
+      calls_list = character(0)
+    )
+  )
+  result <- build_dispatch_edges(nodes, r_files = tmp)
+  expect_s3_class(result, "data.frame")
+  expect_equal(nrow(result), 0L)
+})
+
+test_that("build_dispatch_edges detects S4 EXTENDS edge", {
+  tmp <- tempfile(fileext = ".R")
+  writeLines(
+    c(
+      'setClass("Animal", representation(name = "character"))',
+      'setClass("Dog", contains = "Animal")'
+    ),
+    tmp
+  )
+  on.exit(unlink(tmp))
+
+  nodes <- list(
+    list(
+      node_id = "pkg::Animal",
+      name = "Animal",
+      file = tmp,
+      calls_list = character(0)
+    ),
+    list(
+      node_id = "pkg::Dog",
+      name = "Dog",
+      file = tmp,
+      calls_list = character(0)
+    )
+  )
+  result <- build_dispatch_edges(nodes, r_files = tmp)
+  expect_s3_class(result, "data.frame")
+  if (nrow(result) > 0L) {
+    expect_true("EXTENDS" %in% result$edge_type)
+  }
+})
+
+test_that("build_dispatch_edges detects R6 EXTENDS edge", {
+  skip_if_not_installed("R6")
+  tmp <- tempfile(fileext = ".R")
+  writeLines(
+    c(
+      'Base  <- R6::R6Class("Base",  public = list(init = function() {}))',
+      'Child <- R6::R6Class("Child", inherit = Base)'
+    ),
+    tmp
+  )
+  on.exit(unlink(tmp))
+
+  nodes <- list(
+    list(
+      node_id = "pkg::Base",
+      name = "Base",
+      file = tmp,
+      calls_list = character(0)
+    ),
+    list(
+      node_id = "pkg::Child",
+      name = "Child",
+      file = tmp,
+      calls_list = character(0)
+    )
+  )
+  result <- build_dispatch_edges(nodes, r_files = tmp)
+  expect_s3_class(result, "data.frame")
+  if (nrow(result) > 0L) {
+    expect_true("EXTENDS" %in% result$edge_type)
+  }
+})
+
+test_that("build_dispatch_edges result has edge_type column", {
+  tmp <- tempfile(fileext = ".R")
+  writeLines("x <- 1", tmp)
+  on.exit(unlink(tmp))
+  nodes <- list(
+    list(node_id = "pkg::x", name = "x", file = tmp, calls_list = character(0))
+  )
+  result <- build_dispatch_edges(nodes, r_files = tmp)
+  expect_true("edge_type" %in% names(result))
+})

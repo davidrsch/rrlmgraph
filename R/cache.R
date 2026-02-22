@@ -565,15 +565,16 @@ export_to_sqlite <- function(graph, db_path) {
       {
         entry <- jsonlite::fromJSON(line, simplifyVector = TRUE)
         data.frame(
-          query = entry$query %||% NA_character_,
+          query = as.character(entry$query %||% NA_character_),
           nodes_json = if (is.null(entry$nodes)) {
             NA_character_
           } else {
-            jsonlite::toJSON(entry$nodes, auto_unbox = FALSE)
+            # as.character() strips the S3 json class so rbind() works on R 4.2
+            as.character(jsonlite::toJSON(entry$nodes, auto_unbox = FALSE))
           },
           polarity = as.numeric(entry$polarity %||% 1.0),
-          session_id = entry$session_id %||% NA_character_,
-          created_at = entry$timestamp %||% NA_character_,
+          session_id = as.character(entry$session_id %||% NA_character_),
+          created_at = as.character(entry$timestamp %||% NA_character_),
           stringsAsFactors = FALSE
         )
       },
@@ -597,7 +598,7 @@ export_to_sqlite <- function(graph, db_path) {
           sql,
           params = list(
             rows$query[[i]],
-            rows$nodes_json[[i]],
+            as.character(rows$nodes_json[[i]]),
             as.numeric(rows$polarity[[i]]),
             rows$session_id[[i]],
             rows$created_at[[i]]
