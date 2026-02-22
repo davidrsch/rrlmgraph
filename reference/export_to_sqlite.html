@@ -108,9 +108,8 @@ without calling back into R.</p></dd>
 
 
 <p>The <code>embedding</code> column in <code>nodes</code> is stored as a JSON text
-array of floating-point numbers, e.g.\  <code>[0.12, -0.34, ...]</code>.
-In TypeScript (<span class="pkg">better-sqlite3</span>):</p><div class="sourceCode"><pre><code>const emb: number[] = JSON.parse(row.embedding ?? "[]");</code></pre></div>
-
+array of floating-point numbers (e.g. <code>[0.12, -0.34, ...]</code>).
+In TypeScript, decode with <code>JSON.parse(row.embedding || "[]")</code>.</p>
     </div>
     <div class="section level2">
     <h2 id="see-also">See also<a class="anchor" aria-label="anchor" href="#see-also"></a></h2>

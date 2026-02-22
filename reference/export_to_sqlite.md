@@ -59,10 +59,8 @@ export_to_sqlite(graph, db_path)
 ## Embedding format
 
 The `embedding` column in `nodes` is stored as a JSON text array of
-floating-point numbers, e.g.\\ `[0.12, -0.34, ...]`. In TypeScript
-(better-sqlite3):
-
-    const emb: number[] = JSON.parse(row.embedding ?? "[]");
+floating-point numbers (e.g. `[0.12, -0.34, ...]`). In TypeScript,
+decode with `JSON.parse(row.embedding || "[]")`.
 
 ## See also
 
