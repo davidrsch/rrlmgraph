@@ -562,7 +562,7 @@ build_dispatch_edges <- function(func_nodes, r_files) {
     # setClass("Child", ..., contains = "Parent") → EXTENDS
     for (caps in .regex_all_captures2(
       full,
-      'setClass\\("([A-Za-z._][A-Za-z0-9._]*)")[\\s\\S]{0,500}?\\bcontains\\s*=\\s*"([A-Za-z._][A-Za-z0-9._]*)"'
+      'setClass\\("([A-Za-z._][A-Za-z0-9._]*)"[\\s\\S]{0,500}?\\bcontains\\s*=\\s*"([A-Za-z._][A-Za-z0-9._]*)"'
     )) {
       .add_oop_edge(caps[[1L]], caps[[2L]], "EXTENDS")
     }
@@ -570,7 +570,7 @@ build_dispatch_edges <- function(func_nodes, r_files) {
     # R6Class("Child", ..., inherit = Parent) → EXTENDS
     for (caps in .regex_all_captures2(
       full,
-      'R6Class\\("([A-Za-z._][A-Za-z0-9._]*)")[\\s\\S]{0,500}?\\binherit\\s*=\\s*([A-Za-z._][A-Za-z0-9._]*)'
+      'R6Class\\("([A-Za-z._][A-Za-z0-9._]*)"[\\s\\S]{0,500}?\\binherit\\s*=\\s*([A-Za-z._][A-Za-z0-9._]*)'
     )) {
       .add_oop_edge(caps[[1L]], caps[[2L]], "EXTENDS")
     }
@@ -578,7 +578,7 @@ build_dispatch_edges <- function(func_nodes, r_files) {
     # setRefClass("Child", ..., contains = "Parent") → EXTENDS
     for (caps in .regex_all_captures2(
       full,
-      'setRefClass\\("([A-Za-z._][A-Za-z0-9._]*)")[\\s\\S]{0,500}?\\bcontains\\s*=\\s*"([A-Za-z._][A-Za-z0-9._]*)"'
+      'setRefClass\\("([A-Za-z._][A-Za-z0-9._]*)"[\\s\\S]{0,500}?\\bcontains\\s*=\\s*"([A-Za-z._][A-Za-z0-9._]*)"'
     )) {
       .add_oop_edge(caps[[1L]], caps[[2L]], "EXTENDS")
     }
