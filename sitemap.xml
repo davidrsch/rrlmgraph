@@ -11,6 +11,8 @@
 <url><loc>https://davidrsch.github.io/rrlmgraph/news/index.html</loc></url>
 <url><loc>https://davidrsch.github.io/rrlmgraph/reference/assemble_context_string.html</loc></url>
 <url><loc>https://davidrsch.github.io/rrlmgraph/reference/build_call_edges.html</loc></url>
+<url><loc>https://davidrsch.github.io/rrlmgraph/reference/build_co_change_edges.html</loc></url>
+<url><loc>https://davidrsch.github.io/rrlmgraph/reference/build_dispatch_edges.html</loc></url>
 <url><loc>https://davidrsch.github.io/rrlmgraph/reference/build_import_edges.html</loc></url>
 <url><loc>https://davidrsch.github.io/rrlmgraph/reference/build_node_context.html</loc></url>
 <url><loc>https://davidrsch.github.io/rrlmgraph/reference/build_rrlm_graph.html</loc></url>
@@ -30,6 +32,7 @@
 <url><loc>https://davidrsch.github.io/rrlmgraph/reference/dot-nodes_to_vertex_df.html</loc></url>
 <url><loc>https://davidrsch.github.io/rrlmgraph/reference/dot-ollama_embed_text.html</loc></url>
 <url><loc>https://davidrsch.github.io/rrlmgraph/reference/dot-openai_embed_texts.html</loc></url>
+<url><loc>https://davidrsch.github.io/rrlmgraph/reference/dot-regex_all_captures2.html</loc></url>
 <url><loc>https://davidrsch.github.io/rrlmgraph/reference/dot-text_hash.html</loc></url>
 <url><loc>https://davidrsch.github.io/rrlmgraph/reference/dot-vertices_as_node_list.html</loc></url>
 <url><loc>https://davidrsch.github.io/rrlmgraph/reference/embed_nodes.html</loc></url>

@@ -30,6 +30,10 @@ Parse R source files into nodes and edges.
   : Build IMPORTS edges from R files to package dependencies
 - [`build_test_edges()`](https://davidrsch.github.io/rrlmgraph/reference/build_test_edges.md)
   : Build TEST edges from test files to user-defined functions
+- [`build_co_change_edges()`](https://davidrsch.github.io/rrlmgraph/reference/build_co_change_edges.md)
+  : Build CO_CHANGES edges from git commit history
+- [`build_dispatch_edges()`](https://davidrsch.github.io/rrlmgraph/reference/build_dispatch_edges.md)
+  : Build DISPATCHES_ON and EXTENDS edges for OOP patterns
 - [`find_calls_in_body()`](https://davidrsch.github.io/rrlmgraph/reference/find_calls_in_body.md)
   : Find function calls within an R function body
 - [`embed_nodes()`](https://davidrsch.github.io/rrlmgraph/reference/embed_nodes.md)

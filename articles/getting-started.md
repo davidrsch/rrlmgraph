@@ -33,11 +33,18 @@ graph <- build_rrlm_graph(demo_dir, verbose = TRUE)
 #> Building CALLS edges
 #> Building IMPORT edges
 #> Building TEST edges
+#> Building CO_CHANGES edges from git history
+#> Building DISPATCHES_ON / EXTENDS edges
+#> Warning in gregexpr(pattern, text, perl = TRUE): PCRE pattern compilation error
+#>  'unmatched closing parenthesis'
+#>  at ')[\s\S]{0,500}?\bcontains\s*=\s*"([A-Za-z._][A-Za-z0-9._]*)"'
+#> Warning: Dispatch edge build failed: invalid regular expression
+#> 'setClass\("([A-Za-z._][A-Za-z0-9._]*)")[\s\S]{0,500}?\bcontains\s*=\s*"([A-Za-z._][A-Za-z0-9._]*)"'
 #> Assembling igraph
 #> Computing PageRank
 #> Embedding nodes with method 'tfidf'
 #> Computing semantic similarity edges (threshold 0.7)
-#> Done in 0.53s -- 22 nodes, 11 edges
+#> Done in 0.6s -- 22 nodes, 11 edges
 ```
 
 The function:
@@ -53,8 +60,8 @@ The function:
 summary(graph)
 #> === rrlm_graph: demo ===
 #> Root:  /home/runner/work/_temp/Library/rrlmgraph/extdata/demo
-#> Built: 2026-02-21 18:16:55
-#> Build time: 0.53 s
+#> Built: 2026-02-22 12:39:59
+#> Build time: 0.6 s
 #> 
 #> Nodes (22 total):
 #>   package: 13
@@ -113,7 +120,7 @@ ctx$nodes
 
 # Number of tokens used
 ctx$tokens_used
-#> [1] 93
+#> [1] 111
 ```
 
 The assembled context string – ready to paste into a system prompt:
@@ -121,13 +128,24 @@ The assembled context string – ready to paste into a system prompt:
 ``` r
 cat(ctx$context_string)
 #> # rrlm_graph Context
-#> # Project: demo | R 4.5.2 | ~60 tokens
+#> # Project: demo | R 4.5.2 | ~127 tokens
 #> # Query: How does the data preparation and validation pipeline work?
 #> 
 #> ## CORE FUNCTIONS
 #> ---
 #> ### demo/data_prep::clean_data
-#> clean_data(raw) {}
+#> #' Remove incomplete and duplicate rows
+#> #'
+#> #' @param raw A data.frame.
+#> #' @return A cleaned data.frame with complete, deduplicated rows.
+#> #' @export
+#> clean_data(raw) {
+#> clean_data <- function(raw) {
+#>   raw <- raw[stats::complete.cases(raw), , drop = FALSE]
+#>   raw <- unique(raw)
+#>   raw
+#> }
+#> }
 #> 
 #> ## CONSTRAINTS
 #> ---
@@ -207,24 +225,24 @@ graph_small <- update_graph_incremental(
 #> 
 #> ── Incremental graph update ──
 #> 
-#> Changed files: /tmp/Rtmp3ZIsLR/mypkg_demo/R/data_prep.R
+#> Changed files: /tmp/Rtmp1abINM/mypkg_demo/R/data_prep.R
 #> Removing 1 stale node(s).
 #> Re-parsing 1 file(s).
 #> Embedding 1 new node(s) using method 'tfidf'.
 #> Graph now has 2 nodes, 0 edges.
 #> Recomputing PageRank.
-#> Persisting cache to /tmp/Rtmp3ZIsLR/mypkg_demo.
-#> Graph cached at /tmp/Rtmp3ZIsLR/mypkg_demo/.rrlmgraph
+#> Persisting cache to /tmp/Rtmp1abINM/mypkg_demo.
+#> Graph cached at /tmp/Rtmp1abINM/mypkg_demo/.rrlmgraph
 
 summary(graph_small)
-#> IGRAPH 3a44a83 DNW- 2 0 -- 
+#> IGRAPH 4498dea DNW- 2 0 -- 
 #> + attr: project_name (g/c), project_root (g/c), project_type (g/c),
 #> | r_version (g/c), build_time (g/n), build_at (g/c), embed_method
 #> | (g/c), embed_model (g/x), cache_path (g/c), name (v/c), node_type
 #> | (v/c), file (v/c), line_start (v/n), line_end (v/n), signature (v/c),
-#> | complexity (v/n), pagerank (v/n), task_trace_weight (v/n), embedding
-#> | (v/x), label (v/c), pkg (v/c), doc (v/c), weight (e/n), edge_type
-#> | (e/c)
+#> | body_text (v/c), roxygen_text (v/c), complexity (v/n), pagerank
+#> | (v/n), task_trace_weight (v/n), embedding (v/x), label (v/c), pkg
+#> | (v/c), doc (v/c), weight (e/n), edge_type (e/c)
 ```
 
 ## 6. Caching the graph

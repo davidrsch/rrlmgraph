@@ -112,7 +112,7 @@ A named list with class `c("rrlm_context", "list")`:
 
     - Select the best-scoring node with score `>= min_relevance`.
 
-    - Compute its token cost (`nchar / 4`).
+    - Compute its token cost (`.count_tokens()`).
 
     - Accept the node only if adding it stays within the budget;
       otherwise skip and try the next-best.

@@ -145,7 +145,7 @@ PageRank; otherwise validate and use the supplied name.</p></li>
 <code>frontier</code> is non-empty:</p><ul><li><p>Score every frontier node with <code><a href="compute_relevance.html">compute_relevance()</a></code>.</p></li>
 <li><p>Select the best-scoring node with score
 <code>&gt;= min_relevance</code>.</p></li>
-<li><p>Compute its token cost (<code>nchar / 4</code>).</p></li>
+<li><p>Compute its token cost (<code>.count_tokens()</code>).</p></li>
 <li><p>Accept the node only if adding it stays within the
 budget; otherwise skip and try the next-best.</p></li>
 <li><p>Mark as visited; expand its neighbours into the

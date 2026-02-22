@@ -111,7 +111,7 @@ to <code>&lt;project_root&gt;/.rrlmgraph/graph.rds</code>.</p></dd>
 
 <div class="section">
 <h3 id="edge-types">Edge types<a class="anchor" aria-label="anchor" href="#edge-types"></a></h3>
-<table class="table table"><tr><td>Type</td><td>Description</td></tr><tr><td><code>"CALLS"</code></td><td>Intra-project function call</td></tr><tr><td><code>"IMPORTS"</code></td><td>File/project imports a package</td></tr><tr><td><code>"TESTS"</code></td><td>Test file covers a user function</td></tr><tr><td><code>"SEMANTIC"</code></td><td>Cosine similarity &gt;= <code>semantic_threshold</code></td></tr></table></div>
+<table class="table table"><tr><td>Type</td><td>Description</td></tr><tr><td><code>"CALLS"</code></td><td>Intra-project function call</td></tr><tr><td><code>"IMPORTS"</code></td><td>File/project imports a package</td></tr><tr><td><code>"TESTS"</code></td><td>Test file covers a user function</td></tr><tr><td><code>"SEMANTIC"</code></td><td>Cosine similarity &gt;= <code>semantic_threshold</code></td></tr><tr><td><code>"CO_CHANGES"</code></td><td>Two functions co-edited in &gt;= <code>min_cochanges</code> commits (from <code><a href="build_co_change_edges.html">build_co_change_edges()</a></code>)</td></tr><tr><td><code>"DISPATCHES_ON"</code></td><td>S4/R5 generic dispatches on a class (from <code><a href="build_dispatch_edges.html">build_dispatch_edges()</a></code>)</td></tr><tr><td><code>"EXTENDS"</code></td><td>Class inherits from another class (from <code><a href="build_dispatch_edges.html">build_dispatch_edges()</a></code>)</td></tr></table></div>
 
     </div>
     <div class="section level2">

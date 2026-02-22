@@ -58,41 +58,165 @@
 <img src="logo.svg" class="logo" alt=""><h1 id="rrlmgraph-">rrlmgraph <a class="anchor" aria-label="anchor" href="#rrlmgraph-"></a>
 </h1>
 </div>
-<blockquote>
-<p>Typed knowledge graphs for R projects — give your LLM the right context, not the whole codebase.</p>
-</blockquote>
-<div class="section level2">
-<h2 id="overview">Overview<a class="anchor" aria-label="anchor" href="#overview"></a>
-</h2>
-<p><code>rrlmgraph</code> builds a typed knowledge graph of an R project and uses it to supply large language models with precise, token-budgeted context. It reduces hallucinations and token consumption by grounding every LLM response in verified, version-specific project knowledge.</p>
-</div>
+<!-- badges: start -->
+
+<!-- badges: end -->
+<p>The goal of <code>rrlmgraph</code> is to give large language models the <em>right</em> context about your R project — not the whole codebase. It builds a typed knowledge graph that encodes functions, files, packages, and tests as nodes, then performs a relevance-guided traversal to extract a token-budgeted context window for every LLM query. Compared to pasting entire source files, <code>rrlmgraph</code> reduces hallucinations by grounding responses in verified code and cuts token consumption by orders of magnitude.</p>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
+<p>You can install the development version of <code>rrlmgraph</code> from GitHub with:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># install.packages("pak")</span></span>
 <span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pak.html" class="external-link">pak</a></span><span class="op">(</span><span class="st">"davidrsch/rrlmgraph"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="quick-start">Quick start<a class="anchor" aria-label="anchor" href="#quick-start"></a>
+<h2 id="example">Example<a class="anchor" aria-label="anchor" href="#example"></a>
 </h2>
+<div class="section level3">
+<h3 id="example-1-build-a-knowledge-graph-for-your-r-project">Example 1: Build a knowledge graph for your R project<a class="anchor" aria-label="anchor" href="#example-1-build-a-knowledge-graph-for-your-r-project"></a>
+</h3>
+<p><code><a href="reference/build_rrlm_graph.html">build_rrlm_graph()</a></code> parses every R source file in your project, extracts function definitions, resolves cross-file calls and package imports, computes TF-IDF embeddings for each node, and assembles everything into an <code>igraph</code> object annotated with PageRank scores.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://davidrsch.github.io/rrlmgraph/">rrlmgraph</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Build the graph for any R project</span></span>
-<span><span class="va">g</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/build_rrlm_graph.html">build_rrlm_graph</a></span><span class="op">(</span><span class="st">"path/to/my_project"</span><span class="op">)</span></span>
+<span><span class="co"># Point it at any R project — package, Shiny app, or script directory.</span></span>
+<span><span class="va">g</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/build_rrlm_graph.html">build_rrlm_graph</a></span><span class="op">(</span><span class="st">"path/to/mypkg"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; ✔ Detected R package: mypkg</span></span>
+<span><span class="co">#&gt; ✔ Parsed 14 source files — 38 function nodes, 6 package nodes, 9 test files</span></span>
+<span><span class="co">#&gt; ✔ Built CALLS (52), IMPORTS (31), TESTS (9), SEMANTIC (17) edges</span></span>
+<span><span class="co">#&gt; ✔ TF-IDF embeddings computed (vocab size: 1 204)</span></span>
+<span><span class="co">#&gt; ✔ PageRank computed</span></span>
+<span><span class="co">#&gt; ✔ Graph cached at path/to/mypkg/.rrlmgraph/</span></span>
 <span></span>
-<span><span class="co"># Query for context relevant to a task</span></span>
-<span><span class="va">ctx</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/query_context.html">query_context</a></span><span class="op">(</span><span class="va">g</span>, <span class="st">"How does the model evaluation work?"</span><span class="op">)</span></span>
+<span><span class="co"># The object is a plain igraph, so all igraph tools work.</span></span>
+<span><span class="fu">igraph</span><span class="fu">::</span><span class="fu"><a href="https://r.igraph.org/reference/gorder.html" class="external-link">vcount</a></span><span class="op">(</span><span class="va">g</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 53</span></span>
+<span><span class="fu">igraph</span><span class="fu">::</span><span class="fu"><a href="https://r.igraph.org/reference/gsize.html" class="external-link">ecount</a></span><span class="op">(</span><span class="va">g</span><span class="op">)</span></span>
+<span><span class="co">#&gt; [1] 109</span></span>
+<span></span>
+<span><span class="co"># A typed summary is available via print/summary.</span></span>
+<span><span class="va">g</span></span>
+<span><span class="co">#&gt; &lt;rrlm_graph&gt;  mypkg 0.1.0</span></span>
+<span><span class="co">#&gt;   Nodes : 53  (38 function, 6 package, 9 testfile)</span></span>
+<span><span class="co">#&gt;   Edges : 109 (52 CALLS, 31 IMPORTS, 9 TESTS, 17 SEMANTIC)</span></span>
+<span><span class="co">#&gt;   Embed : tfidf  (vocab 1 204)</span></span>
+<span><span class="co">#&gt;   Cached: path/to/mypkg/.rrlmgraph/graph.rds</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="example-2-query-context-for-a-coding-task">Example 2: Query context for a coding task<a class="anchor" aria-label="anchor" href="#example-2-query-context-for-a-coding-task"></a>
+</h3>
+<p><code><a href="reference/query_context.html">query_context()</a></code> performs a relevance-guided breadth-first search from the most informative seed node. The token budget is a <strong>hard constraint</strong> — the returned context string is guaranteed to fit within it.</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Ask for the most relevant code for a specific task.</span></span>
+<span><span class="va">ctx</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/query_context.html">query_context</a></span><span class="op">(</span></span>
+<span>  <span class="va">g</span>,</span>
+<span>  query        <span class="op">=</span> <span class="st">"How does the model fitting pipeline handle missing values?"</span>,</span>
+<span>  budget_tokens <span class="op">=</span> <span class="fl">2000L</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># ctx is a list with class "rrlm_context".</span></span>
+<span><span class="va">ctx</span><span class="op">$</span><span class="va">seed_node</span></span>
+<span><span class="co">#&gt; [1] "preprocess_data"</span></span>
+<span></span>
+<span><span class="va">ctx</span><span class="op">$</span><span class="va">nodes</span></span>
+<span><span class="co">#&gt; [1] "preprocess_data" "impute_missing"  "fit_model"       "validate_inputs"</span></span>
+<span><span class="co">#&gt; [5] "load_data"</span></span>
+<span></span>
+<span><span class="va">ctx</span><span class="op">$</span><span class="va">tokens_used</span></span>
+<span><span class="co">#&gt; [1] 1847</span></span>
+<span></span>
+<span><span class="co"># The assembled context string is ready to paste into any LLM prompt.</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="va">ctx</span><span class="op">$</span><span class="va">context_string</span><span class="op">)</span></span>
+<span><span class="co">#&gt; === preprocess_data (function | data_pipeline.R) ===</span></span>
+<span><span class="co">#&gt; Signature: preprocess_data(df, strategy = c("median", "knn", "drop"))</span></span>
+<span><span class="co">#&gt; Calls: impute_missing, validate_inputs</span></span>
+<span><span class="co">#&gt; Called by: fit_model, run_cv_fold</span></span>
+<span><span class="co">#&gt;</span></span>
+<span><span class="co">#&gt; Prepares a raw data frame for modelling. Missing values are handled</span></span>
+<span><span class="co">#&gt; according to `strategy`. Runs `validate_inputs()` first.</span></span>
+<span><span class="co">#&gt;</span></span>
+<span><span class="co">#&gt; preprocess_data &lt;- function(df, strategy = c("median", "knn", "drop")) {</span></span>
+<span><span class="co">#&gt;   strategy &lt;- match.arg(strategy)</span></span>
+<span><span class="co">#&gt;   df &lt;- validate_inputs(df)</span></span>
+<span><span class="co">#&gt;   impute_missing(df, strategy = strategy)</span></span>
+<span><span class="co">#&gt; }</span></span>
+<span><span class="co">#&gt; ...</span></span></code></pre></div>
+<p>You can inspect the relevance scores to understand why each node was selected:</p>
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/sort.html" class="external-link">sort</a></span><span class="op">(</span><span class="va">ctx</span><span class="op">$</span><span class="va">relevance_scores</span>, decreasing <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
+<span><span class="co">#&gt;  preprocess_data   impute_missing        fit_model validate_inputs</span></span>
+<span><span class="co">#&gt;        0.8341           0.7129            0.6803            0.5512</span></span>
+<span><span class="co">#&gt;    load_data</span></span>
+<span><span class="co">#&gt;        0.3204</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="example-3-chat-with-an-llm-grounded-in-project-code">Example 3: Chat with an LLM grounded in project code<a class="anchor" aria-label="anchor" href="#example-3-chat-with-an-llm-grounded-in-project-code"></a>
+</h3>
+<p><code><a href="reference/chat_with_context.html">chat_with_context()</a></code> wraps <code><a href="reference/query_context.html">query_context()</a></code> and sends a grounded prompt to an LLM via the <code>ellmer</code> package. The model is instructed to answer only from the provided code snippets and cite node names. Supports OpenAI, Anthropic, GitHub Models, and Ollama.</p>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># GitHub Models — uses GITHUB_PAT, no extra secret needed.</span></span>
+<span><span class="va">answer</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/chat_with_context.html">chat_with_context</a></span><span class="op">(</span></span>
+<span>  <span class="va">g</span>,</span>
+<span>  message       <span class="op">=</span> <span class="st">"Refactor preprocess_data() to support a 'mode' imputation strategy."</span>,</span>
+<span>  provider      <span class="op">=</span> <span class="st">"github"</span>,</span>
+<span>  budget_tokens <span class="op">=</span> <span class="fl">3000L</span></span>
+<span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="va">answer</span><span class="op">)</span></span>
+<span><span class="co">#&gt; Based on `preprocess_data` (data_pipeline.R) and `impute_missing`</span></span>
+<span><span class="co">#&gt; (impute.R), here is a minimal refactor:</span></span>
+<span><span class="co">#&gt;</span></span>
+<span><span class="co">#&gt; ```r</span></span>
+<span><span class="co">#&gt; preprocess_data &lt;- function(df,</span></span>
+<span><span class="co">#&gt;                              strategy = c("median", "knn", "drop", "mode")) {</span></span>
+<span><span class="co">#&gt;   strategy &lt;- match.arg(strategy)</span></span>
+<span><span class="co">#&gt;   df &lt;- validate_inputs(df)</span></span>
+<span><span class="co">#&gt;   impute_missing(df, strategy = strategy)</span></span>
+<span><span class="co">#&gt; }</span></span>
+<span><span class="co">#&gt; ```</span></span>
+<span><span class="co">#&gt;</span></span>
+<span><span class="co">#&gt; `impute_missing()` already dispatches on `strategy` via a switch statement</span></span>
+<span><span class="co">#&gt; (impute.R line 34), so adding `"mode"` there is the only other change needed.</span></span>
 <span></span>
-<span><span class="co"># Chat with an LLM using graph-derived context</span></span>
-<span><span class="va">answer</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/chat_with_context.html">chat_with_context</a></span><span class="op">(</span><span class="va">g</span>, <span class="st">"Add cross-validation to fit_model()"</span><span class="op">)</span></span></code></pre></div>
+<span><span class="co"># Ollama (local, no API key required).</span></span>
+<span><span class="co"># answer &lt;- chat_with_context(g, "...", provider = "ollama", model = "llama3.2")</span></span></code></pre></div>
+</div>
+<div class="section level3">
+<h3 id="example-4-export-to-sqlite-for-the-rrlmgraph-mcp-server">Example 4: Export to SQLite for the rrlmgraph-mcp server<a class="anchor" aria-label="anchor" href="#example-4-export-to-sqlite-for-the-rrlmgraph-mcp-server"></a>
+</h3>
+<p><code><a href="reference/export_to_sqlite.html">export_to_sqlite()</a></code> writes the full graph — nodes with body text, embeddings, and PageRank, edges with types and weights, and the TF-IDF vocabulary — to a single SQLite file that the <a href="https://github.com/davidrsch/rrlmgraph-mcp" class="external-link">rrlmgraph-mcp</a> TypeScript server reads directly.</p>
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># Export once after building (or rebuilding) the graph.</span></span>
+<span><span class="fu"><a href="reference/export_to_sqlite.html">export_to_sqlite</a></span><span class="op">(</span><span class="va">g</span>, db_path <span class="op">=</span> <span class="st">"path/to/mypkg/.rrlmgraph/graph.sqlite"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; ✔ Graph exported to path/to/mypkg/.rrlmgraph/graph.sqlite</span></span>
+<span></span>
+<span><span class="co"># Then point the MCP server at the file.</span></span>
+<span><span class="co"># In ~/.cursor/mcp.json (or equivalent):</span></span>
+<span><span class="co"># {</span></span>
+<span><span class="co">#   "mcpServers": {</span></span>
+<span><span class="co">#     "rrlmgraph": {</span></span>
+<span><span class="co">#       "command": "node",</span></span>
+<span><span class="co">#       "args": [</span></span>
+<span><span class="co">#         "/path/to/rrlmgraph-mcp/dist/index.js",</span></span>
+<span><span class="co">#         "--db-path", "path/to/mypkg/.rrlmgraph/graph.sqlite"</span></span>
+<span><span class="co">#       ]</span></span>
+<span><span class="co">#     }</span></span>
+<span><span class="co">#   }</span></span>
+<span><span class="co"># }</span></span></code></pre></div>
+<p>The SQLite file is self-contained and can be committed alongside your project so teammates benefit from graph context without running R.</p>
+</div>
 </div>
 <div class="section level2">
 <h2 id="learn-more">Learn more<a class="anchor" aria-label="anchor" href="#learn-more"></a>
 </h2>
-<p>See the <a href="articles/getting-started.html">Getting Started</a> vignette for a complete walkthrough, and the <a href="reference/index.html">Reference</a> for full function documentation.</p>
+<ul>
+<li>
+<a href="articles/getting-started.html">Getting Started</a> — end-to-end walkthrough</li>
+<li>
+<a href="reference/index.html">Reference</a> — full function documentation</li>
+<li>
+<a href="https://github.com/davidrsch/rrlmgraph-mcp" class="external-link">rrlmgraph-mcp</a> — MCP server for Cursor, Claude Desktop, and other MCP hosts</li>
+</ul>
 </div>
 </div>
   </main><aside class="col-md-3"><div class="links">

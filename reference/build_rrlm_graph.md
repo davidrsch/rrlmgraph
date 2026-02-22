@@ -79,13 +79,16 @@ attributes (accessible with
 
 ### Edge types
 
-|              |                                            |
-|--------------|--------------------------------------------|
-| Type         | Description                                |
-| `"CALLS"`    | Intra-project function call                |
-| `"IMPORTS"`  | File/project imports a package             |
-| `"TESTS"`    | Test file covers a user function           |
-| `"SEMANTIC"` | Cosine similarity \>= `semantic_threshold` |
+|                   |                                                                                                                                                                     |
+|-------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Type              | Description                                                                                                                                                         |
+| `"CALLS"`         | Intra-project function call                                                                                                                                         |
+| `"IMPORTS"`       | File/project imports a package                                                                                                                                      |
+| `"TESTS"`         | Test file covers a user function                                                                                                                                    |
+| `"SEMANTIC"`      | Cosine similarity \>= `semantic_threshold`                                                                                                                          |
+| `"CO_CHANGES"`    | Two functions co-edited in \>= `min_cochanges` commits (from [`build_co_change_edges()`](https://davidrsch.github.io/rrlmgraph/reference/build_co_change_edges.md)) |
+| `"DISPATCHES_ON"` | S4/R5 generic dispatches on a class (from [`build_dispatch_edges()`](https://davidrsch.github.io/rrlmgraph/reference/build_dispatch_edges.md))                      |
+| `"EXTENDS"`       | Class inherits from another class (from [`build_dispatch_edges()`](https://davidrsch.github.io/rrlmgraph/reference/build_dispatch_edges.md))                        |
 
 ## See also
 
