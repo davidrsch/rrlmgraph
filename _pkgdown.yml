@@ -48,6 +48,8 @@ reference:
       - build_call_edges
       - build_import_edges
       - build_test_edges
+      - build_co_change_edges
+      - build_dispatch_edges
       - find_calls_in_body
       - embed_nodes
       - embed_query
