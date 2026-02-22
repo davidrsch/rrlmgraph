@@ -60,7 +60,7 @@ The function:
 summary(graph)
 #> === rrlm_graph: demo ===
 #> Root:  /home/runner/work/_temp/Library/rrlmgraph/extdata/demo
-#> Built: 2026-02-22 13:14:44
+#> Built: 2026-02-22 13:26:27
 #> Build time: 0.63 s
 #> 
 #> Nodes (22 total):
@@ -225,17 +225,17 @@ graph_small <- update_graph_incremental(
 #> 
 #> ── Incremental graph update ──
 #> 
-#> Changed files: /tmp/RtmpJHrGLz/mypkg_demo/R/data_prep.R
+#> Changed files: /tmp/Rtmplr7uOP/mypkg_demo/R/data_prep.R
 #> Removing 1 stale node(s).
 #> Re-parsing 1 file(s).
 #> Embedding 1 new node(s) using method 'tfidf'.
 #> Graph now has 2 nodes, 0 edges.
 #> Recomputing PageRank.
-#> Persisting cache to /tmp/RtmpJHrGLz/mypkg_demo.
-#> Graph cached at /tmp/RtmpJHrGLz/mypkg_demo/.rrlmgraph
+#> Persisting cache to /tmp/Rtmplr7uOP/mypkg_demo.
+#> Graph cached at /tmp/Rtmplr7uOP/mypkg_demo/.rrlmgraph
 
 summary(graph_small)
-#> IGRAPH 7f26845 DNW- 2 0 -- 
+#> IGRAPH 667804e DNW- 2 0 -- 
 #> + attr: project_name (g/c), project_root (g/c), project_type (g/c),
 #> | r_version (g/c), build_time (g/n), build_at (g/c), embed_method
 #> | (g/c), embed_model (g/x), cache_path (g/c), name (v/c), node_type
