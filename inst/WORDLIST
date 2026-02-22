@@ -18,8 +18,10 @@ centres
 cex
 codebase
 CLI
+CMD
 centred
 codetools
+Codecov
 colour
 coloured
 covr
@@ -30,6 +32,7 @@ datasets
 DBI
 de
 deduplicated
+deduplication
 deserialise
 deserialising
 ellmer
@@ -48,6 +51,7 @@ grey
 htmlwidgets
 httr2
 IDF
+idf
 igraph
 Initialise
 interoperability
@@ -80,6 +84,7 @@ oldrel
 ollama
 Ollama
 ollamar
+OOP
 openai
 OpenAI
 pagerank
