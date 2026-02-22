@@ -205,9 +205,8 @@ is_cache_stale <- function(project_path = ".") {
 #'
 #' @section Embedding format:
 #' The \code{embedding} column in \code{nodes} is stored as a JSON text
-#' array of floating-point numbers, e.g.\  \code{[0.12, -0.34, ...]}.
-#' In TypeScript (\pkg{better-sqlite3}):
-#' \preformatted{const emb: number[] = JSON.parse(row.embedding ?? "[]");}
+#' array of floating-point numbers (e.g. \code{[0.12, -0.34, ...]}).
+#' In TypeScript, decode with \code{JSON.parse(row.embedding || "[]")}.
 #'
 #' @param graph An \code{rrlm_graph} / \code{igraph} object.
 #' @param db_path Character(1).  Path to the \file{.sqlite} file to

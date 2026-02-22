@@ -132,7 +132,10 @@ test_that("embed_query handles out-of-vocabulary terms without crashing", {
   nodes <- make_embed_nodes()
   model <- embed_nodes(nodes)$model
 
-  expect_no_error(embed_query("xyzzy_unknown_tok3n_42", model))
+  expect_no_error(suppressWarnings(embed_query(
+    "xyzzy_unknown_tok3n_42",
+    model
+  )))
 })
 
 test_that("embed_query returns numeric(0) for NULL model", {

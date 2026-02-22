@@ -79,7 +79,11 @@ test_that("query_context never exceeds budget — parametric over 5 budgets", {
   budget_values <- c(50L, 100L, 250L, 500L, 1000L)
 
   for (budget in budget_values) {
-    ctx <- query_context(g, "context word chain", budget_tokens = budget)
+    ctx <- suppressWarnings(query_context(
+      g,
+      "context word chain",
+      budget_tokens = budget
+    ))
 
     expect_lte(
       ctx$tokens_used,
@@ -97,15 +101,23 @@ test_that("query_context never exceeds budget — parametric over 5 budgets", {
 test_that("tighter budgets yield fewer or equal nodes than looser budgets", {
   g <- make_chain_graph(8L)
 
-  ctx_tight <- query_context(g, "node chain", budget_tokens = 80L)
-  ctx_loose <- query_context(g, "node chain", budget_tokens = 800L)
+  ctx_tight <- suppressWarnings(query_context(
+    g,
+    "node chain",
+    budget_tokens = 80L
+  ))
+  ctx_loose <- suppressWarnings(query_context(
+    g,
+    "node chain",
+    budget_tokens = 800L
+  ))
 
   expect_lte(length(ctx_tight$nodes), length(ctx_loose$nodes))
 })
 
 test_that("budget=1L still returns at least the (possibly truncated) seed", {
   g <- make_chain_graph(4L)
-  ctx <- query_context(g, "tiny budget", budget_tokens = 1L)
+  ctx <- suppressWarnings(query_context(g, "tiny budget", budget_tokens = 1L))
 
   expect_s3_class(ctx, "rrlm_context")
   # Seed may consume all tokens — nodes length >= 1 is not guaranteed

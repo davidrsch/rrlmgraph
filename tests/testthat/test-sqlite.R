@@ -124,10 +124,9 @@ test_that("nodes table has all required columns", {
   export_to_sqlite(g, db)
 
   con <- DBI::dbConnect(RSQLite::SQLite(), db)
-  info <- DBI::dbColumnInfo(DBI::dbSendQuery(
-    con,
-    "SELECT * FROM nodes LIMIT 1"
-  ))
+  rs <- DBI::dbSendQuery(con, "SELECT * FROM nodes LIMIT 1")
+  info <- DBI::dbColumnInfo(rs)
+  DBI::dbClearResult(rs)
   DBI::dbDisconnect(con)
 
   required_cols <- c(
@@ -151,10 +150,9 @@ test_that("edges table has all required columns", {
   export_to_sqlite(g, db)
 
   con <- DBI::dbConnect(RSQLite::SQLite(), db)
-  info <- DBI::dbColumnInfo(DBI::dbSendQuery(
-    con,
-    "SELECT * FROM edges LIMIT 1"
-  ))
+  rs <- DBI::dbSendQuery(con, "SELECT * FROM edges LIMIT 1")
+  info <- DBI::dbColumnInfo(rs)
+  DBI::dbClearResult(rs)
   DBI::dbDisconnect(con)
 
   expect_true(all(

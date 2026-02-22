@@ -129,14 +129,18 @@ test_that("$relevance_scores is a named numeric vector", {
 
 test_that("tokens_used never exceeds budget_tokens (hard constraint)", {
   g <- make_dense_graph(10L)
-  ctx <- query_context(g, "evaluate predictions", budget_tokens = 100L)
+  ctx <- suppressWarnings(query_context(
+    g,
+    "evaluate predictions",
+    budget_tokens = 100L
+  ))
 
   expect_lte(ctx$tokens_used, ctx$budget_tokens)
 })
 
 test_that("tokens_used never exceeds budget with very tight budget", {
   g <- make_qc_graph()
-  ctx <- query_context(g, "train model", budget_tokens = 20L)
+  ctx <- suppressWarnings(query_context(g, "train model", budget_tokens = 20L))
 
   expect_lte(ctx$tokens_used, 20L)
 })

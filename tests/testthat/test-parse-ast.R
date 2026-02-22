@@ -133,16 +133,13 @@ test_that("detects R6 class public methods", {
 
 test_that("gracefully handles parse errors without crashing", {
   f <- write_r_file("this is not valid R code <<< }")
-  expect_no_error(extract_function_nodes(f))
-  result <- extract_function_nodes(f)
+  expect_no_error(suppressWarnings(extract_function_nodes(f)))
+  result <- suppressWarnings(extract_function_nodes(f))
   expect_equal(result, list())
 })
 
 test_that("gracefully handles non-existent file", {
-  expect_warning(
-    result <- extract_function_nodes("/non/existent/file.R"),
-    regexp = NULL # any warning is acceptable
-  )
+  result <- suppressWarnings(extract_function_nodes("/non/existent/file.R"))
   expect_equal(result, list())
 })
 

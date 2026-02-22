@@ -39,7 +39,7 @@ test_that("embed_nodes('ollama') falls back to TF-IDF when Ollama unavailable", 
     ollama_available = function() FALSE,
     .package = "rrlmgraph"
   )
-  result <- embed_nodes(nodes, method = "ollama")
+  result <- suppressWarnings(embed_nodes(nodes, method = "ollama"))
   expect_named(result, c("embeddings", "model", "matrix"))
   expect_length(result$embeddings, 3L)
   # Fallback returns a TF-IDF model with vectorizer
