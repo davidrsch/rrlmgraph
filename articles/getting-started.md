@@ -35,11 +35,6 @@ graph <- build_rrlm_graph(demo_dir, verbose = TRUE)
 #> Building TEST edges
 #> Building CO_CHANGES edges from git history
 #> Building DISPATCHES_ON / EXTENDS edges
-#> Warning in gregexpr(pattern, text, perl = TRUE): PCRE pattern compilation error
-#>  'unmatched closing parenthesis'
-#>  at ')[\s\S]{0,500}?\bcontains\s*=\s*"([A-Za-z._][A-Za-z0-9._]*)"'
-#> Warning: Dispatch edge build failed: invalid regular expression
-#> 'setClass\("([A-Za-z._][A-Za-z0-9._]*)")[\s\S]{0,500}?\bcontains\s*=\s*"([A-Za-z._][A-Za-z0-9._]*)"'
 #> Assembling igraph
 #> Computing PageRank
 #> Embedding nodes with method 'tfidf'
@@ -60,7 +55,7 @@ The function:
 summary(graph)
 #> === rrlm_graph: demo ===
 #> Root:  /home/runner/work/_temp/Library/rrlmgraph/extdata/demo
-#> Built: 2026-02-22 22:30:31
+#> Built: 2026-02-22 23:05:13
 #> Build time: 0.6 s
 #> 
 #> Nodes (22 total):
@@ -225,17 +220,17 @@ graph_small <- update_graph_incremental(
 #> 
 #> ── Incremental graph update ──
 #> 
-#> Changed files: /tmp/RtmpioqbBW/mypkg_demo/R/data_prep.R
+#> Changed files: /tmp/RtmpPM0eUd/mypkg_demo/R/data_prep.R
 #> Removing 1 stale node(s).
 #> Re-parsing 1 file(s).
 #> Embedding 1 new node(s) using method 'tfidf'.
 #> Graph now has 2 nodes, 0 edges.
 #> Recomputing PageRank.
-#> Persisting cache to /tmp/RtmpioqbBW/mypkg_demo.
-#> Graph cached at /tmp/RtmpioqbBW/mypkg_demo/.rrlmgraph
+#> Persisting cache to /tmp/RtmpPM0eUd/mypkg_demo.
+#> Graph cached at /tmp/RtmpPM0eUd/mypkg_demo/.rrlmgraph
 
 summary(graph_small)
-#> IGRAPH e4a17b1 DNW- 2 0 -- 
+#> IGRAPH 48090ab DNW- 2 0 -- 
 #> + attr: project_name (g/c), project_root (g/c), project_type (g/c),
 #> | r_version (g/c), build_time (g/n), build_at (g/c), embed_method
 #> | (g/c), embed_model (g/x), cache_path (g/c), name (v/c), node_type
