@@ -43,17 +43,15 @@ test_that("embed_nodes('openai') errors when OPENAI_API_KEY is not set", {
 # ---- .openai_embed_texts mocked ------------------------------------
 
 test_that("embed_nodes('openai') returns 1536-dim vectors", {
-  skip_if_not_installed("mockery")
   withr::local_envvar(OPENAI_API_KEY = "test-key")
   nodes <- make_openai_nodes(3L)
   n_dims <- 1536L
 
-  mockery::stub(
-    rrlmgraph:::.embed_openai,
-    ".openai_embed_texts",
-    function(texts, key, verbose) {
+  local_mocked_bindings(
+    .openai_embed_texts = function(texts, key, verbose) {
       lapply(seq_along(texts), function(i) rep(0.1, n_dims))
-    }
+    },
+    .package = "rrlmgraph"
   )
 
   result <- embed_nodes(
@@ -70,17 +68,15 @@ test_that("embed_nodes('openai') returns 1536-dim vectors", {
 })
 
 test_that("embed_nodes('openai') output matrix has correct dimensions", {
-  skip_if_not_installed("mockery")
   withr::local_envvar(OPENAI_API_KEY = "test-key")
   nodes <- make_openai_nodes(4L)
   n_dims <- 1536L
 
-  mockery::stub(
-    rrlmgraph:::.embed_openai,
-    ".openai_embed_texts",
-    function(texts, key, verbose) {
+  local_mocked_bindings(
+    .openai_embed_texts = function(texts, key, verbose) {
       lapply(seq_along(texts), function(i) rep(0.2, n_dims))
-    }
+    },
+    .package = "rrlmgraph"
   )
 
   result <- embed_nodes(
@@ -96,19 +92,19 @@ test_that("embed_nodes('openai') output matrix has correct dimensions", {
 # ---- caching --------------------------------------------------------
 
 test_that("embed_nodes('openai') skips API calls for cached nodes", {
-  skip_if_not_installed("mockery")
   withr::local_envvar(OPENAI_API_KEY = "test-key")
   nodes <- make_openai_nodes(2L)
   tmp <- withr::local_tempdir()
   n_dims <- 1536L
   api_calls <- 0L
 
-  fake_api <- function(texts, key, verbose) {
-    api_calls <<- api_calls + length(texts)
-    lapply(seq_along(texts), function(i) rep(0.3, n_dims))
-  }
-
-  mockery::stub(rrlmgraph:::.embed_openai, ".openai_embed_texts", fake_api)
+  local_mocked_bindings(
+    .openai_embed_texts = function(texts, key, verbose) {
+      api_calls <<- api_calls + length(texts)
+      lapply(seq_along(texts), function(i) rep(0.3, n_dims))
+    },
+    .package = "rrlmgraph"
+  )
 
   # First call
   embed_nodes(nodes, method = "openai", cache_dir = tmp)
@@ -125,17 +121,15 @@ test_that("embed_nodes('openai') skips API calls for cached nodes", {
 # ---- verbose cost estimate -----------------------------------------
 
 test_that("embed_nodes('openai') emits cost estimate when verbose = TRUE", {
-  skip_if_not_installed("mockery")
   withr::local_envvar(OPENAI_API_KEY = "test-key")
   nodes <- make_openai_nodes(2L)
   n_dims <- 1536L
 
-  mockery::stub(
-    rrlmgraph:::.embed_openai,
-    ".openai_embed_texts",
-    function(texts, key, verbose) {
+  local_mocked_bindings(
+    .openai_embed_texts = function(texts, key, verbose) {
       lapply(seq_along(texts), function(i) rep(0.1, n_dims))
-    }
+    },
+    .package = "rrlmgraph"
   )
 
   expect_message(
@@ -152,18 +146,18 @@ test_that("embed_nodes('openai') emits cost estimate when verbose = TRUE", {
 # ---- batching -------------------------------------------------------
 
 test_that("embed_nodes('openai') batches > 100 nodes into multiple calls", {
-  skip_if_not_installed("mockery")
   withr::local_envvar(OPENAI_API_KEY = "test-key")
   nodes <- make_openai_nodes(150L)
   n_dims <- 1536L
   n_batches <- 0L
 
-  fake_api <- function(texts, key, verbose) {
-    n_batches <<- n_batches + 1L
-    lapply(seq_along(texts), function(i) rep(0.1, n_dims))
-  }
-
-  mockery::stub(rrlmgraph:::.embed_openai, ".openai_embed_texts", fake_api)
+  local_mocked_bindings(
+    .openai_embed_texts = function(texts, key, verbose) {
+      n_batches <<- n_batches + 1L
+      lapply(seq_along(texts), function(i) rep(0.1, n_dims))
+    },
+    .package = "rrlmgraph"
+  )
 
   result <- embed_nodes(
     nodes,
@@ -257,14 +251,12 @@ test_that("embed_query('openai') errors without API key", {
 })
 
 test_that("embed_query('openai') returns a 1536-dim vector when mocked", {
-  skip_if_not_installed("mockery")
   withr::local_envvar(OPENAI_API_KEY = "test-key")
   n_dims <- 1536L
 
-  mockery::stub(
-    rrlmgraph:::embed_query,
-    ".openai_embed_texts",
-    function(texts, key, verbose) list(rep(0.7, n_dims))
+  local_mocked_bindings(
+    .openai_embed_texts = function(texts, key, verbose) list(rep(0.7, n_dims)),
+    .package = "rrlmgraph"
   )
 
   vec <- embed_query(

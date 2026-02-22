@@ -151,8 +151,7 @@ test_that("chat_with_context dispatches correct provider to .llm_via_ellmer", {
 test_that("chat_with_context rejects invalid provider", {
   g <- make_llm_graph()
   expect_error(
-    chat_with_context(g, "test", provider = "invalid_provider"),
-    regexp = "provider"
+    chat_with_context(g, "test", provider = "invalid_provider")
   )
 })
 

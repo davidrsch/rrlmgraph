@@ -8,7 +8,8 @@ test_that("detect_rproject errors on non-existent path", {
 # ---- helpers: build fixture directories in temp space ---------------
 
 make_package_fixture <- function() {
-  root <- withr::local_tempdir()
+  root <- tempfile("rrlm_pkg_test_")
+  dir.create(root, recursive = TRUE)
   writeLines(
     c("Package: mypkg", "Version: 0.1.0", "License: MIT"),
     file.path(root, "DESCRIPTION")
@@ -28,19 +29,22 @@ make_package_fixture <- function() {
 }
 
 make_shiny_fixture <- function() {
-  root <- withr::local_tempdir()
+  root <- tempfile("rrlm_shiny_test_")
+  dir.create(root, recursive = TRUE)
   writeLines("shinyApp(ui, server)", file.path(root, "app.R"))
   root
 }
 
 make_quarto_fixture <- function() {
-  root <- withr::local_tempdir()
+  root <- tempfile("rrlm_quarto_test_")
+  dir.create(root, recursive = TRUE)
   writeLines("project:\n  type: default", file.path(root, "_quarto.yml"))
   root
 }
 
 make_rmd_fixture <- function() {
-  root <- withr::local_tempdir()
+  root <- tempfile("rrlm_rmd_test_")
+  dir.create(root, recursive = TRUE)
   writeLines(
     "---\ntitle: Test\n---\n```{r}\n1+1\n```",
     file.path(root, "report.Rmd")
@@ -49,7 +53,8 @@ make_rmd_fixture <- function() {
 }
 
 make_script_fixture <- function() {
-  tmpdir <- withr::local_tempdir()
+  tmpdir <- tempfile("rrlm_script_test_")
+  dir.create(tmpdir, recursive = TRUE)
   writeLines("x <- 1 + 1", file.path(tmpdir, "analysis.R"))
   tmpdir
 }

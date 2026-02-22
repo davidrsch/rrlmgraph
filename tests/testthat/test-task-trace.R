@@ -161,9 +161,20 @@ test_that("update_task_polarity rewrites polarity in recent entries", {
   log_task_trace("query 1", c("pkg::load_data"), g, polarity = 0)
   log_task_trace("query 2", c("pkg::load_data"), g, polarity = 0)
 
+  ctx <- structure(
+    list(
+      nodes = c("pkg::load_data"),
+      context_string = "test context",
+      tokens_used = 1L,
+      budget_tokens = 100L,
+      seed_node = "pkg::load_data",
+      relevance_scores = c("pkg::load_data" = 1.0)
+    ),
+    class = c("rrlm_context", "list")
+  )
   update_task_polarity(
     g,
-    context = c("pkg::load_data"),
+    context = ctx,
     polarity = 1,
     n_recent = 2L
   )
@@ -184,9 +195,20 @@ test_that("update_task_polarity only rewrites n_recent entries", {
     log_task_trace(paste("q", i), c("pkg::load_data"), g, polarity = 0)
   }
 
+  ctx <- structure(
+    list(
+      nodes = c("pkg::load_data"),
+      context_string = "test context",
+      tokens_used = 1L,
+      budget_tokens = 100L,
+      seed_node = "pkg::load_data",
+      relevance_scores = c("pkg::load_data" = 1.0)
+    ),
+    class = c("rrlm_context", "list")
+  )
   update_task_polarity(
     g,
-    context = c("pkg::load_data"),
+    context = ctx,
     polarity = 0.9,
     n_recent = 2L
   )
@@ -207,8 +229,19 @@ test_that("update_task_polarity returns invisible trace file path", {
   tmp <- withr::local_tempdir()
   g <- make_tt_graph(project_root = tmp)
   log_task_trace("q", c("pkg::load_data"), g)
+  ctx <- structure(
+    list(
+      nodes = c("pkg::load_data"),
+      context_string = "test context",
+      tokens_used = 1L,
+      budget_tokens = 100L,
+      seed_node = "pkg::load_data",
+      relevance_scores = c("pkg::load_data" = 1.0)
+    ),
+    class = c("rrlm_context", "list")
+  )
   res <- withVisible(
-    update_task_polarity(g, context = c("pkg::load_data"), polarity = 0.5)
+    update_task_polarity(g, context = ctx, polarity = 0.5)
   )
   expect_false(res$visible)
 })
