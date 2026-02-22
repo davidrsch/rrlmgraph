@@ -43,6 +43,7 @@ Suggests:
     rmarkdown,
     spelling,
     testthat (>= 3.0.0),
+    tokenizers,
     webshot2,
     withr
 VignetteBuilder: knitr

@@ -1,4 +1,4 @@
-﻿#' Build CALLS edges between function nodes
+#' Build CALLS edges between function nodes
 #'
 #' Cross-references each function node's `calls_list` against the set of
 #' known user-defined node identifiers.  Each matched call produces one
@@ -74,8 +74,8 @@ build_call_edges <- function(func_nodes) {
   }
 
   unique(data.frame(
-    from   = vapply(rows, `[[`, character(1L), "from"),
-    to     = vapply(rows, `[[`, character(1L), "to"),
+    from = vapply(rows, `[[`, character(1L), "from"),
+    to = vapply(rows, `[[`, character(1L), "to"),
     weight = 1,
     stringsAsFactors = FALSE
   ))
@@ -344,9 +344,295 @@ build_test_edges <- function(func_nodes, test_files) {
   }
 
   unique(data.frame(
-    from   = vapply(rows, `[[`, character(1L), "from"),
-    to     = vapply(rows, `[[`, character(1L), "to"),
+    from = vapply(rows, `[[`, character(1L), "from"),
+    to = vapply(rows, `[[`, character(1L), "to"),
     weight = 1,
+    stringsAsFactors = FALSE
+  ))
+}
+
+# ---- build_co_change_edges ------------------------------------------
+
+#' Build CO_CHANGES edges from git commit history
+#'
+#' Scans the git log and identifies R source files that were modified
+#' together in the same commit.  Function nodes in those files receive
+#' bidirectional \code{CO_CHANGES} edges with weight proportional to
+#' how often the files change together (capped at \code{1.0}).
+#'
+#' Requires that \code{project_root} is inside a git repository.  Returns
+#' zero rows silently when git is unavailable or the project has no commit
+#' history with co-changed R files.
+#'
+#' @param func_nodes A list of node records from
+#'   [extract_function_nodes()].
+#' @param project_root Character(1).  Root of the git repository.
+#'   Defaults to \code{"."}.
+#' @param min_cochanges Integer(1).  Minimum number of co-change commits
+#'   required to create an edge.  Default \code{2L}.
+#'
+#' @return A \code{data.frame} with columns \code{from}, \code{to},
+#'   \code{weight}.  Zero rows when no qualifying pairs are found.
+#'
+#' @seealso [build_call_edges()], [build_rrlm_graph()]
+#' @export
+#' @examples
+#' \dontrun{
+#' proj  <- detect_rproject("/path/to/mypkg")
+#' nodes <- extract_function_nodes(proj$r_files)
+#' edges <- build_co_change_edges(nodes, proj$root)
+#' }
+build_co_change_edges <- function(
+  func_nodes,
+  project_root = ".",
+  min_cochanges = 2L
+) {
+  if (length(func_nodes) == 0L) {
+    return(.empty_edge_df())
+  }
+  project_root <- as.character(fs::path_abs(project_root))
+  if (!.git_available(project_root)) {
+    return(.empty_edge_df())
+  }
+
+  git_lines <- tryCatch(
+    system2(
+      "git",
+      c(
+        "-C",
+        shQuote(project_root),
+        "log",
+        "--name-only",
+        "--format=%H",
+        "--diff-filter=ACMR",
+        "--",
+        "*.R"
+      ),
+      stdout = TRUE,
+      stderr = FALSE
+    ),
+    error = function(e) character(0)
+  )
+  if (length(git_lines) == 0L) {
+    return(.empty_edge_df())
+  }
+
+  commit_files <- .parse_git_log_files(git_lines)
+  if (length(commit_files) == 0L) {
+    return(.empty_edge_df())
+  }
+
+  node_ids <- vapply(func_nodes, `[[`, character(1), "node_id")
+  node_files <- vapply(
+    func_nodes,
+    function(n) n$file %||% NA_character_,
+    character(1)
+  )
+  node_files_norm <- normalizePath(node_files, winslash = "/", mustWork = FALSE)
+
+  total_commits <- length(commit_files)
+  co_counts <- list()
+
+  for (files in commit_files) {
+    files_norm <- normalizePath(
+      file.path(project_root, files),
+      winslash = "/",
+      mustWork = FALSE
+    )
+    relevant <- unique(files_norm[
+      !is.na(node_files_norm) & files_norm %in% node_files_norm
+    ])
+    if (length(relevant) < 2L) {
+      next
+    }
+    pairs <- utils::combn(sort(relevant), 2L, simplify = FALSE)
+    for (pair in pairs) {
+      key <- paste(pair, collapse = "\t")
+      co_counts[[key]] <- (co_counts[[key]] %||% 0L) + 1L
+    }
+  }
+
+  if (length(co_counts) == 0L) {
+    return(.empty_edge_df())
+  }
+
+  rows <- list()
+  k <- 0L
+  min_n <- as.integer(min_cochanges)
+
+  for (key in names(co_counts)) {
+    n_together <- co_counts[[key]]
+    if (n_together < min_n) {
+      next
+    }
+    pair_files <- strsplit(key, "\t", fixed = TRUE)[[1L]]
+    f1_nodes <- node_ids[
+      !is.na(node_files_norm) & node_files_norm == pair_files[[1L]]
+    ]
+    f2_nodes <- node_ids[
+      !is.na(node_files_norm) & node_files_norm == pair_files[[2L]]
+    ]
+    if (length(f1_nodes) == 0L || length(f2_nodes) == 0L) {
+      next
+    }
+    w <- min(1.0, n_together / max(1L, total_commits))
+    for (n1 in f1_nodes) {
+      for (n2 in f2_nodes) {
+        k <- k + 1L
+        rows[[k]] <- list(from = n1, to = n2, weight = w)
+        k <- k + 1L
+        rows[[k]] <- list(from = n2, to = n1, weight = w)
+      }
+    }
+  }
+
+  if (k == 0L) {
+    return(.empty_edge_df())
+  }
+
+  unique(data.frame(
+    from = vapply(rows, `[[`, character(1), "from"),
+    to = vapply(rows, `[[`, character(1), "to"),
+    weight = vapply(rows, `[[`, numeric(1), "weight"),
+    stringsAsFactors = FALSE
+  ))
+}
+
+# ---- build_dispatch_edges -------------------------------------------
+
+#' Build DISPATCHES_ON and EXTENDS edges for OOP patterns
+#'
+#' Scans R source files for S4 generics/methods, R5 reference classes,
+#' and R6 classes.  Emits:
+#' \describe{
+#'   \item{\code{EXTENDS}}{From child class node to parent, detected via
+#'     \code{setClass(contains=)}, \code{R6Class(inherit=)}, and
+#'     \code{setRefClass(contains=)}.}
+#'   \item{\code{DISPATCHES_ON}}{From a concrete S4 method node to the
+#'     corresponding generic node when both appear in the parsed node set.}
+#' }
+#'
+#' @param func_nodes A list of node records from [extract_function_nodes()].
+#' @param r_files Character vector of absolute paths to \file{.R} source
+#'   files.
+#'
+#' @return A \code{data.frame} with columns \code{from}, \code{to},
+#'   \code{weight}, and \code{edge_type}.  Zero rows when no OOP patterns
+#'   are detected.
+#'
+#' @seealso [build_call_edges()], [build_rrlm_graph()]
+#' @export
+#' @examples
+#' \dontrun{
+#' proj  <- detect_rproject("/path/to/mypkg")
+#' nodes <- extract_function_nodes(proj$r_files)
+#' edges <- build_dispatch_edges(nodes, proj$r_files)
+#' }
+build_dispatch_edges <- function(func_nodes, r_files) {
+  if (length(func_nodes) == 0L || length(r_files) == 0L) {
+    return(.empty_dispatch_edge_df())
+  }
+
+  node_ids <- vapply(func_nodes, `[[`, character(1), "node_id")
+  node_names <- vapply(func_nodes, `[[`, character(1), "name")
+  name_to_id <- stats::setNames(node_ids, node_names)
+
+  rows <- list()
+  k <- 0L
+
+  .add_oop_edge <- function(child, parent, type) {
+    cid <- name_to_id[[child]]
+    pid <- name_to_id[[parent]]
+    if (!is.null(cid) && !is.null(pid) && !identical(cid, pid)) {
+      k <<- k + 1L
+      rows[[k]] <<- list(from = cid, to = pid, edge_type = type)
+    }
+  }
+
+  for (fpath in r_files) {
+    src <- tryCatch(
+      readLines(fpath, warn = FALSE),
+      error = function(e) character(0)
+    )
+    if (length(src) == 0L) {
+      next
+    }
+    full <- paste(src, collapse = "\n")
+
+    # setClass("Child", ..., contains = "Parent") → EXTENDS
+    for (caps in .regex_all_captures2(
+      full,
+      'setClass\\("([A-Za-z._][A-Za-z0-9._]*)")[\\s\\S]{0,500}?\\bcontains\\s*=\\s*"([A-Za-z._][A-Za-z0-9._]*)"'
+    )) {
+      .add_oop_edge(caps[[1L]], caps[[2L]], "EXTENDS")
+    }
+
+    # R6Class("Child", ..., inherit = Parent) → EXTENDS
+    for (caps in .regex_all_captures2(
+      full,
+      'R6Class\\("([A-Za-z._][A-Za-z0-9._]*)")[\\s\\S]{0,500}?\\binherit\\s*=\\s*([A-Za-z._][A-Za-z0-9._]*)'
+    )) {
+      .add_oop_edge(caps[[1L]], caps[[2L]], "EXTENDS")
+    }
+
+    # setRefClass("Child", ..., contains = "Parent") → EXTENDS
+    for (caps in .regex_all_captures2(
+      full,
+      'setRefClass\\("([A-Za-z._][A-Za-z0-9._]*)")[\\s\\S]{0,500}?\\bcontains\\s*=\\s*"([A-Za-z._][A-Za-z0-9._]*)"'
+    )) {
+      .add_oop_edge(caps[[1L]], caps[[2L]], "EXTENDS")
+    }
+
+    # DISPATCHES_ON: setMethod("name") when a same-named setGeneric exists.
+    # gregexpr() on a single string returns a 1-element list; work with [[1L]].
+    .extract_first_capture <- function(pattern) {
+      m <- gregexpr(pattern, full, perl = TRUE)[[1L]]
+      if (m[[1L]] == -1L) {
+        return(character(0))
+      }
+      st <- attr(m, "capture.start")[, 1L, drop = TRUE]
+      ln <- attr(m, "capture.length")[, 1L, drop = TRUE]
+      unique(substr(rep(full, length(st)), st, st + ln - 1L))
+    }
+
+    generic_names_here <- .extract_first_capture(
+      'setGeneric\\("([A-Za-z._][A-Za-z0-9._]*)"'
+    )
+    generic_names_here <- generic_names_here[nzchar(generic_names_here)]
+
+    meth_names_here <- .extract_first_capture(
+      'setMethod\\("([A-Za-z._][A-Za-z0-9._]*)"'
+    )
+    meth_names_here <- meth_names_here[nzchar(meth_names_here)]
+
+    dispatch_names <- intersect(
+      meth_names_here,
+      c(generic_names_here, node_names)
+    )
+    for (mname in dispatch_names) {
+      same_name <- node_ids[node_names == mname]
+      if (length(same_name) >= 2L) {
+        for (i in seq(2L, length(same_name))) {
+          k <- k + 1L
+          rows[[k]] <- list(
+            from = same_name[[i]],
+            to = same_name[[1L]],
+            edge_type = "DISPATCHES_ON"
+          )
+        }
+      }
+    }
+  }
+
+  if (k == 0L) {
+    return(.empty_dispatch_edge_df())
+  }
+
+  unique(data.frame(
+    from = vapply(rows, `[[`, character(1), "from"),
+    to = vapply(rows, `[[`, character(1), "to"),
+    weight = 1.0,
+    edge_type = vapply(rows, `[[`, character(1), "edge_type"),
     stringsAsFactors = FALSE
   ))
 }
@@ -361,6 +647,106 @@ build_test_edges <- function(func_nodes, test_files) {
     weight = numeric(0),
     stringsAsFactors = FALSE
   )
+}
+
+#' @keywords internal
+.empty_dispatch_edge_df <- function() {
+  data.frame(
+    from = character(0),
+    to = character(0),
+    weight = numeric(0),
+    edge_type = character(0),
+    stringsAsFactors = FALSE
+  )
+}
+
+#' @keywords internal
+.git_available <- function(project_root) {
+  git_dir <- file.path(as.character(project_root), ".git")
+  if (!file.exists(git_dir)) {
+    return(FALSE)
+  }
+  tryCatch(
+    identical(
+      system2(
+        "git",
+        c(
+          "-C",
+          shQuote(as.character(project_root)),
+          "rev-parse",
+          "--is-inside-work-tree"
+        ),
+        stdout = FALSE,
+        stderr = FALSE
+      ),
+      0L
+    ),
+    error = function(e) FALSE
+  )
+}
+
+#' @keywords internal
+.parse_git_log_files <- function(lines) {
+  result <- list()
+  current_hash <- NULL
+  current_files <- character(0)
+  past_blank <- FALSE
+
+  for (line in lines) {
+    trimmed <- trimws(line)
+    if (grepl("^[0-9a-f]{40}$", trimmed, perl = TRUE)) {
+      if (!is.null(current_hash) && length(current_files) > 0L) {
+        result <- c(result, list(current_files))
+      }
+      current_hash <- trimmed
+      current_files <- character(0)
+      past_blank <- FALSE
+    } else if (nchar(trimmed) == 0L) {
+      past_blank <- TRUE
+    } else if (past_blank && nchar(trimmed) > 0L) {
+      current_files <- c(current_files, trimmed)
+    }
+  }
+  if (!is.null(current_hash) && length(current_files) > 0L) {
+    result <- c(result, list(current_files))
+  }
+  result
+}
+
+#' Extract pairs of regex capture groups from all matches in \code{text}.
+#' \code{pattern} must have exactly two capturing groups.
+#' Returns a list of \code{character(2)} vectors, one per match.
+#' @keywords internal
+.regex_all_captures2 <- function(text, pattern) {
+  matches <- gregexpr(pattern, text, perl = TRUE)
+  result <- list()
+  for (i in seq_along(text)) {
+    m <- matches[[i]]
+    if (length(m) == 0L || m[[1L]] == -1L) {
+      next
+    }
+    starts <- attr(m, "capture.start")
+    lengths <- attr(m, "capture.length")
+    if (is.null(starts) || ncol(starts) < 2L) {
+      next
+    }
+    for (j in seq_len(nrow(starts))) {
+      g1 <- substr(
+        text[[i]],
+        starts[j, 1L],
+        starts[j, 1L] + lengths[j, 1L] - 1L
+      )
+      g2 <- substr(
+        text[[i]],
+        starts[j, 2L],
+        starts[j, 2L] + lengths[j, 2L] - 1L
+      )
+      if (nzchar(g1) && nzchar(g2)) {
+        result <- c(result, list(c(g1, g2)))
+      }
+    }
+  }
+  result
 }
 
 #' @keywords internal
@@ -446,6 +832,9 @@ build_test_edges <- function(func_nodes, test_files) {
 #' | `"IMPORTS"` | File/project imports a package |
 #' | `"TESTS"` | Test file covers a user function |
 #' | `"SEMANTIC"` | Cosine similarity >= `semantic_threshold` |
+#' | `"CO_CHANGES"` | Two functions co-edited in >= `min_cochanges` commits (from `build_co_change_edges()`) |
+#' | `"DISPATCHES_ON"` | S4/R5 generic dispatches on a class (from `build_dispatch_edges()`) |
+#' | `"EXTENDS"` | Class inherits from another class (from `build_dispatch_edges()`) |
 #'
 #' @param project_path Character(1).  Path to the R project root.
 #'   Defaults to `"."`.
@@ -510,6 +899,24 @@ build_rrlm_graph <- function(
   .vlog("Building TEST edges")
   test_edges <- build_test_edges(func_nodes, proj$test_files)
 
+  .vlog("Building CO_CHANGES edges from git history")
+  cochange_edges <- tryCatch(
+    build_co_change_edges(func_nodes, project_root = root),
+    error = function(e) {
+      cli::cli_warn("CO_CHANGES edge build failed: {conditionMessage(e)}")
+      .empty_edge_df()
+    }
+  )
+
+  .vlog("Building DISPATCHES_ON / EXTENDS edges")
+  dispatch_edges <- tryCatch(
+    build_dispatch_edges(func_nodes, proj$r_files),
+    error = function(e) {
+      cli::cli_warn("Dispatch edge build failed: {conditionMessage(e)}")
+      .empty_dispatch_edge_df()
+    }
+  )
+
   # ---- 2. Vertex data frame -------------------------------------------
   fn_vertex_df <- .make_function_vertex_df(func_nodes)
 
@@ -527,6 +934,8 @@ build_rrlm_graph <- function(
         line_start = NA_integer_,
         line_end = NA_integer_,
         signature = pkgs,
+        body_text = NA_character_,
+        roxygen_text = NA_character_,
         complexity = NA_integer_,
         pagerank = NA_real_,
         stringsAsFactors = FALSE
@@ -548,6 +957,8 @@ build_rrlm_graph <- function(
         line_start = NA_integer_,
         line_end = NA_integer_,
         signature = new_stems,
+        body_text = NA_character_,
+        roxygen_text = NA_character_,
         complexity = NA_integer_,
         pagerank = NA_real_,
         stringsAsFactors = FALSE
@@ -571,6 +982,8 @@ build_rrlm_graph <- function(
       line_start = integer(0),
       line_end = integer(0),
       signature = character(0),
+      body_text = character(0),
+      roxygen_text = character(0),
       complexity = integer(0),
       pagerank = numeric(0),
       stringsAsFactors = FALSE
@@ -579,6 +992,40 @@ build_rrlm_graph <- function(
 
   # ---- 3. Combine edge data frames for igraph -------------------------
   all_edges <- .assemble_edges(call_edges, import_edges, test_edges, vertex_df)
+
+  # Append CO_CHANGES edges (bidirectional; weight = co-change frequency)
+  if (nrow(cochange_edges) > 0L) {
+    cc <- cochange_edges
+    cc$edge_type <- "CO_CHANGES"
+    cc <- cc[
+      cc$from %in% vertex_df$name & cc$to %in% vertex_df$name,
+      ,
+      drop = FALSE
+    ]
+    if (nrow(cc) > 0L) {
+      all_edges <- rbind(
+        all_edges,
+        cc[, c("from", "to", "weight", "edge_type")]
+      )
+    }
+  }
+
+  # Append DISPATCHES_ON + EXTENDS edges
+  if (nrow(dispatch_edges) > 0L) {
+    de <- dispatch_edges[
+      dispatch_edges$from %in%
+        vertex_df$name &
+        dispatch_edges$to %in% vertex_df$name,
+      ,
+      drop = FALSE
+    ]
+    if (nrow(de) > 0L) {
+      all_edges <- rbind(
+        all_edges,
+        de[, c("from", "to", "weight", "edge_type")]
+      )
+    }
+  }
 
   # ---- 4. Build igraph object -----------------------------------------
   .vlog("Assembling igraph")
@@ -721,6 +1168,8 @@ build_rrlm_graph <- function(
 # ---- internal assembly helpers ---------------------------------------
 
 #' @keywords internal
+# audit/expert-review fix: body_text and roxygen_text were silently
+# dropped here, causing NULL context in SQLite export and context_assemble.R.
 .make_function_vertex_df <- function(func_nodes) {
   if (length(func_nodes) == 0L) {
     return(data.frame(
@@ -730,6 +1179,8 @@ build_rrlm_graph <- function(
       line_start = integer(0),
       line_end = integer(0),
       signature = character(0),
+      body_text = character(0),
+      roxygen_text = character(0),
       complexity = integer(0),
       pagerank = numeric(0),
       stringsAsFactors = FALSE
@@ -756,6 +1207,16 @@ build_rrlm_graph <- function(
     signature = vapply(
       func_nodes,
       function(n) n$signature %||% "",
+      character(1)
+    ),
+    body_text = vapply(
+      func_nodes,
+      function(n) n$body_text %||% NA_character_,
+      character(1)
+    ),
+    roxygen_text = vapply(
+      func_nodes,
+      function(n) n$roxygen_text %||% NA_character_,
       character(1)
     ),
     complexity = vapply(
@@ -820,11 +1281,13 @@ build_rrlm_graph <- function(
 #' @keywords internal
 .build_semantic_edges <- function(embeddings, threshold, max_per_node = 5L) {
   ids <- names(embeddings)
-  n   <- length(ids)
+  n <- length(ids)
 
   empty_df <- data.frame(
-    from = character(0), to = character(0),
-    similarity = numeric(0), stringsAsFactors = FALSE
+    from = character(0),
+    to = character(0),
+    similarity = numeric(0),
+    stringsAsFactors = FALSE
   )
 
   if (n < 2L) {
@@ -847,35 +1310,50 @@ build_rrlm_graph <- function(
   # compute all pairwise cosines in one operation, which is much faster than
   # iterating over pairs.
   first_emb <- embeddings[[1L]]
-  is_dense  <- is.numeric(first_emb) && length(first_emb) > 1L &&
-    all(vapply(embeddings, function(e) {
-      is.numeric(e) && length(e) == length(first_emb)
-    }, logical(1L)))
+  is_dense <- is.numeric(first_emb) &&
+    length(first_emb) > 1L &&
+    all(vapply(
+      embeddings,
+      function(e) {
+        is.numeric(e) && length(e) == length(first_emb)
+      },
+      logical(1L)
+    ))
 
   if (is_dense) {
     # Build normalised matrix (rows = nodes, cols = dims)
-    mat   <- do.call(rbind, embeddings)
+    mat <- do.call(rbind, embeddings)
     norms <- sqrt(rowSums(mat^2))
     # Avoid division by zero for zero-norm rows (empty documents)
     norms[norms == 0] <- 1
-    mat   <- mat / norms                    # L2-normalise
-    sims  <- mat %*% t(mat)                 # n x n cosine similarities
-    diag(sims) <- 0                         # exclude self-similarity
+    mat <- mat / norms # L2-normalise
+    sims <- mat %*% t(mat) # n x n cosine similarities
+    diag(sims) <- 0 # exclude self-similarity
 
     # Collect index pairs above threshold, capped per node
     per_node_count <- integer(n)
     rows <- list()
-    k    <- 0L
+    k <- 0L
     # Iterate columns in descending similarity order for consistent top-k
     for (i in seq_len(n)) {
-      if (per_node_count[[i]] >= max_per_node) next
+      if (per_node_count[[i]] >= max_per_node) {
+        next
+      }
       order_j <- order(sims[i, ], decreasing = TRUE)
       for (j in order_j) {
-        if (j <= i) next                    # emit each pair only once
-        if (per_node_count[[i]] >= max_per_node) break
-        if (per_node_count[[j]] >= max_per_node) next
+        if (j <= i) {
+          next
+        } # emit each pair only once
+        if (per_node_count[[i]] >= max_per_node) {
+          break
+        }
+        if (per_node_count[[j]] >= max_per_node) {
+          next
+        }
         s <- sims[i, j]
-        if (s < threshold) break            # rows are sorted descending
+        if (s < threshold) {
+          break
+        } # rows are sorted descending
         k <- k + 1L
         rows[[k]] <- list(from = ids[[i]], to = ids[[j]], similarity = s)
         per_node_count[[i]] <- per_node_count[[i]] + 1L
@@ -887,11 +1365,15 @@ build_rrlm_graph <- function(
     # explicit pairwise loop with list accumulation and per-node cap.
     per_node_count <- integer(n)
     rows <- list()
-    k    <- 0L
+    k <- 0L
     for (i in seq_len(n - 1L)) {
-      if (per_node_count[[i]] >= max_per_node) next
+      if (per_node_count[[i]] >= max_per_node) {
+        next
+      }
       for (j in seq(i + 1L, n)) {
-        if (per_node_count[[j]] >= max_per_node) next
+        if (per_node_count[[j]] >= max_per_node) {
+          next
+        }
         s <- tryCatch(
           cosine_similarity(embeddings[[i]], embeddings[[j]]),
           error = function(e) 0
@@ -911,9 +1393,9 @@ build_rrlm_graph <- function(
   }
 
   data.frame(
-    from       = vapply(rows[seq_len(k)], `[[`, character(1L), "from"),
-    to         = vapply(rows[seq_len(k)], `[[`, character(1L), "to"),
-    similarity = vapply(rows[seq_len(k)], `[[`, numeric(1L),   "similarity"),
+    from = vapply(rows[seq_len(k)], `[[`, character(1L), "from"),
+    to = vapply(rows[seq_len(k)], `[[`, character(1L), "to"),
+    similarity = vapply(rows[seq_len(k)], `[[`, numeric(1L), "similarity"),
     stringsAsFactors = FALSE
   )
 }
