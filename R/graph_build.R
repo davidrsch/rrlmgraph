@@ -934,6 +934,8 @@ build_rrlm_graph <- function(
         line_start = NA_integer_,
         line_end = NA_integer_,
         signature = pkgs,
+        body_text = NA_character_,
+        roxygen_text = NA_character_,
         complexity = NA_integer_,
         pagerank = NA_real_,
         stringsAsFactors = FALSE
@@ -955,6 +957,8 @@ build_rrlm_graph <- function(
         line_start = NA_integer_,
         line_end = NA_integer_,
         signature = new_stems,
+        body_text = NA_character_,
+        roxygen_text = NA_character_,
         complexity = NA_integer_,
         pagerank = NA_real_,
         stringsAsFactors = FALSE
@@ -978,6 +982,8 @@ build_rrlm_graph <- function(
       line_start = integer(0),
       line_end = integer(0),
       signature = character(0),
+      body_text = character(0),
+      roxygen_text = character(0),
       complexity = integer(0),
       pagerank = numeric(0),
       stringsAsFactors = FALSE
@@ -1162,6 +1168,8 @@ build_rrlm_graph <- function(
 # ---- internal assembly helpers ---------------------------------------
 
 #' @keywords internal
+# audit/expert-review fix: body_text and roxygen_text were silently
+# dropped here, causing NULL context in SQLite export and context_assemble.R.
 .make_function_vertex_df <- function(func_nodes) {
   if (length(func_nodes) == 0L) {
     return(data.frame(
@@ -1171,6 +1179,8 @@ build_rrlm_graph <- function(
       line_start = integer(0),
       line_end = integer(0),
       signature = character(0),
+      body_text = character(0),
+      roxygen_text = character(0),
       complexity = integer(0),
       pagerank = numeric(0),
       stringsAsFactors = FALSE
@@ -1197,6 +1207,16 @@ build_rrlm_graph <- function(
     signature = vapply(
       func_nodes,
       function(n) n$signature %||% "",
+      character(1)
+    ),
+    body_text = vapply(
+      func_nodes,
+      function(n) n$body_text %||% NA_character_,
+      character(1)
+    ),
+    roxygen_text = vapply(
+      func_nodes,
+      function(n) n$roxygen_text %||% NA_character_,
       character(1)
     ),
     complexity = vapply(

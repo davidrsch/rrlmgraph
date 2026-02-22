@@ -413,8 +413,10 @@ export_to_sqlite <- function(graph, db_path) {
     file = pull("file"),
     node_type = pull("node_type"),
     signature = pull("signature"),
-    body_text = pull("body"),
-    roxygen_text = pull("roxygen"),
+    # audit/expert-review fix: correct vertex attribute names.
+    # R igraph vertex attrs are "body_text" and "roxygen_text", not "body"/"roxygen".
+    body_text = pull("body_text"),
+    roxygen_text = pull("roxygen_text"),
     complexity = as.numeric(pull("complexity", NA_real_)),
     pagerank = as.numeric(pull("pagerank", NA_real_)),
     task_weight = as.numeric(pull("task_weight", NA_real_)),
