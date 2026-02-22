@@ -107,27 +107,44 @@ test_that("cold start: node with highest pagerank scores higher (no sem)", {
 test_that("non-zero query_vec changes score vs numeric(0)", {
   skip_if_not_installed("text2vec")
   g <- make_traverse_graph()
+  # Use a multi-node corpus so IDF weights are non-trivial and cosine
+  # similarity is meaningful (single-doc TF-IDF collapses to all-equal IDF)
   nodes <- list(
     list(
       node_id = "pkg::b",
       name = "b",
-      signature = "b(x)",
-      body_text = "x + 1",
-      roxygen_text = ""
+      signature = "increment_value(x)",
+      body_text = "add one to numeric value x returning incremented result",
+      roxygen_text = "increment a number by one"
+    ),
+    list(
+      node_id = "pkg::other",
+      name = "other",
+      signature = "filter_dataframe(df)",
+      body_text = "remove rows where score column is missing using filter",
+      roxygen_text = "filter rows from a dataframe"
+    ),
+    list(
+      node_id = "pkg::another",
+      name = "another",
+      signature = "fit_model(train)",
+      body_text = "fit linear regression model to training data",
+      roxygen_text = "build a regression model"
     )
   )
   emb <- embed_nodes(nodes)
   igraph::V(g)$embedding <- vector("list", igraph::vcount(g))
   igraph::V(g)$embedding[[which(igraph::V(g)$name == "pkg::b")]] <-
     emb$embeddings[["pkg::b"]]
-  q <- embed_query("add one to x", emb$model)
+  q <- embed_query("increment a number", emb$model)
 
   s_with_q <- compute_relevance("pkg::b", q, graph = g)
   s_no_q <- compute_relevance("pkg::b", numeric(0), graph = g)
-  # Scores may differ but must both be in [0,1]
+  # Scores must be in [0,1]
   expect_gte(s_with_q, 0)
   expect_lte(s_with_q, 1)
-  expect_false(isTRUE(all.equal(s_with_q, s_no_q)))
+  # With a semantically matching query the score must exceed the no-query score
+  expect_gt(s_with_q, s_no_q)
 })
 
 # ---- co-change signal -----------------------------------------------

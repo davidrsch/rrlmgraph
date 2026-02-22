@@ -48,7 +48,7 @@ test_that("embed_nodes returns correct structure", {
   nodes <- make_embed_nodes()
   result <- embed_nodes(nodes)
 
-  expect_named(result, c("embeddings", "model"))
+  expect_named(result, c("embeddings", "model", "matrix"))
   expect_type(result$embeddings, "list")
   expect_length(result$embeddings, length(nodes))
 })
@@ -105,7 +105,7 @@ test_that("embed_nodes result is serializable to RDS without errors", {
 
   expect_no_error(saveRDS(result, f))
   loaded <- readRDS(f)
-  expect_named(loaded, c("embeddings", "model"))
+  expect_named(loaded, c("embeddings", "model", "matrix"))
 })
 
 # ---- embed_query ----------------------------------------------------

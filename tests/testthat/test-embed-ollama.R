@@ -23,12 +23,10 @@ test_that("ollama_available returns FALSE when Ollama not reachable", {
   # Mock httr2::req_perform to simulate a connection failure
   local_mocked_bindings(
     req_perform = function(req, ...) stop("Connection refused"),
-    .package = "httr2",
-    {
-      result <- ollama_available()
-      expect_false(result)
-    }
+    .package = "httr2"
   )
+  result <- ollama_available()
+  expect_false(result)
 })
 
 # ---- .embed_ollama fallback when Ollama unavailable -----------------
@@ -39,17 +37,15 @@ test_that("embed_nodes('ollama') falls back to TF-IDF when Ollama unavailable", 
   # Mock ollama_available to return FALSE
   local_mocked_bindings(
     ollama_available = function() FALSE,
-    .package = "rrlmgraph",
-    {
-      result <- embed_nodes(nodes, method = "ollama")
-      expect_named(result, c("embeddings", "model", "matrix"))
-      expect_length(result$embeddings, 3L)
-      # Fallback returns a TF-IDF model with vectorizer
-      expect_true(
-        !is.null(result$model$vectorizer) ||
-          identical(result$model$method, "ollama")
-      )
-    }
+    .package = "rrlmgraph"
+  )
+  result <- embed_nodes(nodes, method = "ollama")
+  expect_named(result, c("embeddings", "model", "matrix"))
+  expect_length(result$embeddings, 3L)
+  # Fallback returns a TF-IDF model with vectorizer
+  expect_true(
+    !is.null(result$model$vectorizer) ||
+      identical(result$model$method, "ollama")
   )
 })
 
@@ -71,7 +67,7 @@ test_that("embed_nodes('ollama') calls .ollama_embed_text in batches", {
     fake_embed
   )
   mockery::stub(
-    rrlmgraph:::embed_nodes,
+    rrlmgraph:::.embed_ollama,
     "ollama_available",
     function() TRUE
   )
@@ -92,10 +88,14 @@ test_that("embed_nodes('ollama') produces 768-dim vectors", {
   nodes <- make_embed_nodes(2L)
   n_dims <- 768L
 
-  mockery::stub(rrlmgraph:::.embed_ollama, ".ollama_embed_text", function(m, t, b) {
-    rep(0.1, n_dims)
-  })
-  mockery::stub(rrlmgraph:::embed_nodes, "ollama_available", function() TRUE)
+  mockery::stub(
+    rrlmgraph:::.embed_ollama,
+    ".ollama_embed_text",
+    function(m, t, b) {
+      rep(0.1, n_dims)
+    }
+  )
+  mockery::stub(rrlmgraph:::.embed_ollama, "ollama_available", function() TRUE)
 
   result <- embed_nodes(
     nodes,
@@ -123,7 +123,7 @@ test_that("embed_nodes('ollama') skips re-embedding cached nodes", {
   }
 
   mockery::stub(rrlmgraph:::.embed_ollama, ".ollama_embed_text", fake_embed)
-  mockery::stub(rrlmgraph:::embed_nodes, "ollama_available", function() TRUE)
+  mockery::stub(rrlmgraph:::.embed_ollama, "ollama_available", function() TRUE)
 
   # First call — should embed 2 nodes
   embed_nodes(nodes, method = "ollama", cache_dir = tmp)
@@ -144,10 +144,14 @@ test_that("embed_nodes('ollama') returns a matrix when vectors are non-null", {
   nodes <- make_embed_nodes(3L)
   n_dims <- 768L
 
-  mockery::stub(rrlmgraph:::.embed_ollama, ".ollama_embed_text", function(m, t, b) {
-    rep(0.2, n_dims)
-  })
-  mockery::stub(rrlmgraph:::embed_nodes, "ollama_available", function() TRUE)
+  mockery::stub(
+    rrlmgraph:::.embed_ollama,
+    ".ollama_embed_text",
+    function(m, t, b) {
+      rep(0.2, n_dims)
+    }
+  )
+  mockery::stub(rrlmgraph:::.embed_ollama, "ollama_available", function() TRUE)
 
   result <- embed_nodes(
     nodes,
@@ -167,9 +171,13 @@ test_that("embed_query('ollama') returns a 768-dim vector when Ollama available"
   n_dims <- 768L
 
   mockery::stub(rrlmgraph:::embed_query, "ollama_available", function() TRUE)
-  mockery::stub(rrlmgraph:::embed_query, ".ollama_embed_text", function(m, t, b) {
-    rep(0.3, n_dims)
-  })
+  mockery::stub(
+    rrlmgraph:::embed_query,
+    ".ollama_embed_text",
+    function(m, t, b) {
+      rep(0.3, n_dims)
+    }
+  )
 
   vec <- embed_query(
     "test query",

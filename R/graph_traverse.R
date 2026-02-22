@@ -112,7 +112,7 @@ compute_relevance <- function(
     NA_real_
   }
   if (is.null(ttw) || length(ttw) == 0L || is.na(ttw)) {
-    ttw <- 0.0 # neutral / no prior history (not 0.5, which adds constant bias)
+    ttw <- 0.5 # neutral prior: no history yet, do not suppress the node
   }
   ttw <- max(0, min(1, ttw))
 

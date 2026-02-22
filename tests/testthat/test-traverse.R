@@ -215,12 +215,15 @@ test_that("query string appears in assembled context string", {
   expect_match(ctx$context_string, query, fixed = TRUE)
 })
 
-test_that("tokens_used approximates nchar(context_string)/4", {
+test_that("tokens_used is a reasonable approximation of text length", {
   g <- make_chain_graph(4L)
   ctx <- query_context(g, "token approx", budget_tokens = 1000L)
 
-  expected <- as.integer(ceiling(nchar(ctx$context_string) / 4L))
-  expect_equal(ctx$tokens_used, expected)
+  # .count_tokens uses nchar/3.5 fallback or tokenizers word-count*1.3;
+  # either way must be within factor ~2 of the naive nchar/4 estimate.
+  nchars <- nchar(ctx$context_string)
+  expect_gte(ctx$tokens_used, as.integer(nchars / 6L))
+  expect_lte(ctx$tokens_used, as.integer(ceiling(nchars / 2L)))
 })
 
 # ============================================================
