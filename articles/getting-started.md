@@ -55,7 +55,7 @@ The function:
 summary(graph)
 #> === rrlm_graph: demo ===
 #> Root:  /home/runner/work/_temp/Library/rrlmgraph/extdata/demo
-#> Built: 2026-02-23 10:10:15
+#> Built: 2026-02-23 11:51:07
 #> Build time: 0.6 s
 #> 
 #> Nodes (22 total):
@@ -220,17 +220,17 @@ graph_small <- update_graph_incremental(
 #> 
 #> ── Incremental graph update ──
 #> 
-#> Changed files: /tmp/RtmpAav3FF/mypkg_demo/R/data_prep.R
+#> Changed files: /tmp/RtmpeLwhPE/mypkg_demo/R/data_prep.R
 #> Removing 1 stale node(s).
 #> Re-parsing 1 file(s).
 #> Embedding 1 new node(s) using method 'tfidf'.
 #> Graph now has 2 nodes, 0 edges.
 #> Recomputing PageRank.
-#> Persisting cache to /tmp/RtmpAav3FF/mypkg_demo.
-#> Graph cached at /tmp/RtmpAav3FF/mypkg_demo/.rrlmgraph
+#> Persisting cache to /tmp/RtmpeLwhPE/mypkg_demo.
+#> Graph cached at /tmp/RtmpeLwhPE/mypkg_demo/.rrlmgraph
 
 summary(graph_small)
-#> IGRAPH d8724d5 DNW- 2 0 -- 
+#> IGRAPH b90a7c6 DNW- 2 0 -- 
 #> + attr: project_name (g/c), project_root (g/c), project_type (g/c),
 #> | r_version (g/c), build_time (g/n), build_at (g/c), embed_method
 #> | (g/c), embed_model (g/x), cache_path (g/c), name (v/c), node_type
