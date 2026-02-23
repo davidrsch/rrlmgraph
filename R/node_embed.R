@@ -237,6 +237,36 @@ cosine_similarity <- function(a, b) {
   tfidf <- text2vec::TfIdf$new()
   dtm_tfidf <- text2vec::fit_transform(dtm, tfidf)
 
+  # Extract IDF weights NOW, while tfidf is in scope and its private fields
+  # are accessible.  text2vec 0.6+ stores IDF as a sparse diagonal Matrix in
+  # private$idf (not as a public idf_vector active binding as earlier docs
+  # suggested).  We extract the diagonal here so the value survives
+  # serialisation as a plain numeric vector inside the model list.
+  idf_weights <- tryCatch(
+    {
+      d <- tfidf$.__enclos_env__$private$idf
+      if (
+        inherits(d, "ddiMatrix") ||
+          inherits(d, "Diagonal") ||
+          isVirtualClass("diagonalMatrix") && is(d, "diagonalMatrix")
+      ) {
+        as.numeric(Matrix::diag(d))
+      } else if (is.numeric(d)) {
+        as.numeric(d)
+      } else {
+        NULL
+      }
+    },
+    error = function(e) NULL
+  )
+
+  # Fallback: compute smoothed IDF from document frequencies in vocab.
+  # IDF(t) = log(1 + N / df(t)), where N = number of documents in the corpus.
+  if (is.null(idf_weights) || length(idf_weights) == 0L) {
+    n_docs <- nrow(dtm)
+    idf_weights <- log(1 + n_docs / pmax(as.integer(vocab$doc_count), 1L))
+  }
+
   # Convert each row to a dense numeric vector and store by node_id
   embeddings <- stats::setNames(
     lapply(seq_len(nrow(dtm_tfidf)), function(i) {
@@ -250,6 +280,7 @@ cosine_similarity <- function(a, b) {
     vectorizer = vectorizer,
     tfidf = tfidf,
     vocab = vocab,
+    idf_weights = idf_weights,
     n_dims = ncol(dtm_tfidf)
   )
 }

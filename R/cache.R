@@ -492,16 +492,30 @@ export_to_sqlite <- function(graph, db_path) {
     return(invisible(NULL))
   }
 
-  # Extract IDF weights from the fitted TF-IDF transformer.
-  # text2vec TfIdf exposes idf_vector as a public active binding after fit.
-  idf_weights <- tryCatch(
-    as.numeric(model$tfidf$idf_vector),
-    error = function(e) {
-      # Fallback: compute smoothed IDF from doc_count
-      n <- max(as.integer(vocab$doc_count), na.rm = TRUE)
-      log((n + 1) / (as.integer(vocab$doc_count) + 1)) + 1
-    }
-  )
+  # Extract IDF weights.  .fit_tfidf() now stores them as a plain numeric
+  # vector in model$idf_weights (extracted from text2vec's private$idf
+  # diagonal matrix while still in scope).  Fall back to the old
+  # model$tfidf$idf_vector path for graphs built with older versions of the
+  # package, and then to a document-frequency-based estimate.
+  idf_weights <- if (
+    !is.null(model$idf_weights) &&
+      length(model$idf_weights) > 0L &&
+      is.numeric(model$idf_weights)
+  ) {
+    model$idf_weights
+  } else {
+    tryCatch(
+      as.numeric(model$tfidf$idf_vector),
+      error = function(e) NULL
+    )
+  }
+
+  # Final fallback: estimate from document frequencies stored in vocab.
+  # IDF(t) = log(1 + N / df(t)); use max(doc_count) as proxy for N.
+  if (is.null(idf_weights) || length(idf_weights) == 0L) {
+    n_docs <- max(as.integer(vocab$doc_count), na.rm = TRUE)
+    idf_weights <- log(1 + n_docs / pmax(as.integer(vocab$doc_count), 1L))
+  }
 
   n_terms <- nrow(vocab)
   if (length(idf_weights) != n_terms) {

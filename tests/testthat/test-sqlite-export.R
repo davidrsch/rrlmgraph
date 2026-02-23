@@ -290,3 +290,89 @@ test_that("task_traces table populated from task_trace.jsonl", {
   row <- DBI::dbGetQuery(con, "SELECT query FROM task_traces LIMIT 1")
   expect_equal(row$query, "train the model")
 })
+# ---- tfidf_vocab population (issue #71) --------------------------------
+
+test_that("tfidf_vocab populated with > 0 rows and valid IDF values after export", {
+  skip_if_not_installed("text2vec")
+
+  # Build a real TF-IDF model through embed_nodes()
+  func_nodes <- list(
+    list(
+      node_id = "pkg::train",
+      name = "train",
+      signature = "train(data, epochs)",
+      body = "# fit model to training data",
+      node_type = "function",
+      file = "R/model.R"
+    ),
+    list(
+      node_id = "pkg::evaluate",
+      name = "evaluate",
+      signature = "evaluate(model, test_data)",
+      body = "# evaluate model performance",
+      node_type = "function",
+      file = "R/model.R"
+    ),
+    list(
+      node_id = "pkg::load_data",
+      name = "load_data",
+      signature = "load_data(path)",
+      body = "# load dataset from disk",
+      node_type = "function",
+      file = "R/data.R"
+    )
+  )
+
+  embed_result <- rrlmgraph:::embed_nodes(func_nodes, method = "tfidf")
+  model <- embed_result$model
+
+  # Sanity: idf_weights should be populated by .fit_tfidf()
+  expect_true(!is.null(model$idf_weights))
+  expect_gt(length(model$idf_weights), 0L)
+  expect_true(all(is.finite(model$idf_weights)))
+  expect_true(all(model$idf_weights > 0))
+
+  # Build graph with the real model attached
+  verts <- data.frame(
+    name = c("pkg::train", "pkg::evaluate", "pkg::load_data"),
+    node_type = "function",
+    pagerank = c(0.5, 0.3, 0.2),
+    stringsAsFactors = FALSE
+  )
+  g <- igraph::graph_from_data_frame(
+    d = data.frame(
+      from = c("pkg::train", "pkg::evaluate"),
+      to = c("pkg::evaluate", "pkg::load_data"),
+      weight = c(1, 1),
+      edge_type = c("CALLS", "CALLS"),
+      stringsAsFactors = FALSE
+    ),
+    vertices = verts,
+    directed = TRUE
+  )
+  igraph::graph_attr(g, "project_name") <- "testpkg"
+  igraph::graph_attr(g, "embed_method") <- "tfidf"
+  igraph::graph_attr(g, "embed_model") <- model
+  igraph::graph_attr(g, "build_time") <- 0.01
+  class(g) <- c("rrlm_graph", class(g))
+
+  tmp <- withr::local_tempdir()
+  db <- file.path(tmp, "tfidf_test.sqlite")
+  export_to_sqlite(g, db)
+
+  con <- DBI::dbConnect(RSQLite::SQLite(), db)
+  on.exit(DBI::dbDisconnect(con))
+
+  # Acceptance criterion: tfidf_vocab has > 0 rows
+  n_vocab <- DBI::dbGetQuery(con, "SELECT COUNT(*) AS n FROM tfidf_vocab")$n
+  expect_gt(n_vocab, 0L)
+
+  # IDF values must be non-NA and positive
+  rows <- DBI::dbGetQuery(
+    con,
+    "SELECT term, idf, doc_count, term_count FROM tfidf_vocab"
+  )
+  expect_false(any(is.na(rows$idf)))
+  expect_true(all(rows$idf > 0))
+  expect_true(all(rows$doc_count >= 1L))
+})
