@@ -492,3 +492,139 @@ test_that(".tt_session_id returns non-empty string when env var absent", {
     }
   )
 })
+
+# ---- update_task_weights — SQLite source (issue #67) ----------------
+
+.make_sqlite_with_traces <- function(sqlite_path, rows) {
+  skip_if_not_installed("DBI")
+  skip_if_not_installed("RSQLite")
+  con <- DBI::dbConnect(RSQLite::SQLite(), sqlite_path)
+  on.exit(DBI::dbDisconnect(con))
+  DBI::dbExecute(
+    con,
+    "CREATE TABLE IF NOT EXISTS task_traces (
+       trace_id   INTEGER PRIMARY KEY AUTOINCREMENT,
+       query      TEXT,
+       nodes_json TEXT,
+       polarity   REAL    DEFAULT 0,
+       session_id TEXT,
+       created_at TEXT
+     )"
+  )
+  for (r in rows) {
+    DBI::dbExecute(
+      con,
+      "INSERT INTO task_traces (query, nodes_json, polarity, session_id, created_at)
+       VALUES (?, ?, ?, ?, ?)",
+      params = list(r$query, r$nodes_json, r$polarity, r$session_id, r$created_at)
+    )
+  }
+  invisible(sqlite_path)
+}
+
+test_that("update_task_weights reads from SQLite when sqlite_path provided", {
+  skip_if_not_installed("DBI")
+  skip_if_not_installed("RSQLite")
+  skip_if_not_installed("jsonlite")
+
+  tmp <- withr::local_tempdir()
+  g   <- make_tt_graph(project_root = tmp)
+
+  sqlite_path <- file.path(tmp, "graph.sqlite")
+  .make_sqlite_with_traces(sqlite_path, list(
+    list(
+      query      = "How does load_data work?",
+      nodes_json = jsonlite::toJSON(list("pkg::load_data"), auto_unbox = FALSE),
+      polarity   = 1.0,
+      session_id = "mcp-s1",
+      created_at = "2024-01-01T00:00:00Z"
+    )
+  ))
+
+  g2 <- update_task_weights(g, sqlite_path = sqlite_path)
+
+  w <- stats::setNames(
+    igraph::V(g2)$task_trace_weight,
+    igraph::V(g2)$name
+  )
+  # pkg::load_data was the only trace node — it must have the highest weight
+  expect_gt(w[["pkg::load_data"]], w[["pkg::clean"]])
+  expect_gt(w[["pkg::load_data"]], w[["pkg::model"]])
+})
+
+test_that("update_task_weights merges JSONL and SQLite traces without duplicates", {
+  skip_if_not_installed("DBI")
+  skip_if_not_installed("RSQLite")
+  skip_if_not_installed("jsonlite")
+
+  tmp <- withr::local_tempdir()
+  g   <- make_tt_graph(project_root = tmp)
+
+  # Write a JSONL trace for pkg::clean
+  trace_dir <- file.path(tmp, ".rrlmgraph")
+  dir.create(trace_dir, showWarnings = FALSE, recursive = TRUE)
+  trace_file <- file.path(trace_dir, "task_trace.jsonl")
+  writeLines(
+    as.character(jsonlite::toJSON(
+      list(
+        timestamp  = "2024-01-02T00:00:00Z",
+        query      = "clean data",
+        nodes      = list("pkg::clean"),
+        polarity   = 0.8,
+        session_id = "r-s1"
+      ),
+      auto_unbox = TRUE
+    )),
+    trace_file
+  )
+
+  # SQLite trace for pkg::model (different session + timestamp => not a dup)
+  sqlite_path <- file.path(trace_dir, "graph.sqlite")
+  .make_sqlite_with_traces(sqlite_path, list(
+    list(
+      query      = "run model",
+      nodes_json = jsonlite::toJSON(list("pkg::model"), auto_unbox = FALSE),
+      polarity   = 0.9,
+      session_id = "mcp-s2",
+      created_at = "2024-01-03T00:00:00Z"
+    )
+  ))
+
+  g2 <- update_task_weights(g, sqlite_path = sqlite_path)
+
+  w <- stats::setNames(
+    igraph::V(g2)$task_trace_weight,
+    igraph::V(g2)$name
+  )
+  # Both non-load_data nodes should be boosted above 0.1 (the min after normalise)
+  expect_gt(w[["pkg::clean"]], 0.1)
+  expect_gt(w[["pkg::model"]], 0.1)
+})
+
+test_that("update_task_weights skips SQLite when sqlite_path = NA", {
+  skip_if_not_installed("DBI")
+  skip_if_not_installed("RSQLite")
+  skip_if_not_installed("jsonlite")
+
+  tmp <- withr::local_tempdir()
+  g   <- make_tt_graph(project_root = tmp)
+
+  # No SQLite, no JSONL — should fall through to EMA path without error
+  g2 <- update_task_weights(g,
+    useful_nodes = c("pkg::load_data"),
+    sqlite_path  = NA_character_
+  )
+  expect_s3_class(g2, "igraph")
+  # EMA should have boosted pkg::load_data slightly
+  w <- stats::setNames(
+    igraph::V(g2)$task_trace_weight,
+    igraph::V(g2)$name
+  )
+  expect_gt(w[["pkg::load_data"]], w[["pkg::clean"]])
+})
+
+test_that(".read_traces_sqlite returns NULL for missing file", {
+  expect_null(rrlmgraph:::.read_traces_sqlite("/nonexistent/path.sqlite"))
+  expect_null(rrlmgraph:::.read_traces_sqlite(NULL))
+  expect_null(rrlmgraph:::.read_traces_sqlite(""))
+})
