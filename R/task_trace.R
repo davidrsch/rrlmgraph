@@ -52,17 +52,22 @@ log_task_trace <- function(query, nodes, graph, polarity = 0) {
 
 #' Update task-trace weights on graph vertices
 #'
-#' Reads all entries from \file{.rrlmgraph/task_trace.jsonl}, applies
-#' exponential decay with a 30-day half-life
+#' Reads trace entries from \file{.rrlmgraph/task_trace.jsonl} and/or the
+#' \code{task_traces} table in the project's \file{graph.sqlite} database,
+#' applies exponential decay with a 30-day half-life
 #' \eqn{(w = 2^{-\Delta d / 30})}, and accumulates per-node weights
 #' as \eqn{\sum_i w_i \cdot (1 + \text{polarity}_i)}.  The result is
 #' min-max-normalised to \eqn{[0, 1]} and stored in the
 #' \code{task_trace_weight} vertex attribute.
 #'
-#' When no trace file exists (empty graph or first run), falls back to
-#' the exponential moving-average (EMA) stub so that
-#' \code{query_context()} can still boost \code{useful_nodes} in
-#' memory.
+#' Reading from both sources ensures that traces written by the MCP server's
+#' \code{add_task_trace} tool (which writes directly to SQLite) are
+#' included alongside traces written by \code{log_task_trace()} (which
+#' writes to JSONL).
+#'
+#' When no trace data exists anywhere, falls back to the exponential
+#' moving-average (EMA) stub so that \code{query_context()} can still
+#' boost \code{useful_nodes} in memory.
 #'
 #' @param graph An \code{rrlm_graph} / \code{igraph} object.
 #' @param useful_nodes Character vector of node names that were helpful
@@ -70,12 +75,17 @@ log_task_trace <- function(query, nodes, graph, polarity = 0) {
 #'   \code{character(0)} to skip the EMA boost.
 #' @param alpha Numeric(1).  EMA learning rate \eqn{(0, 1)}.  Default
 #'   \code{0.3}.  Used only for the in-memory EMA boost; ignored when
-#'   a JSONL file is present.
+#'   trace data is present.
 #' @param decay Numeric(1).  Multiplicative decay applied to all other
 #'   nodes in the EMA fallback path.  Default \code{0.99}.
 #' @param trace_file Character(1) or \code{NULL}.  Explicit path to the
 #'   JSONL file.  \code{NULL} (default) infers the path from the
 #'   \code{"project_root"} graph attribute.
+#' @param sqlite_path Character(1) or \code{NULL}.  Path to the SQLite
+#'   database exported by \code{\link{export_to_sqlite}}.  \code{NULL}
+#'   (default) infers the path as
+#'   \file{.rrlmgraph/graph.sqlite} under the project root.  Set to
+#'   \code{NA_character_} to skip SQLite lookup entirely.
 #'
 #' @return The graph with updated \code{task_trace_weight} vertex
 #'   attributes.
@@ -91,7 +101,8 @@ update_task_weights <- function(
   useful_nodes = NULL,
   alpha = 0.3,
   decay = 0.99,
-  trace_file = NULL
+  trace_file = NULL,
+  sqlite_path = NULL
 ) {
   if (!inherits(graph, "igraph")) {
     cli::cli_abort("{.arg graph} must be an igraph / rrlm_graph object.")
@@ -101,10 +112,15 @@ update_task_weights <- function(
   }
 
   # ---- resolve trace file -----------------------------------------
-  if (is.null(trace_file)) {
+  if (is.null(trace_file) || is.null(sqlite_path)) {
     project_root <- .trace_project_root(graph)
     if (!is.null(project_root)) {
-      trace_file <- file.path(project_root, ".rrlmgraph", "task_trace.jsonl")
+      if (is.null(trace_file)) {
+        trace_file <- file.path(project_root, ".rrlmgraph", "task_trace.jsonl")
+      }
+      if (is.null(sqlite_path)) {
+        sqlite_path <- file.path(project_root, ".rrlmgraph", "graph.sqlite")
+      }
     }
   }
 
@@ -119,9 +135,14 @@ update_task_weights <- function(
 
   v_names <- igraph::V(graph)$name
 
-  # ---- full JSONL path --------------------------------------------
+  # ---- full trace path (JSONL + SQLite) ---------------------------
+  # Collect trace rows from JSONL (R-side writes) and SQLite (MCP-side writes).
+  all_rows <- NULL
+
+  # --- JSONL source ---
   if (
     !is.null(trace_file) &&
+      !is.na(trace_file) &&
       file.exists(trace_file) &&
       requireNamespace("jsonlite", quietly = TRUE)
   ) {
@@ -129,54 +150,100 @@ update_task_weights <- function(
     lines <- lines[nchar(trimws(lines)) > 0L]
 
     if (length(lines) > 0L) {
-      now_ts <- as.numeric(Sys.time())
-
-      accum <- stats::setNames(
-        rep(0.0, length(v_names)),
-        v_names
-      )
-
-      for (line in lines) {
-        entry <- tryCatch(
-          jsonlite::fromJSON(line, simplifyVector = TRUE),
+      jsonl_rows <- lapply(lines, function(line) {
+        tryCatch(
+          {
+            entry <- jsonlite::fromJSON(line, simplifyVector = TRUE)
+            list(
+              created_at = as.character(entry$timestamp %||% NA_character_),
+              nodes = as.character(unlist(entry$nodes)),
+              polarity = as.numeric(entry$polarity %||% 0),
+              session_id = as.character(entry$session_id %||% NA_character_)
+            )
+          },
           error = function(e) NULL
         )
-        if (is.null(entry)) {
-          next
-        }
-
-        ts_str <- entry$timestamp %||% character(0)
-        entry_ts <- tryCatch(
-          as.numeric(as.POSIXct(
-            ts_str[[1L]],
-            format = "%Y-%m-%dT%H:%M:%SZ",
-            tz = "UTC"
-          )),
-          error = function(e) now_ts
-        )
-        delta_days <- max(0, (now_ts - entry_ts) / 86400)
-        w_decay <- 2^(-delta_days / 30)
-
-        pol <- as.numeric(entry$polarity %||% 0)
-        pol <- max(-1, min(1, pol))
-
-        entry_nodes <- as.character(unlist(entry$nodes))
-        for (nd in entry_nodes) {
-          if (nd %in% v_names) {
-            accum[[nd]] <- accum[[nd]] + w_decay * (1 + pol)
-          }
-        }
-      }
-
-      # min-max normalise to [0.1, 1.0]
-      mx <- max(accum)
-      if (mx > 0) {
-        cur <- 0.1 + 0.9 * (accum / mx)
-      }
-
-      igraph::V(graph)$task_trace_weight <- cur
-      return(graph)
+      })
+      all_rows <- c(all_rows, Filter(Negate(is.null), jsonl_rows))
     }
+  }
+
+  # --- SQLite source ---
+  if (!is.null(sqlite_path) && !identical(sqlite_path, NA_character_)) {
+    sq <- .read_traces_sqlite(sqlite_path)
+    if (!is.null(sq) && nrow(sq) > 0L) {
+      sq_rows <- lapply(seq_len(nrow(sq)), function(i) {
+        nodes_raw <- tryCatch(
+          if (requireNamespace("jsonlite", quietly = TRUE)) {
+            as.character(unlist(jsonlite::fromJSON(
+              sq$nodes_json[[i]],
+              simplifyVector = TRUE
+            )))
+          } else {
+            character(0)
+          },
+          error = function(e) character(0)
+        )
+        list(
+          created_at = as.character(sq$created_at[[i]]),
+          nodes = nodes_raw,
+          polarity = as.numeric(sq$polarity[[i]]),
+          session_id = as.character(sq$session_id[[i]])
+        )
+      })
+      all_rows <- c(all_rows, sq_rows)
+    }
+  }
+
+  # Deduplicate: remove rows with identical (session_id, created_at).
+  if (length(all_rows) > 0L) {
+    keys <- vapply(
+      all_rows,
+      function(r) {
+        paste(r$session_id %||% "", r$created_at %||% "", sep = "\r")
+      },
+      character(1L)
+    )
+    all_rows <- all_rows[!duplicated(keys)]
+  }
+
+  if (length(all_rows) > 0L) {
+    now_ts <- as.numeric(Sys.time())
+
+    accum <- stats::setNames(
+      rep(0.0, length(v_names)),
+      v_names
+    )
+
+    for (row in all_rows) {
+      entry_ts <- tryCatch(
+        as.numeric(as.POSIXct(
+          row$created_at[[1L]],
+          format = "%Y-%m-%dT%H:%M:%SZ",
+          tz = "UTC"
+        )),
+        error = function(e) now_ts
+      )
+      delta_days <- max(0, (now_ts - entry_ts) / 86400)
+      w_decay <- 2^(-delta_days / 30)
+
+      pol <- max(-1, min(1, as.numeric(row$polarity %||% 0)))
+
+      for (nd in row$nodes) {
+        if (nd %in% v_names) {
+          accum[[nd]] <- accum[[nd]] + w_decay * (1 + pol)
+        }
+      }
+    }
+
+    # min-max normalise to [0.1, 1.0]
+    mx <- max(accum)
+    if (mx > 0) {
+      cur <- 0.1 + 0.9 * (accum / mx)
+    }
+
+    igraph::V(graph)$task_trace_weight <- cur
+    return(graph)
   }
 
   # ---- EMA fallback -----------------------------------------------
@@ -297,6 +364,52 @@ update_task_polarity <- function(graph, context, polarity, n_recent = 3L) {
 }
 
 # ---- Internal helpers ------------------------------------------------
+
+#' Read task-trace rows from a SQLite \code{task_traces} table.
+#'
+#' Returns a data.frame with columns: \code{query}, \code{nodes_json},
+#' \code{polarity}, \code{session_id}, \code{created_at}.
+#' Returns \code{NULL} silently on any failure.
+#'
+#' @keywords internal
+.read_traces_sqlite <- function(sqlite_path) {
+  if (is.null(sqlite_path) || !nzchar(sqlite_path)) {
+    return(NULL)
+  }
+  if (!file.exists(sqlite_path)) {
+    return(NULL)
+  }
+  if (!requireNamespace("DBI", quietly = TRUE)) {
+    return(NULL)
+  }
+  if (!requireNamespace("RSQLite", quietly = TRUE)) {
+    return(NULL)
+  }
+
+  tryCatch(
+    {
+      con <- DBI::dbConnect(
+        RSQLite::SQLite(),
+        sqlite_path,
+        flags = RSQLite::SQLITE_RO
+      )
+      on.exit(DBI::dbDisconnect(con), add = TRUE)
+
+      tables <- DBI::dbListTables(con)
+      if (!"task_traces" %in% tables) {
+        return(NULL)
+      }
+
+      DBI::dbGetQuery(
+        con,
+        "SELECT query, nodes_json, polarity, session_id, created_at
+       FROM task_traces
+       ORDER BY created_at ASC"
+      )
+    },
+    error = function(e) NULL
+  )
+}
 
 #' @keywords internal
 .trace_project_root <- function(graph) {
