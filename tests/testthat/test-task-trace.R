@@ -245,3 +245,97 @@ test_that("update_task_polarity returns invisible trace file path", {
   )
   expect_false(res$visible)
 })
+
+# ---- update_task_polarity early-return paths -------------------------
+
+test_that("update_task_polarity warns when graph has no project_root", {
+  g_no_root <- make_tt_graph() # no project_root set
+  ctx <- structure(
+    list(
+      nodes = c("pkg::load_data"),
+      context_string = "test",
+      tokens_used = 1L,
+      budget_tokens = 100L,
+      seed_node = "pkg::load_data",
+      relevance_scores = c("pkg::load_data" = 1.0)
+    ),
+    class = c("rrlm_context", "list")
+  )
+  expect_warning(
+    update_task_polarity(g_no_root, context = ctx, polarity = 0.5),
+    regexp = "Cannot update polarity"
+  )
+})
+
+test_that("update_task_polarity returns silently when trace file is absent", {
+  tmp <- withr::local_tempdir()
+  g <- make_tt_graph(project_root = tmp)
+  # No JSONL file written yet
+  ctx <- structure(
+    list(
+      nodes = c("pkg::load_data"),
+      context_string = "test",
+      tokens_used = 1L,
+      budget_tokens = 100L,
+      seed_node = "pkg::load_data",
+      relevance_scores = c("pkg::load_data" = 1.0)
+    ),
+    class = c("rrlm_context", "list")
+  )
+  result <- update_task_polarity(g, context = ctx, polarity = 0.5)
+  expect_s3_class(result, "igraph")
+})
+
+test_that("update_task_polarity returns unchanged when no entries match", {
+  skip_if_not_installed("jsonlite")
+  tmp <- withr::local_tempdir()
+  g <- make_tt_graph(project_root = tmp)
+
+  log_task_trace("q1", c("pkg::model"), g, polarity = 0)
+
+  ctx <- structure(
+    list(
+      nodes = c("pkg::nonexistent_node"),
+      context_string = "test",
+      tokens_used = 1L,
+      budget_tokens = 100L,
+      seed_node = "pkg::nonexistent_node",
+      relevance_scores = c("pkg::nonexistent_node" = 1.0)
+    ),
+    class = c("rrlm_context", "list")
+  )
+  update_task_polarity(g, context = ctx, polarity = 0.9)
+
+  path <- file.path(tmp, ".rrlmgraph", "task_trace.jsonl")
+  lines <- readLines(path, warn = FALSE)
+  entries <- lapply(lines, jsonlite::fromJSON)
+  polarities <- vapply(entries, `[[`, numeric(1), "polarity")
+  # Original polarity 0 should be unchanged
+  expect_equal(polarities, 0)
+})
+
+# ---- internal helper coverage ---------------------------------------
+
+test_that(".trace_project_root returns NULL when graph has no project_root", {
+  g_no_root <- make_tt_graph()
+  result <- rrlmgraph:::.trace_project_root(g_no_root)
+  expect_null(result)
+})
+
+test_that(".trace_project_root returns NULL when project_root is empty string", {
+  g <- make_tt_graph(project_root = "")
+  result <- rrlmgraph:::.trace_project_root(g)
+  expect_null(result)
+})
+
+test_that(".ensure_trace_file returns NULL when project_root is NULL", {
+  result <- rrlmgraph:::.ensure_trace_file(NULL)
+  expect_null(result)
+})
+
+test_that(".trace_project_root returns path when set", {
+  tmp <- withr::local_tempdir()
+  g <- make_tt_graph(project_root = tmp)
+  result <- rrlmgraph:::.trace_project_root(g)
+  expect_equal(result, tmp)
+})

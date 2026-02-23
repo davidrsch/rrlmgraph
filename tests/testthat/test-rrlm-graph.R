@@ -161,3 +161,129 @@ test_that("plot.rrlm_graph handles graph smaller than n_hubs gracefully", {
   # n_hubs larger than total node count — should not error
   expect_no_error(plot(g, n_hubs = 9999L))
 })
+
+# ---- rrlm_graph branch coverage (no fixture needed) -----------------
+
+.make_minimal_rrlm_graph <- function(
+  node_names = c("pkg::a", "pkg::b"),
+  add_edges = TRUE,
+  node_type = "function"
+) {
+  verts <- data.frame(
+    name = node_names,
+    node_type = node_type,
+    pagerank = seq_len(length(node_names)) / length(node_names),
+    stringsAsFactors = FALSE
+  )
+  if (add_edges && length(node_names) >= 2L) {
+    edges <- data.frame(
+      from = node_names[[1L]],
+      to = node_names[[2L]],
+      weight = 1.0,
+      edge_type = "CALLS",
+      stringsAsFactors = FALSE
+    )
+  } else {
+    edges <- data.frame(
+      from = character(0),
+      to = character(0),
+      weight = numeric(0),
+      edge_type = character(0),
+      stringsAsFactors = FALSE
+    )
+  }
+  g <- igraph::graph_from_data_frame(
+    d = edges,
+    vertices = verts,
+    directed = TRUE
+  )
+  igraph::graph_attr(g, "project_name") <- "testpkg"
+  igraph::graph_attr(g, "embed_method") <- "tfidf"
+  igraph::graph_attr(g, "build_time") <- 0.1
+  igraph::graph_attr(g, "build_at") <- "2024-01-01"
+  class(g) <- c("rrlm_graph", class(g))
+  g
+}
+
+test_that("summary.rrlm_graph handles graph with 0 nodes", {
+  g_empty <- igraph::make_empty_graph(0, directed = TRUE)
+  class(g_empty) <- c("rrlm_graph", class(g_empty))
+  igraph::graph_attr(g_empty, "project_name") <- "empty_pkg"
+  igraph::graph_attr(g_empty, "embed_method") <- "tfidf"
+  igraph::graph_attr(g_empty, "build_time") <- 0
+  igraph::graph_attr(g_empty, "build_at") <- "2024-01-01"
+  # Should output the header without error even with no nodes or edges
+  expect_output(summary(g_empty), "rrlm_graph")
+})
+
+test_that("summary.rrlm_graph handles graph with null node_type attribute", {
+  # Graph without node_type → null branch inside the vcount > 0 block
+  g <- igraph::make_ring(3L, directed = TRUE)
+  igraph::V(g)$name <- c("a", "b", "c")
+  # Deliberately omit node_type and pagerank
+  class(g) <- c("rrlm_graph", class(g))
+  igraph::graph_attr(g, "project_name") <- "notype_pkg"
+  igraph::graph_attr(g, "embed_method") <- "tfidf"
+  igraph::graph_attr(g, "build_time") <- 0
+  igraph::graph_attr(g, "build_at") <- "2024-01-01"
+  expect_output(summary(g), "rrlm_graph")
+})
+
+test_that("summary.rrlm_graph handles graph with null edge_type attribute", {
+  g <- .make_minimal_rrlm_graph()
+  # Remove edge_type attribute safely
+  g2 <- igraph::delete_edge_attr(g, "edge_type")
+  expect_output(summary(g2), "rrlm_graph")
+})
+
+test_that("plot.rrlm_graph returns invisibly and messages on empty graph", {
+  skip_if_not_installed("DiagrammeR")
+  g <- igraph::make_empty_graph(0, directed = TRUE)
+  class(g) <- c("rrlm_graph", class(g))
+  igraph::graph_attr(g, "project_name") <- "empty"
+  igraph::graph_attr(g, "embed_method") <- "tfidf"
+  igraph::graph_attr(g, "build_time") <- 0
+  igraph::graph_attr(g, "build_at") <- "2024-01-01"
+  expect_message(
+    res <- withVisible(plot(g)),
+    regexp = "no nodes"
+  )
+  expect_false(res$visible)
+})
+
+test_that("plot.rrlm_graph messages when sub-graph has only 1 node", {
+  skip_if_not_installed("DiagrammeR")
+  # A single function node with no edges: neighbourhood = {itself} → sub = 1 node
+  g <- .make_minimal_rrlm_graph(
+    node_names = "pkg::lonely",
+    add_edges = FALSE
+  )
+  expect_message(
+    plot(g, n_hubs = 1L),
+    regexp = "Sub-graph has only"
+  )
+})
+
+test_that("plot.rrlm_graph handles null node_type (pagerank present)", {
+  skip_if_not_installed("DiagrammeR")
+  g <- igraph::make_ring(3L, directed = TRUE)
+  igraph::V(g)$name <- c("pkg::x", "pkg::y", "pkg::z")
+  igraph::V(g)$pagerank <- c(0.5, 0.3, 0.2)
+  # No node_type → null-check branch inside plot
+  class(g) <- c("rrlm_graph", class(g))
+  igraph::graph_attr(g, "project_name") <- "noattr"
+  igraph::graph_attr(g, "embed_method") <- "tfidf"
+  igraph::graph_attr(g, "build_time") <- 0
+  igraph::graph_attr(g, "build_at") <- "2024-01-01"
+  # Should not error (treated as all "function" type with equal pagerank)
+  expect_no_error(suppressMessages(plot(g, n_hubs = 2L)))
+})
+
+test_that("plot.rrlm_graph errors on unsupported file extension", {
+  skip_if_not_installed("DiagrammeR")
+  skip_if_not_installed("htmlwidgets")
+  g <- .make_minimal_rrlm_graph()
+  tmp <- tempfile(fileext = ".xyz")
+  on.exit(unlink(tmp), add = TRUE)
+  expect_error(plot(g, file = tmp), regexp = "Unsupported")
+})
