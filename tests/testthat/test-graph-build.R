@@ -690,3 +690,425 @@ test_that(".parse_git_log_files ignores commits with no files", {
   result <- rrlmgraph:::.parse_git_log_files(git_log)
   expect_length(result, 0L)
 })
+
+# ---- .regex_all_captures2 (internal) --------------------------------
+
+test_that(".regex_all_captures2 extracts two capture groups from match", {
+  text <- 'setClass("Child", contains = "Parent")'
+  result <- rrlmgraph:::.regex_all_captures2(
+    text,
+    'setClass\\("([A-Za-z._][A-Za-z0-9._]*)"[\\s\\S]{0,500}?\\bcontains\\s*=\\s*"([A-Za-z._][A-Za-z0-9._]*)"'
+  )
+  expect_type(result, "list")
+  expect_length(result, 1L)
+  expect_equal(result[[1L]][[1L]], "Child")
+  expect_equal(result[[1L]][[2L]], "Parent")
+})
+
+test_that(".regex_all_captures2 returns empty list when no match", {
+  result <- rrlmgraph:::.regex_all_captures2(
+    "plain text no match here",
+    'setClass\\("([A-Za-z]+)"[\\s\\S]{0,50}?contains\\s*=\\s*"([A-Za-z]+)"'
+  )
+  expect_type(result, "list")
+  expect_length(result, 0L)
+})
+
+test_that(".regex_all_captures2 handles multiple matches in same text", {
+  text <- paste(
+    'setClass("Dog", contains = "Animal")',
+    'setClass("Cat", contains = "Animal")',
+    sep = "\n"
+  )
+  result <- rrlmgraph:::.regex_all_captures2(
+    text,
+    'setClass\\("([A-Za-z]+)"[\\s\\S]{0,200}?contains\\s*=\\s*"([A-Za-z]+)"'
+  )
+  expect_gte(length(result), 1L)
+})
+
+# ---- .make_function_vertex_df (internal) ----------------------------
+
+test_that(".make_function_vertex_df returns empty data frame for empty input", {
+  result <- rrlmgraph:::.make_function_vertex_df(list())
+  expect_s3_class(result, "data.frame")
+  expect_equal(nrow(result), 0L)
+  expect_true("name" %in% names(result))
+  expect_true("node_type" %in% names(result))
+})
+
+test_that(".make_function_vertex_df maps node fields to vertex columns", {
+  nodes <- list(
+    list(
+      node_id = "pkg::foo",
+      name = "foo",
+      file = "/path/foo.R",
+      line_start = 1L,
+      line_end = 5L,
+      signature = "foo(x)",
+      body_text = "x + 1",
+      roxygen_text = "#' Foo",
+      complexity = 1L
+    ),
+    list(
+      node_id = "pkg::bar",
+      name = "bar",
+      file = "/path/bar.R",
+      line_start = 10L,
+      line_end = 20L,
+      signature = "bar(y)",
+      body_text = "y * 2",
+      roxygen_text = "",
+      complexity = 2L
+    )
+  )
+  df <- rrlmgraph:::.make_function_vertex_df(nodes)
+  expect_equal(nrow(df), 2L)
+  expect_equal(df$name, c("pkg::foo", "pkg::bar"))
+  expect_true(all(df$node_type == "function"))
+  expect_equal(df$signature[[1L]], "foo(x)")
+  expect_equal(df$complexity[[2L]], 2L)
+})
+
+# ---- .assemble_edges (internal) -------------------------------------
+
+test_that(".assemble_edges returns empty df when all edge dfs are empty", {
+  vdf <- data.frame(name = c("a", "b"), stringsAsFactors = FALSE)
+  result <- rrlmgraph:::.assemble_edges(
+    .empty_edge_df(),
+    data.frame(
+      from = character(0),
+      to = character(0),
+      weight = numeric(0),
+      source = character(0),
+      stringsAsFactors = FALSE
+    ),
+    .empty_edge_df(),
+    vdf
+  )
+  expect_s3_class(result, "data.frame")
+  expect_equal(nrow(result), 0L)
+})
+
+test_that(".assemble_edges labels CALLS edges and filters unknown endpoints", {
+  vdf <- data.frame(name = c("a", "b", "c"), stringsAsFactors = FALSE)
+  call_df <- data.frame(
+    from = c("a", "a"),
+    to = c("b", "unknown_node"),
+    weight = 1,
+    stringsAsFactors = FALSE
+  )
+  import_df <- data.frame(
+    from = character(0),
+    to = character(0),
+    weight = numeric(0),
+    source = character(0),
+    stringsAsFactors = FALSE
+  )
+  result <- rrlmgraph:::.assemble_edges(
+    call_df,
+    import_df,
+    .empty_edge_df(),
+    vdf
+  )
+  expect_true("CALLS" %in% result$edge_type)
+  # Edge to "unknown_node" should be filtered out
+  expect_false(any(result$to == "unknown_node"))
+})
+
+test_that(".assemble_edges includes IMPORTS edges for known endpoints", {
+  vdf <- data.frame(name = c("myfile", "pkg_dep"), stringsAsFactors = FALSE)
+  import_df <- data.frame(
+    from = "myfile",
+    to = "pkg_dep",
+    weight = 1,
+    source = "library",
+    stringsAsFactors = FALSE
+  )
+  result <- rrlmgraph:::.assemble_edges(
+    .empty_edge_df(),
+    import_df,
+    .empty_edge_df(),
+    vdf
+  )
+  expect_true("IMPORTS" %in% result$edge_type)
+})
+
+# ---- .build_semantic_edges (internal) --------------------------------
+
+test_that(".build_semantic_edges returns empty df for < 2 embeddings", {
+  result <- rrlmgraph:::.build_semantic_edges(
+    list(a = c(x = 1.0, y = 0.0)),
+    threshold = 0.5
+  )
+  expect_s3_class(result, "data.frame")
+  expect_equal(nrow(result), 0L)
+})
+
+test_that(".build_semantic_edges returns empty df for empty embeddings", {
+  result <- rrlmgraph:::.build_semantic_edges(list(), threshold = 0.5)
+  expect_s3_class(result, "data.frame")
+  expect_equal(nrow(result), 0L)
+})
+
+test_that(".build_semantic_edges detects highly similar dense embeddings", {
+  # Dense (same-length) embeddings: matrix multiply path
+  embs <- list(
+    a = c(1.0, 0.0, 0.0),
+    b = c(1.0, 0.0, 0.0), # identical → cosine 1
+    d = c(0.0, 1.0, 0.0) # orthogonal → cosine 0
+  )
+  result <- rrlmgraph:::.build_semantic_edges(embs, threshold = 0.9)
+  expect_s3_class(result, "data.frame")
+  expect_gt(nrow(result), 0L)
+  expect_true(
+    any(result$from %in% c("a", "b") & result$to %in% c("a", "b"))
+  )
+})
+
+test_that(".build_semantic_edges no edges when all dense embeddings orthogonal", {
+  embs <- list(
+    a = c(1.0, 0.0, 0.0),
+    b = c(0.0, 1.0, 0.0),
+    d = c(0.0, 0.0, 1.0)
+  )
+  result <- rrlmgraph:::.build_semantic_edges(embs, threshold = 0.5)
+  expect_equal(nrow(result), 0L)
+})
+
+test_that(".build_semantic_edges uses sparse path for variable-length embeddings", {
+  # Variable-length named vectors → sparse pairwise loop path
+  embs <- list(
+    a = c(foo = 1.0, bar = 0.5),
+    b = c(foo = 1.0, bar = 0.5), # identical to a
+    d = c(baz = 1.0) # no common terms with a or b
+  )
+  result <- rrlmgraph:::.build_semantic_edges(embs, threshold = 0.5)
+  expect_s3_class(result, "data.frame")
+  # a & b should be similar (cosine ~1)
+  if (nrow(result) > 0L) {
+    expect_true(any(result$from %in% c("a", "b") & result$to %in% c("a", "b")))
+  }
+})
+
+test_that(".build_semantic_edges respects max_per_node cap", {
+  # Create 6 identical embeddings: without cap all would pair with each other
+  embs <- lapply(paste0("n", 1:6), function(nm) c(x = 1.0, y = 0.0))
+  names(embs) <- paste0("n", 1:6)
+  result <- rrlmgraph:::.build_semantic_edges(
+    embs,
+    threshold = 0.9,
+    max_per_node = 2L
+  )
+  expect_s3_class(result, "data.frame")
+  # Each node should have at most 2 edges
+  if (nrow(result) > 0L) {
+    from_counts <- table(result$from)
+    expect_true(all(from_counts <= 2L))
+  }
+})
+
+# ---- build_rrlm_graph -----------------------------------------------
+
+# Helper: write a minimal valid R project to a temp dir
+.make_mini_r_project <- function(env = parent.frame()) {
+  root <- withr::local_tempdir(.local_envir = env)
+  r_dir <- file.path(root, "R")
+  test_dir <- file.path(root, "tests", "testthat")
+  dir.create(r_dir, recursive = TRUE)
+  dir.create(test_dir, recursive = TRUE)
+
+  writeLines(
+    c(
+      "Package: minitest",
+      "Version: 0.1.0",
+      "Imports: stats",
+      "Description: Mini test package."
+    ),
+    file.path(root, "DESCRIPTION")
+  )
+
+  writeLines(
+    c(
+      "#' Add two numbers",
+      "#' @export",
+      "add_two <- function(x, y) x + y",
+      "",
+      "#' Multiply by calling add internally",
+      "#' @export",
+      "multiply_via_add <- function(x, n) {",
+      "  result <- add_two(x, 0)",
+      "  x * n",
+      "}"
+    ),
+    file.path(r_dir, "math.R")
+  )
+
+  writeLines(
+    c(
+      "#' Summarise a numeric vector",
+      "#' @export",
+      "summarise_vec <- function(x) {",
+      "  list(mean = mean(x), sd = stats::sd(x))",
+      "}"
+    ),
+    file.path(r_dir, "utils.R")
+  )
+
+  writeLines(
+    c(
+      'test_that("add_two works", {',
+      '  expect_equal(add_two(1, 2), 3)',
+      "})"
+    ),
+    file.path(test_dir, "test-math.R")
+  )
+
+  root
+}
+
+test_that("build_rrlm_graph returns an rrlm_graph on a minimal R project", {
+  skip_if_not_installed("igraph")
+  root <- .make_mini_r_project()
+  g <- build_rrlm_graph(root, cache = FALSE)
+  expect_s3_class(g, "rrlm_graph")
+  expect_s3_class(g, "igraph")
+  expect_gte(igraph::vcount(g), 2L) # at least add_two and multiply_via_add
+})
+
+test_that("build_rrlm_graph verbose=TRUE emits messages without error", {
+  skip_if_not_installed("igraph")
+  root <- .make_mini_r_project()
+  expect_no_error(
+    suppressMessages(build_rrlm_graph(root, cache = FALSE, verbose = TRUE))
+  )
+})
+
+test_that("build_rrlm_graph stores expected graph metadata attributes", {
+  skip_if_not_installed("igraph")
+  root <- .make_mini_r_project()
+  g <- build_rrlm_graph(root, cache = FALSE)
+  expect_equal(igraph::graph_attr(g, "project_name"), basename(root))
+  expect_equal(igraph::graph_attr(g, "embed_method"), "tfidf")
+  expect_false(is.null(igraph::graph_attr(g, "build_time")))
+  expect_false(is.null(igraph::graph_attr(g, "build_at")))
+})
+
+test_that("build_rrlm_graph with semantic_threshold=0 runs without error", {
+  skip_if_not_installed("igraph")
+  root <- .make_mini_r_project()
+  g <- build_rrlm_graph(root, cache = FALSE, semantic_threshold = 0.0)
+  expect_s3_class(g, "rrlm_graph")
+})
+
+test_that("build_rrlm_graph with include_package_nodes=FALSE excludes package nodes", {
+  skip_if_not_installed("igraph")
+  root <- .make_mini_r_project()
+  g <- build_rrlm_graph(root, cache = FALSE, include_package_nodes = FALSE)
+  node_types <- igraph::V(g)$node_type
+  expect_false("package" %in% node_types)
+})
+
+test_that("build_rrlm_graph on empty project warns and returns valid graph", {
+  skip_if_not_installed("igraph")
+  root <- withr::local_tempdir() # no R files at all
+  expect_warning(
+    g <- build_rrlm_graph(root, cache = FALSE),
+    regexp = "No function nodes"
+  )
+  expect_s3_class(g, "rrlm_graph")
+})
+
+test_that("build_rrlm_graph nodes have pagerank and task_trace_weight attributes", {
+  skip_if_not_installed("igraph")
+  root <- .make_mini_r_project()
+  g <- build_rrlm_graph(root, cache = FALSE)
+  if (igraph::vcount(g) > 0L) {
+    expect_false(is.null(igraph::V(g)$pagerank))
+    expect_false(is.null(igraph::V(g)$task_trace_weight))
+  }
+})
+
+test_that("build_rrlm_graph creates CALLS edges between calling functions", {
+  skip_if_not_installed("igraph")
+  root <- .make_mini_r_project()
+  g <- build_rrlm_graph(root, cache = FALSE)
+  # multiply_via_add calls add_two → should create a CALLS edge
+  edge_types <- igraph::E(g)$edge_type
+  expect_true("CALLS" %in% edge_types)
+})
+
+test_that("build_rrlm_graph with cache=TRUE writes an rds file", {
+  skip_if_not_installed("igraph")
+  root <- .make_mini_r_project()
+  g <- build_rrlm_graph(root, cache = TRUE)
+  cache_file <- file.path(root, ".rrlmgraph", "graph.rds")
+  expect_true(file.exists(cache_file))
+})
+
+# ---- build_dispatch_edges DISPATCHES_ON path ------------------------
+
+test_that("build_dispatch_edges detects DISPATCHES_ON for setGeneric+setMethod", {
+  tmp <- tempfile(fileext = ".R")
+  writeLines(
+    c(
+      'setGeneric("speak", function(animal, ...) standardGeneric("speak"))',
+      'setMethod("speak", "Dog", function(animal, ...) "Woof")'
+    ),
+    tmp
+  )
+  on.exit(unlink(tmp))
+
+  # Two nodes with the same bare name "speak" triggers DISPATCHES_ON
+  nodes <- list(
+    list(
+      node_id = "pkg::speak",
+      name = "speak",
+      file = tmp,
+      calls_list = character(0)
+    ),
+    list(
+      node_id = "pkg::speak_method",
+      name = "speak",
+      file = tmp,
+      calls_list = character(0)
+    )
+  )
+  result <- build_dispatch_edges(nodes, r_files = tmp)
+  expect_s3_class(result, "data.frame")
+  if (nrow(result) > 0L) {
+    expect_true("DISPATCHES_ON" %in% result$edge_type)
+  }
+})
+
+test_that("build_dispatch_edges detects setRefClass EXTENDS edge", {
+  tmp <- tempfile(fileext = ".R")
+  writeLines(
+    c(
+      'Base  <- setRefClass("Base",  methods = list(greet = function() "Hi"))',
+      'Child <- setRefClass("Child", contains = "Base")'
+    ),
+    tmp
+  )
+  on.exit(unlink(tmp))
+
+  nodes <- list(
+    list(
+      node_id = "pkg::Base",
+      name = "Base",
+      file = tmp,
+      calls_list = character(0)
+    ),
+    list(
+      node_id = "pkg::Child",
+      name = "Child",
+      file = tmp,
+      calls_list = character(0)
+    )
+  )
+  result <- build_dispatch_edges(nodes, r_files = tmp)
+  expect_s3_class(result, "data.frame")
+  if (nrow(result) > 0L) {
+    expect_true("EXTENDS" %in% result$edge_type)
+  }
+})

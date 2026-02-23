@@ -197,3 +197,46 @@ test_that(".log_task_completion writes JSONL when project_root is set", {
   expect_equal(entry$query, "train model")
   expect_true("pkg::fit_model" %in% entry$nodes)
 })
+
+# ---- .session_id ----------------------------------------------------
+
+test_that(".session_id uses RRLMGRAPH_SESSION_ID env var when set", {
+  withr::with_envvar(
+    c(RRLMGRAPH_SESSION_ID = "my_test_session_007"),
+    {
+      id <- rrlmgraph:::.session_id()
+      expect_equal(id, "my_test_session_007")
+    }
+  )
+})
+
+test_that(".session_id returns a non-empty character(1) when env var absent", {
+  withr::with_envvar(
+    c(RRLMGRAPH_SESSION_ID = ""),
+    {
+      id <- rrlmgraph:::.session_id()
+      expect_type(id, "character")
+      expect_length(id, 1L)
+      expect_gt(nchar(id), 0L)
+    }
+  )
+})
+
+# ---- chat_with_context edge: ellmer absent + non-openai provider ----
+
+test_that("chat_with_context errors when ellmer absent and provider != openai", {
+  # Only meaningful when ellmer is NOT installed; skip otherwise.
+  skip_if(requireNamespace("ellmer", quietly = TRUE), "ellmer is installed")
+  g <- make_llm_graph()
+  expect_error(
+    chat_with_context(g, "question", provider = "ollama"),
+    regexp = "ellmer"
+  )
+})
+
+# ---- .build_system_prompt whitespace edge cases --------------------
+
+test_that(".build_system_prompt treats whitespace-only context as empty", {
+  sp <- rrlmgraph:::.build_system_prompt("   \n  ")
+  expect_false(grepl("BEGIN CODE CONTEXT", sp, fixed = TRUE))
+})

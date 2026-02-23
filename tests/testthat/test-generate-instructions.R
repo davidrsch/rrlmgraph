@@ -189,3 +189,236 @@ test_that("generate_instructions rejects max_tokens < 100", {
   g <- make_gen_graph()
   expect_error(generate_instructions(g, max_tokens = 10L), "max_tokens")
 })
+
+# ---- .gi_project_type internal --------------------------------------
+
+test_that(".gi_project_type detects Shiny app via app.R", {
+  tmp <- withr::local_tempdir()
+  writeLines("shinyApp(ui, server)", file.path(tmp, "app.R"))
+  result <- rrlmgraph:::.gi_project_type(tmp)
+  expect_equal(result, "Shiny application")
+})
+
+test_that(".gi_project_type detects Shiny app via server.R", {
+  tmp <- withr::local_tempdir()
+  writeLines("function(input, output) {}", file.path(tmp, "server.R"))
+  result <- rrlmgraph:::.gi_project_type(tmp)
+  expect_equal(result, "Shiny application")
+})
+
+test_that(".gi_project_type detects R Markdown project", {
+  tmp <- withr::local_tempdir()
+  writeLines("# Analysis\nSome text.", file.path(tmp, "analysis.Rmd"))
+  result <- rrlmgraph:::.gi_project_type(tmp)
+  expect_equal(result, "R Markdown / Quarto project")
+})
+
+test_that(".gi_project_type returns generic 'R project' when no structure found", {
+  tmp <- withr::local_tempdir() # empty dir
+  result <- rrlmgraph:::.gi_project_type(tmp)
+  expect_equal(result, "R project")
+})
+
+test_that(".gi_project_type respects explicit Type field in DESCRIPTION", {
+  tmp <- withr::local_tempdir()
+  writeLines(
+    c("Package: mypkg", "Version: 0.1.0", "Type: Package"),
+    file.path(tmp, "DESCRIPTION")
+  )
+  result <- rrlmgraph:::.gi_project_type(tmp)
+  expect_equal(result, "Package")
+})
+
+# ---- .gi_conventions internal ----------------------------------------
+
+test_that(".gi_conventions detects camelCase naming", {
+  verts <- data.frame(
+    name = c(
+      "pkg::loadData",
+      "pkg::cleanData",
+      "pkg::fitModel",
+      "pkg::predictOutcome",
+      "pkg::evaluateModel",
+      "pkg::buildGraph",
+      "pkg::runBenchmark",
+      "pkg::createNode"
+    ),
+    node_type = "function",
+    stringsAsFactors = FALSE
+  )
+  g <- igraph::graph_from_data_frame(
+    d = data.frame(
+      from = character(0),
+      to = character(0),
+      stringsAsFactors = FALSE
+    ),
+    vertices = verts,
+    directed = TRUE
+  )
+  tmp <- withr::local_tempdir()
+  result <- rrlmgraph:::.gi_conventions(g, tmp)
+  expect_true(any(grepl("camel", result, ignore.case = TRUE)))
+})
+
+test_that(".gi_conventions detects magrittr pipe in R files", {
+  tmp <- withr::local_tempdir()
+  r_dir <- file.path(tmp, "R")
+  dir.create(r_dir)
+  writeLines(
+    c("library(dplyr)", "f <- function(x) x %>% filter(!is.na(x))"),
+    file.path(r_dir, "utils.R")
+  )
+  # Graph with snake_case names so naming convention doesn't trigger
+  verts <- data.frame(
+    name = c(
+      "pkg::foo",
+      "pkg::bar",
+      "pkg::baz",
+      "pkg::qux",
+      "pkg::quux",
+      "pkg::corge"
+    ),
+    node_type = "function",
+    stringsAsFactors = FALSE
+  )
+  g <- igraph::graph_from_data_frame(
+    d = data.frame(
+      from = character(0),
+      to = character(0),
+      stringsAsFactors = FALSE
+    ),
+    vertices = verts,
+    directed = TRUE
+  )
+  result <- rrlmgraph:::.gi_conventions(g, tmp)
+  expect_true(any(
+    grepl("magrittr", result, ignore.case = TRUE) |
+      grepl("pipe", result, ignore.case = TRUE)
+  ))
+})
+
+test_that(".gi_conventions returns fallback message when no conventions detected", {
+  # Very small graph (<=5 names) and empty dirs → no conventions detected
+  tmp <- withr::local_tempdir()
+  verts <- data.frame(
+    name = c("pkg::a", "pkg::b"),
+    node_type = "function",
+    stringsAsFactors = FALSE
+  )
+  g <- igraph::graph_from_data_frame(
+    d = data.frame(
+      from = character(0),
+      to = character(0),
+      stringsAsFactors = FALSE
+    ),
+    vertices = verts,
+    directed = TRUE
+  )
+  result <- rrlmgraph:::.gi_conventions(g, tmp)
+  expect_true(any(grepl("No strong", result, ignore.case = TRUE)))
+})
+
+# ---- .gi_package_inventory internal --------------------------------------
+
+test_that(".gi_package_inventory includes Suggests field packages", {
+  tmp <- withr::local_tempdir()
+  writeLines(
+    c(
+      "Package: mypkg",
+      "Version: 0.1.0",
+      "Imports: cli",
+      "Suggests: testthat, withr"
+    ),
+    file.path(tmp, "DESCRIPTION")
+  )
+  result <- rrlmgraph:::.gi_package_inventory(tmp)
+  expect_s3_class(result, "data.frame")
+  expect_true("testthat" %in% result$package)
+  expect_true("withr" %in% result$package)
+})
+
+test_that(".gi_package_inventory returns empty df when no DESCRIPTION", {
+  tmp <- withr::local_tempdir()
+  result <- rrlmgraph:::.gi_package_inventory(tmp)
+  expect_s3_class(result, "data.frame")
+  expect_equal(nrow(result), 0L)
+})
+
+test_that(".gi_package_inventory returns empty df when DESCRIPTION has no deps", {
+  tmp <- withr::local_tempdir()
+  writeLines(
+    c("Package: mypkg", "Version: 0.1.0"),
+    file.path(tmp, "DESCRIPTION")
+  )
+  result <- rrlmgraph:::.gi_package_inventory(tmp)
+  expect_s3_class(result, "data.frame")
+  expect_equal(nrow(result), 0L)
+})
+
+# ---- .gi_render_markdown edge cases ---------------------------------
+
+test_that(".gi_render_markdown shows '_No functions found._' for empty top_fns", {
+  md <- rrlmgraph:::.gi_render_markdown(
+    pkg_name = "testpkg",
+    build_date = "2024-01-01",
+    proj_type = "R package",
+    r_version = "4.4.0",
+    top_fns = data.frame(
+      name = character(0),
+      pagerank = numeric(0),
+      stringsAsFactors = FALSE
+    ),
+    conventions = "snake_case",
+    pkg_inventory = data.frame(
+      package = character(0),
+      version = character(0),
+      stringsAsFactors = FALSE
+    ),
+    max_tokens = 2000L
+  )
+  expect_match(md, "No functions found", ignore.case = TRUE)
+})
+
+test_that(".gi_render_markdown shows '_No dependencies found._' for empty inventory", {
+  md <- rrlmgraph:::.gi_render_markdown(
+    pkg_name = "testpkg",
+    build_date = "2024-01-01",
+    proj_type = "R package",
+    r_version = "4.4.0",
+    top_fns = data.frame(
+      name = character(0),
+      pagerank = numeric(0),
+      stringsAsFactors = FALSE
+    ),
+    conventions = "snake_case",
+    pkg_inventory = data.frame(
+      package = character(0),
+      version = character(0),
+      stringsAsFactors = FALSE
+    ),
+    max_tokens = 2000L
+  )
+  expect_match(md, "No dependencies found", ignore.case = TRUE)
+})
+
+test_that(".gi_render_markdown trims to token budget and appends notice", {
+  md <- rrlmgraph:::.gi_render_markdown(
+    pkg_name = "testpkg",
+    build_date = "2024-01-01",
+    proj_type = "R package",
+    r_version = "4.4.0",
+    top_fns = data.frame(
+      name = "mypkg::fn",
+      pagerank = 0.5,
+      stringsAsFactors = FALSE
+    ),
+    conventions = "snake_case",
+    pkg_inventory = data.frame(
+      package = character(0),
+      version = character(0),
+      stringsAsFactors = FALSE
+    ),
+    max_tokens = 100L # very tight: forces trim
+  )
+  expect_match(md, "trimmed", ignore.case = TRUE)
+})
