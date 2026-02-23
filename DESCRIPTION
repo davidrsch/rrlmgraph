@@ -28,11 +28,13 @@ Imports:
     htmlwidgets,
     httr2,
     igraph,
+    jsonlite,
     Matrix,
     methods,
     rlang,
     RSQLite,
     text2vec,
+    tokenizers,
     tools,
     utils
 Suggests:
@@ -40,13 +42,11 @@ Suggests:
     digest,
     dplyr,
     ellmer,
-    jsonlite,
     knitr,
     mockery,
     rmarkdown,
     spelling,
     testthat (>= 3.0.0),
-    tokenizers,
     webshot2,
     withr
 VignetteBuilder: knitr
