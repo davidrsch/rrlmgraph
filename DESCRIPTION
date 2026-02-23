@@ -28,6 +28,7 @@ Imports:
     htmlwidgets,
     httr2,
     igraph,
+    Matrix,
     rlang,
     RSQLite,
     text2vec,

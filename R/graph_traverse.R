@@ -28,7 +28,7 @@
 #'   \item{pagerank}{Pre-computed \code{pagerank} vertex attribute,
 #'     min-max normalised across the full graph to \eqn{[0, 1]}.}
 #'   \item{task_trace_weight}{Vertex attribute set by
-#'     \code{update_task_weights()} (issue \#13).  Defaults to \eqn{0.5}
+#'     \code{update_task_weights()} (issue #13).  Defaults to \eqn{0.5}
 #'     (neutral) when the attribute is absent or \code{NA}.}
 #'   \item{cochange_score}{Mean weight of \code{CO_CHANGES} edges
 #'     connecting this node to already-visited nodes.  Zero when
