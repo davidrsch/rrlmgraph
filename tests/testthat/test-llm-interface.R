@@ -240,3 +240,86 @@ test_that(".build_system_prompt treats whitespace-only context as empty", {
   sp <- rrlmgraph:::.build_system_prompt("   \n  ")
   expect_false(grepl("BEGIN CODE CONTEXT", sp, fixed = TRUE))
 })
+
+# ---- .llm_via_httr2 direct call: missing API key -------------------
+
+test_that(".llm_via_httr2 errors when OPENAI_API_KEY is not set", {
+  skip_if_not_installed("httr2")
+
+  withr::with_envvar(
+    c(OPENAI_API_KEY = ""),
+    {
+      expect_error(
+        rrlmgraph:::.llm_via_httr2(
+          system_prompt = "You are helpful.",
+          message = "hello",
+          model = "gpt-4o-mini"
+        ),
+        regexp = "OPENAI_API_KEY"
+      )
+    }
+  )
+})
+
+# ---- .llm_via_httr2 direct call: mock httr2 happy path --------------
+
+test_that(".llm_via_httr2 returns response text on mocked success", {
+  skip_if_not_installed("httr2")
+
+  # Mock httr2::req_perform and httr2::resp_body_json to avoid a real HTTP call
+  mock_resp <- structure(list(), class = "httr2_response")
+  local_mocked_bindings(
+    req_perform = function(...) mock_resp,
+    resp_body_json = function(...) {
+      list(
+        error = NULL,
+        choices = list(
+          list(message = list(content = "mocked LLM answer"))
+        )
+      )
+    },
+    .package = "httr2"
+  )
+
+  withr::with_envvar(
+    c(OPENAI_API_KEY = "sk-test-key"),
+    {
+      result <- rrlmgraph:::.llm_via_httr2(
+        system_prompt = "You are an assistant.",
+        message = "What is 2+2?",
+        model = "gpt-4o-mini"
+      )
+    }
+  )
+  expect_equal(result, "mocked LLM answer")
+})
+
+test_that(".llm_via_httr2 errors on API error response", {
+  skip_if_not_installed("httr2")
+
+  mock_resp <- structure(list(), class = "httr2_response")
+  local_mocked_bindings(
+    req_perform = function(...) mock_resp,
+    resp_body_json = function(...) {
+      list(
+        error = list(message = "Invalid API key"),
+        choices = NULL
+      )
+    },
+    .package = "httr2"
+  )
+
+  withr::with_envvar(
+    c(OPENAI_API_KEY = "sk-bad-key"),
+    {
+      expect_error(
+        rrlmgraph:::.llm_via_httr2(
+          system_prompt = "sys",
+          message = "msg",
+          model = "gpt-4o-mini"
+        ),
+        regexp = "OpenAI API error"
+      )
+    }
+  )
+})

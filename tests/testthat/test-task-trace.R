@@ -339,3 +339,162 @@ test_that(".trace_project_root returns path when set", {
   result <- rrlmgraph:::.trace_project_root(g)
   expect_equal(result, tmp)
 })
+
+# ---- log_task_trace input validation --------------------------------
+
+test_that("log_task_trace errors on non-character query", {
+  g <- make_tt_graph()
+  expect_error(
+    log_task_trace(42L, c("pkg::load_data"), g),
+    regexp = "query"
+  )
+})
+
+test_that("log_task_trace errors on length-2 query", {
+  g <- make_tt_graph()
+  expect_error(
+    log_task_trace(c("a", "b"), c("pkg::load_data"), g),
+    regexp = "query"
+  )
+})
+
+# ---- update_task_weights input validation ---------------------------
+
+test_that("update_task_weights errors on non-igraph input", {
+  expect_error(
+    update_task_weights(list()),
+    regexp = "igraph"
+  )
+})
+
+test_that("update_task_weights returns graph unchanged for 0-node graph", {
+  g_empty <- igraph::make_empty_graph(n = 0, directed = TRUE)
+  class(g_empty) <- c("rrlm_graph", class(g_empty))
+  result <- update_task_weights(g_empty, useful_nodes = c("pkg::foo"))
+  expect_equal(igraph::vcount(result), 0L)
+})
+
+test_that("update_task_weights skips malformed JSONL entries", {
+  skip_if_not_installed("jsonlite")
+  tmp <- withr::local_tempdir()
+  g <- make_tt_graph(project_root = tmp)
+
+  # Write a valid JSONL entry and a malformed one
+  trace_dir <- file.path(tmp, ".rrlmgraph")
+  dir.create(trace_dir, recursive = TRUE, showWarnings = FALSE)
+  trace_file <- file.path(trace_dir, "task_trace.jsonl")
+  writeLines(
+    c(
+      jsonlite::toJSON(
+        list(
+          timestamp = "2024-01-01T00:00:00Z",
+          query = "q1",
+          nodes = list("pkg::load_data"),
+          polarity = 0,
+          session_id = "s1"
+        ),
+        auto_unbox = TRUE
+      ),
+      "not valid json {{{" # malformed — forces the next branch
+    ),
+    trace_file
+  )
+
+  # Should not error despite the malformed line
+  expect_no_error(
+    update_task_weights(g, useful_nodes = c("pkg::load_data"))
+  )
+})
+
+# ---- update_task_polarity input validation --------------------------
+
+test_that("update_task_polarity errors on non-rrlm_context", {
+  g <- make_tt_graph()
+  expect_error(
+    update_task_polarity(g, context = list(nodes = "x"), polarity = 0.5),
+    regexp = "rrlm_context"
+  )
+})
+
+test_that("update_task_polarity errors on polarity out of range", {
+  g <- make_tt_graph()
+  ctx <- structure(
+    list(
+      nodes = c("pkg::load_data"),
+      context_string = "test",
+      tokens_used = 1L,
+      budget_tokens = 100L,
+      seed_node = "pkg::load_data",
+      relevance_scores = c("pkg::load_data" = 1.0)
+    ),
+    class = c("rrlm_context", "list")
+  )
+  expect_error(
+    update_task_polarity(g, context = ctx, polarity = 1.5),
+    regexp = "polarity"
+  )
+})
+
+test_that("update_task_polarity handles blank and malformed trace lines", {
+  skip_if_not_installed("jsonlite")
+  tmp <- withr::local_tempdir()
+  g <- make_tt_graph(project_root = tmp)
+
+  # Write: blank line + malformed JSON + valid entry
+  trace_dir <- file.path(tmp, ".rrlmgraph")
+  dir.create(trace_dir, recursive = TRUE, showWarnings = FALSE)
+  trace_file <- file.path(trace_dir, "task_trace.jsonl")
+  valid_entry <- jsonlite::toJSON(
+    list(
+      timestamp = "2024-01-01T00:00:00Z",
+      query = "q1",
+      nodes = list("pkg::load_data"),
+      polarity = 0,
+      session_id = "s1"
+    ),
+    auto_unbox = TRUE
+  )
+  writeLines(
+    c("", "not json {{{", as.character(valid_entry)),
+    trace_file
+  )
+
+  ctx <- structure(
+    list(
+      nodes = c("pkg::load_data"),
+      context_string = "test",
+      tokens_used = 1L,
+      budget_tokens = 100L,
+      seed_node = "pkg::load_data",
+      relevance_scores = c("pkg::load_data" = 1.0)
+    ),
+    class = c("rrlm_context", "list")
+  )
+  # Should not error; blank line and malformed line are skipped
+  expect_no_error(
+    update_task_polarity(g, context = ctx, polarity = 0.8)
+  )
+
+  # Valid entry should have polarity updated
+  result_lines <- readLines(trace_file, warn = FALSE)
+  non_empty <- result_lines[
+    nchar(trimws(result_lines)) > 0L &
+      !grepl("not json", result_lines)
+  ]
+  entry <- jsonlite::fromJSON(non_empty[[length(non_empty)]])
+  expect_equal(as.numeric(entry$polarity), 0.8)
+})
+
+# ---- .tt_session_id -------------------------------------------------
+
+test_that(".tt_session_id returns non-empty string when env var absent", {
+  withr::with_envvar(
+    c(RRLMGRAPH_SESSION_ID = ""),
+    {
+      id <- rrlmgraph:::.tt_session_id()
+      expect_type(id, "character")
+      expect_length(id, 1L)
+      expect_gt(nchar(id), 0L)
+    }
+  )
+})
