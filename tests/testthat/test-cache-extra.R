@@ -37,6 +37,21 @@ make_extra_cache_graph <- function(project_root = NULL) {
   g
 }
 
+# Helper: export a graph with the given embed_model, return tfidf_vocab rows.
+# Manages its own temp directory + DB connection lifecycle.
+tfidf_vocab_rows <- function(mock_model) {
+  tmp <- tempfile()
+  dir.create(tmp, recursive = TRUE)
+  on.exit(unlink(tmp, recursive = TRUE), add = TRUE)
+  db <- file.path(tmp, "tfidf.sqlite")
+  g <- make_extra_cache_graph()
+  igraph::graph_attr(g, "embed_model") <- mock_model
+  export_to_sqlite(g, db)
+  con <- DBI::dbConnect(RSQLite::SQLite(), db)
+  on.exit(DBI::dbDisconnect(con), add = TRUE)
+  DBI::dbGetQuery(con, "SELECT * FROM tfidf_vocab")
+}
+
 # ---- export_to_sqlite: creates nested db directory ------------------
 
 test_that("export_to_sqlite creates nested db directory when it does not exist", {
@@ -52,9 +67,6 @@ test_that("export_to_sqlite creates nested db directory when it does not exist",
 # ---- .upsert_nodes: 0-vertex graph ----------------------------------
 
 test_that("export_to_sqlite handles 0-vertex graph (empty upsert_nodes path)", {
-  skip_if_not_installed("DBI")
-  skip_if_not_installed("RSQLite")
-
   tmp <- withr::local_tempdir()
   db <- file.path(tmp, "empty.sqlite")
 
@@ -74,7 +86,6 @@ test_that("export_to_sqlite handles 0-vertex graph (empty upsert_nodes path)", {
 # ---- .upsert_edges: extra edge attributes (metadata_json path) ------
 
 test_that("export_to_sqlite serialises extra edge attributes to metadata JSON", {
-  skip_if_not_installed("jsonlite")
   tmp <- withr::local_tempdir()
   db <- file.path(tmp, "meta.sqlite")
 
@@ -115,15 +126,7 @@ test_that("export_to_sqlite serialises extra edge attributes to metadata JSON", 
 # ---- .upsert_tfidf_vocab: happy path --------------------------------
 
 test_that("export_to_sqlite populates tfidf_vocab when embed_model is present", {
-  skip_if_not_installed("DBI")
-  skip_if_not_installed("RSQLite")
-
-  tmp <- withr::local_tempdir()
-  db <- file.path(tmp, "tfidf.sqlite")
-  g <- make_extra_cache_graph()
-
-  # Attach a minimal mock tfidf model (with idf_vector via tfidf object)
-  mock_model <- list(
+  rows <- tfidf_vocab_rows(list(
     vocab = data.frame(
       term = c("function", "data", "return"),
       doc_count = c(3L, 2L, 1L),
@@ -133,32 +136,17 @@ test_that("export_to_sqlite populates tfidf_vocab when embed_model is present", 
     tfidf = list(idf_vector = c(1.5, 1.2, 2.0)),
     vectorizer = NULL,
     embeddings = list()
-  )
-  igraph::graph_attr(g, "embed_model") <- mock_model
-
-  expect_no_error(export_to_sqlite(g, db))
-
-  con <- DBI::dbConnect(RSQLite::SQLite(), db)
-  on.exit(DBI::dbDisconnect(con), add = TRUE)
-
-  vocab_rows <- DBI::dbGetQuery(con, "SELECT * FROM tfidf_vocab")
-  expect_equal(nrow(vocab_rows), 3L)
-  expect_true("term" %in% names(vocab_rows))
-  expect_true("idf" %in% names(vocab_rows))
+  ))
+  expect_equal(nrow(rows), 3L)
+  expect_true(all(c("term", "idf") %in% names(rows)))
 })
 
 # ---- .upsert_tfidf_vocab: fallback IDF (no idf_vector) --------------
 
 test_that("export_to_sqlite computes IDF fallback when tfidf object is NULL", {
-  skip_if_not_installed("DBI")
-  skip_if_not_installed("RSQLite")
-
-  tmp <- withr::local_tempdir()
-  db <- file.path(tmp, "tfidf_fallback.sqlite")
-  g <- make_extra_cache_graph()
-
-  # Model without a tfidf object → uses fallback log-IDF computation
-  mock_model <- list(
+  # tfidf = NULL → as.numeric(NULL$idf_vector) = numeric(0) → length-mismatch
+  # handler fills idf with NA; rows still exist.
+  rows <- tfidf_vocab_rows(list(
     vocab = data.frame(
       term = c("alpha", "beta"),
       doc_count = c(2L, 1L),
@@ -168,32 +156,15 @@ test_that("export_to_sqlite computes IDF fallback when tfidf object is NULL", {
     tfidf = NULL,
     vectorizer = NULL,
     embeddings = list()
-  )
-  igraph::graph_attr(g, "embed_model") <- mock_model
-
-  expect_no_error(export_to_sqlite(g, db))
-
-  con <- DBI::dbConnect(RSQLite::SQLite(), db)
-  on.exit(DBI::dbDisconnect(con), add = TRUE)
-
-  vocab_rows <- DBI::dbGetQuery(con, "SELECT * FROM tfidf_vocab")
-  # With tfidf = NULL, as.numeric(NULL$idf_vector) = numeric(0), so idf values
-  # are padded with NA by the length-mismatch handler. Just verify rows exist.
-  expect_equal(nrow(vocab_rows), 2L)
-  expect_equal(vocab_rows$term, c("alpha", "beta"))
+  ))
+  expect_equal(nrow(rows), 2L)
+  expect_equal(rows$term, c("alpha", "beta"))
 })
 
 test_that("export_to_sqlite uses error-fallback IDF when tfidf$idf_vector access errors", {
-  skip_if_not_installed("DBI")
-  skip_if_not_installed("RSQLite")
-
-  tmp <- withr::local_tempdir()
-  db <- file.path(tmp, "tfidf_errfallback.sqlite")
-  g <- make_extra_cache_graph()
-
-  # A non-list/non-NULL tfidf causes `"string"$idf_vector` to throw,
-  # which activates the tryCatch error handler (fallback IDF computation).
-  mock_model <- list(
+  # A non-list tfidf causes `"string"$idf_vector` to throw →
+  # tryCatch activates fallback log-IDF (non-NA values).
+  rows <- tfidf_vocab_rows(list(
     vocab = data.frame(
       term = c("go", "code"),
       doc_count = c(3L, 2L),
@@ -203,32 +174,16 @@ test_that("export_to_sqlite uses error-fallback IDF when tfidf$idf_vector access
     tfidf = "string_triggers_dollar_error",
     vectorizer = NULL,
     embeddings = list()
-  )
-  igraph::graph_attr(g, "embed_model") <- mock_model
-
-  expect_no_error(export_to_sqlite(g, db))
-
-  con <- DBI::dbConnect(RSQLite::SQLite(), db)
-  on.exit(DBI::dbDisconnect(con), add = TRUE)
-
-  vocab_rows <- DBI::dbGetQuery(con, "SELECT * FROM tfidf_vocab")
-  expect_equal(nrow(vocab_rows), 2L)
-  # Fallback IDF should produce non-NA numeric values
-  expect_true(all(!is.na(vocab_rows$idf)))
+  ))
+  expect_equal(nrow(rows), 2L)
+  expect_true(all(!is.na(rows$idf)))
 })
 
-# ---- .upsert_tfidf_vocab: length-mismatched idf_vector --------------
+# ---- .upsert_tfidf_vocab: length-mismatched idf_vector (truncate / pad) ------
 
-test_that("export_to_sqlite handles mismatched idf_vector length (truncates/pads)", {
-  skip_if_not_installed("DBI")
-  skip_if_not_installed("RSQLite")
-
-  tmp <- withr::local_tempdir()
-  db <- file.path(tmp, "tfidf_mismatch.sqlite")
-  g <- make_extra_cache_graph()
-
-  # idf_vector has 5 values but vocab has 3 terms → should truncate to 3
-  mock_model <- list(
+test_that("export_to_sqlite truncates idf_vector longer than vocab", {
+  # 5 idf values, 3-term vocab → truncated to 3
+  rows <- tfidf_vocab_rows(list(
     vocab = data.frame(
       term = c("a", "b", "c"),
       doc_count = c(1L, 1L, 1L),
@@ -238,30 +193,13 @@ test_that("export_to_sqlite handles mismatched idf_vector length (truncates/pads
     tfidf = list(idf_vector = c(1.1, 1.2, 1.3, 1.4, 1.5)),
     vectorizer = NULL,
     embeddings = list()
-  )
-  igraph::graph_attr(g, "embed_model") <- mock_model
-
-  expect_no_error(export_to_sqlite(g, db))
-
-  con <- DBI::dbConnect(RSQLite::SQLite(), db)
-  on.exit(DBI::dbDisconnect(con), add = TRUE)
-
-  vocab_rows <- DBI::dbGetQuery(con, "SELECT * FROM tfidf_vocab")
-  expect_equal(nrow(vocab_rows), 3L)
+  ))
+  expect_equal(nrow(rows), 3L)
 })
 
-# ---- .upsert_tfidf_vocab: padded idf_vector -------------------------
-
-test_that("export_to_sqlite handles shorter idf_vector (pads with NA)", {
-  skip_if_not_installed("DBI")
-  skip_if_not_installed("RSQLite")
-
-  tmp <- withr::local_tempdir()
-  db <- file.path(tmp, "tfidf_pad.sqlite")
-  g <- make_extra_cache_graph()
-
-  # idf_vector has 1 value but vocab has 3 terms → pad with NA
-  mock_model <- list(
+test_that("export_to_sqlite pads idf_vector shorter than vocab with NA", {
+  # 1 idf value, 3-term vocab → padded to 3 rows
+  rows <- tfidf_vocab_rows(list(
     vocab = data.frame(
       term = c("x", "y", "z"),
       doc_count = c(3L, 2L, 1L),
@@ -271,37 +209,15 @@ test_that("export_to_sqlite handles shorter idf_vector (pads with NA)", {
     tfidf = list(idf_vector = c(2.0)),
     vectorizer = NULL,
     embeddings = list()
-  )
-  igraph::graph_attr(g, "embed_model") <- mock_model
-
-  expect_no_error(export_to_sqlite(g, db))
-
-  con <- DBI::dbConnect(RSQLite::SQLite(), db)
-  on.exit(DBI::dbDisconnect(con), add = TRUE)
-
-  vocab_rows <- DBI::dbGetQuery(con, "SELECT * FROM tfidf_vocab")
-  expect_equal(nrow(vocab_rows), 3L)
+  ))
+  expect_equal(nrow(rows), 3L)
 })
 
 # ---- .upsert_tfidf_vocab: skipped when not a list -------------------
 
 test_that("export_to_sqlite skips tfidf_vocab when embed_model is not a list", {
-  skip_if_not_installed("DBI")
-  skip_if_not_installed("RSQLite")
-
-  tmp <- withr::local_tempdir()
-  db <- file.path(tmp, "tfidf_skip.sqlite")
-  g <- make_extra_cache_graph()
-
-  igraph::graph_attr(g, "embed_model") <- "not_a_list"
-
-  expect_no_error(export_to_sqlite(g, db))
-
-  con <- DBI::dbConnect(RSQLite::SQLite(), db)
-  on.exit(DBI::dbDisconnect(con), add = TRUE)
-
-  vocab_rows <- DBI::dbGetQuery(con, "SELECT * FROM tfidf_vocab")
-  expect_equal(nrow(vocab_rows), 0L)
+  rows <- tfidf_vocab_rows("not_a_list")
+  expect_equal(nrow(rows), 0L)
 })
 
 # ---- .validate_cache_version: version mismatch warning --------------

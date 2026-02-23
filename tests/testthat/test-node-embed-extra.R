@@ -6,29 +6,21 @@ skip_if_not_installed("igraph")
 
 # ---- .text_hash -------------------------------------------------------
 
-test_that(".text_hash returns a non-empty character string", {
-  result <- rrlmgraph:::.text_hash("hello world")
-  expect_type(result, "character")
-  expect_length(result, 1L)
-  expect_gt(nchar(result), 0L)
+test_that(".text_hash returns a non-empty character(1) for normal and empty inputs", {
+  for (txt in list("hello world", "")) {
+    h <- rrlmgraph:::.text_hash(txt)
+    expect_type(h, "character")
+    expect_length(h, 1L)
+  }
+  expect_gt(nchar(rrlmgraph:::.text_hash("hello world")), 0L)
 })
 
-test_that(".text_hash returns different values for different texts", {
-  h1 <- rrlmgraph:::.text_hash("hello")
-  h2 <- rrlmgraph:::.text_hash("world")
-  expect_false(identical(h1, h2))
-})
-
-test_that(".text_hash returns the same value for the same text", {
-  h1 <- rrlmgraph:::.text_hash("same text here")
-  h2 <- rrlmgraph:::.text_hash("same text here")
-  expect_equal(h1, h2)
-})
-
-test_that(".text_hash handles empty string", {
-  result <- rrlmgraph:::.text_hash("")
-  expect_type(result, "character")
-  expect_length(result, 1L)
+test_that(".text_hash is deterministic and input-sensitive", {
+  expect_equal(rrlmgraph:::.text_hash("abc"), rrlmgraph:::.text_hash("abc"))
+  expect_false(identical(
+    rrlmgraph:::.text_hash("hello"),
+    rrlmgraph:::.text_hash("world")
+  ))
 })
 
 # ---- .resolve_embed_cache --------------------------------------------

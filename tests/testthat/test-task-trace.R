@@ -408,6 +408,21 @@ test_that("update_task_weights skips malformed JSONL entries", {
 
 # ---- update_task_polarity input validation --------------------------
 
+# Shared context fixture for polarity tests
+make_tt_ctx <- function(nodes = c("pkg::load_data")) {
+  structure(
+    list(
+      nodes = nodes,
+      context_string = "test",
+      tokens_used = 1L,
+      budget_tokens = 100L,
+      seed_node = nodes[[1L]],
+      relevance_scores = setNames(rep(1.0, length(nodes)), nodes)
+    ),
+    class = c("rrlm_context", "list")
+  )
+}
+
 test_that("update_task_polarity errors on non-rrlm_context", {
   g <- make_tt_graph()
   expect_error(
@@ -418,19 +433,8 @@ test_that("update_task_polarity errors on non-rrlm_context", {
 
 test_that("update_task_polarity errors on polarity out of range", {
   g <- make_tt_graph()
-  ctx <- structure(
-    list(
-      nodes = c("pkg::load_data"),
-      context_string = "test",
-      tokens_used = 1L,
-      budget_tokens = 100L,
-      seed_node = "pkg::load_data",
-      relevance_scores = c("pkg::load_data" = 1.0)
-    ),
-    class = c("rrlm_context", "list")
-  )
   expect_error(
-    update_task_polarity(g, context = ctx, polarity = 1.5),
+    update_task_polarity(g, context = make_tt_ctx(), polarity = 1.5),
     regexp = "polarity"
   )
 })
@@ -459,17 +463,7 @@ test_that("update_task_polarity handles blank and malformed trace lines", {
     trace_file
   )
 
-  ctx <- structure(
-    list(
-      nodes = c("pkg::load_data"),
-      context_string = "test",
-      tokens_used = 1L,
-      budget_tokens = 100L,
-      seed_node = "pkg::load_data",
-      relevance_scores = c("pkg::load_data" = 1.0)
-    ),
-    class = c("rrlm_context", "list")
-  )
+  ctx <- make_tt_ctx()
   # Should not error; blank line and malformed line are skipped
   expect_no_error(
     update_task_polarity(g, context = ctx, polarity = 0.8)
