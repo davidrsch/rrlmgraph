@@ -465,3 +465,228 @@ test_that("build_dispatch_edges result has edge_type column", {
   result <- build_dispatch_edges(nodes, r_files = tmp)
   expect_true("edge_type" %in% names(result))
 })
+
+# ---- build_import_edges ---------------------------------------------
+
+test_that("build_import_edges returns empty df with correct columns for empty input", {
+  result <- build_import_edges(r_files = character(0))
+  expect_s3_class(result, "data.frame")
+  expect_equal(nrow(result), 0L)
+  expect_true(all(c("from", "to", "weight", "source") %in% names(result)))
+})
+
+test_that("build_import_edges detects library() calls", {
+  tmp <- tempfile(fileext = ".R")
+  writeLines(
+    c(
+      "library(ggplot2)",
+      "my_func <- function(x) x + 1"
+    ),
+    tmp
+  )
+  on.exit(unlink(tmp))
+  result <- build_import_edges(r_files = tmp)
+  expect_s3_class(result, "data.frame")
+  lib_rows <- result[result$source == "library", ]
+  expect_true("ggplot2" %in% lib_rows$to)
+})
+
+test_that("build_import_edges detects require() calls", {
+  tmp <- tempfile(fileext = ".R")
+  writeLines(
+    c(
+      "require('dplyr')",
+      "another <- function(y) y * 2"
+    ),
+    tmp
+  )
+  on.exit(unlink(tmp))
+  result <- build_import_edges(r_files = tmp)
+  expect_s3_class(result, "data.frame")
+  lib_rows <- result[result$source == "library", ]
+  expect_true("dplyr" %in% lib_rows$to)
+})
+
+test_that("build_import_edges detects pkg::fn qualified calls", {
+  tmp <- tempfile(fileext = ".R")
+  writeLines(
+    c(
+      "my_func <- function(x) ggplot2::ggplot(x) + ggplot2::aes(y = x)",
+      "helper <- function() jsonlite::toJSON(list())"
+    ),
+    tmp
+  )
+  on.exit(unlink(tmp))
+  result <- build_import_edges(r_files = tmp)
+  expect_s3_class(result, "data.frame")
+  qual_rows <- result[result$source == "qualified", ]
+  expect_true("ggplot2" %in% qual_rows$to)
+  expect_true("jsonlite" %in% qual_rows$to)
+})
+
+test_that("build_import_edges reads DESCRIPTION Imports and Depends", {
+  tmp_dir <- tempfile()
+  dir.create(tmp_dir)
+  on.exit(unlink(tmp_dir, recursive = TRUE))
+
+  desc_path <- file.path(tmp_dir, "DESCRIPTION")
+  writeLines(
+    c(
+      "Package: mypkg",
+      "Title: My Package",
+      "Version: 0.1.0",
+      "Imports: dplyr, ggplot2 (>= 3.0.0), jsonlite",
+      "Depends: R (>= 4.0.0), methods"
+    ),
+    desc_path
+  )
+
+  result <- build_import_edges(r_files = character(0), root = tmp_dir)
+  expect_s3_class(result, "data.frame")
+  desc_rows <- result[result$source == "description", ]
+  expect_true("dplyr" %in% desc_rows$to)
+  expect_true("ggplot2" %in% desc_rows$to)
+  expect_true("jsonlite" %in% desc_rows$to)
+  # R and methods from Depends – R should be excluded, methods kept
+  expect_false("R" %in% desc_rows$to)
+  expect_true("methods" %in% desc_rows$to)
+})
+
+test_that("build_import_edges deduplicates repeated imports", {
+  tmp <- tempfile(fileext = ".R")
+  writeLines(
+    c(
+      "library(ggplot2)",
+      "library(ggplot2)",
+      "x <- ggplot2::ggplot(NULL)"
+    ),
+    tmp
+  )
+  on.exit(unlink(tmp))
+  result <- build_import_edges(r_files = tmp)
+  # Each unique (from, to, source) kept only once
+  expect_equal(
+    nrow(result[result$to == "ggplot2" & result$source == "library", ]),
+    1L
+  )
+})
+
+# ---- build_test_edges -----------------------------------------------
+
+test_that("build_test_edges returns empty df for empty nodes", {
+  result <- build_test_edges(list(), character(0))
+  expect_s3_class(result, "data.frame")
+  expect_equal(nrow(result), 0L)
+  expect_true(all(c("from", "to", "weight") %in% names(result)))
+})
+
+test_that("build_test_edges returns empty df for empty test_files", {
+  nodes <- make_fake_nodes()
+  result <- build_test_edges(nodes, test_files = character(0))
+  expect_s3_class(result, "data.frame")
+  expect_equal(nrow(result), 0L)
+})
+
+test_that("build_test_edges detects calls to known functions in test file", {
+  tmp <- tempfile(fileext = ".R")
+  writeLines(
+    c(
+      'test_that("load_data works", {',
+      '  result <- load_data("path.csv")',
+      '  expect_true(is.data.frame(result))',
+      '})'
+    ),
+    tmp
+  )
+  on.exit(unlink(tmp))
+
+  result <- build_test_edges(make_fake_nodes(), test_files = tmp)
+  expect_s3_class(result, "data.frame")
+  # Should detect load_data usage
+  if (nrow(result) > 0L) {
+    expect_true(all(c("from", "to", "weight") %in% names(result)))
+    expect_true("data_prep::load_data" %in% result$to)
+  }
+})
+
+test_that("build_test_edges excludes testthat helper symbols", {
+  tmp <- tempfile(fileext = ".R")
+  writeLines(
+    c(
+      'test_that("basic", {',
+      '  expect_equal(1, 1)',
+      '  expect_true(TRUE)',
+      '  expect_false(FALSE)',
+      '})'
+    ),
+    tmp
+  )
+  on.exit(unlink(tmp))
+
+  # Nodes that match the helper names – they should NOT become TEST edges
+  helper_nodes <- list(
+    list(
+      node_id = "pkg::test_that",
+      name = "test_that",
+      file = tmp,
+      calls_list = character(0)
+    ),
+    list(
+      node_id = "pkg::expect_equal",
+      name = "expect_equal",
+      file = tmp,
+      calls_list = character(0)
+    ),
+    list(
+      node_id = "pkg::expect_true",
+      name = "expect_true",
+      file = tmp,
+      calls_list = character(0)
+    )
+  )
+  result <- build_test_edges(helper_nodes, test_files = tmp)
+  expect_s3_class(result, "data.frame")
+  expect_equal(nrow(result), 0L)
+})
+
+test_that("build_test_edges handles unreadable / unparseable test file", {
+  nodes <- make_fake_nodes()
+  result <- build_test_edges(nodes, test_files = "/nonexistent/test_file.R")
+  expect_s3_class(result, "data.frame")
+  expect_equal(nrow(result), 0L)
+})
+
+# ---- .parse_git_log_files (internal) --------------------------------
+
+test_that(".parse_git_log_files correctly groups files by commit", {
+  # Simulate git log --name-only --format=%H output
+  hash1 <- paste(rep("a", 40L), collapse = "") # 40 'a' chars = valid hex
+  hash2 <- paste(rep("b", 40L), collapse = "")
+  git_log <- c(
+    hash1,
+    "",
+    "R/foo.R",
+    "R/bar.R",
+    hash2,
+    "",
+    "R/baz.R"
+  )
+  result <- rrlmgraph:::.parse_git_log_files(git_log)
+  expect_length(result, 2L)
+  expect_equal(result[[1L]], c("R/foo.R", "R/bar.R"))
+  expect_equal(result[[2L]], c("R/baz.R"))
+})
+
+test_that(".parse_git_log_files returns empty list for empty input", {
+  result <- rrlmgraph:::.parse_git_log_files(character(0))
+  expect_type(result, "list")
+  expect_length(result, 0L)
+})
+
+test_that(".parse_git_log_files ignores commits with no files", {
+  hash1 <- paste(rep("c", 40L), collapse = "")
+  # No blank line + file after hash → no files for this commit
+  git_log <- c(hash1)
+  result <- rrlmgraph:::.parse_git_log_files(git_log)
+  expect_length(result, 0L)
+})

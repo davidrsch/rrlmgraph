@@ -145,3 +145,56 @@ test_that("output retains rrlm_graph class", {
   )
   expect_s3_class(g_out, "rrlm_graph")
 })
+
+# ---- new node addition (covers the extant-file → merge path) --------
+
+test_that("update_graph_incremental adds nodes from a new R file", {
+  tmp <- withr::local_tempdir()
+
+  # Create an R file with a function definition
+  new_file <- file.path(tmp, "new_fn.R")
+  writeLines(
+    c("new_function <- function(x) x * 2"),
+    new_file
+  )
+
+  g <- make_index_graph(project_root = tmp)
+  n_before <- igraph::vcount(g)
+
+  g_out <- suppressWarnings(
+    update_graph_incremental(
+      g,
+      changed_files = new_file,
+      embed_method = "tfidf"
+    )
+  )
+
+  # New node(s) should be added
+  expect_gt(igraph::vcount(g_out), n_before)
+  expect_true(any(grepl("new_function", igraph::V(g_out)$name)))
+})
+
+test_that("update_graph_incremental verbose=TRUE shows messages with new file", {
+  tmp <- withr::local_tempdir()
+
+  new_file <- file.path(tmp, "verbose_fn.R")
+  writeLines(
+    c("verbose_function <- function(a, b) a + b"),
+    new_file
+  )
+
+  g <- make_index_graph(project_root = tmp)
+
+  expect_no_error(
+    suppressMessages(
+      suppressWarnings(
+        update_graph_incremental(
+          g,
+          changed_files = new_file,
+          embed_method = "tfidf",
+          verbose = TRUE
+        )
+      )
+    )
+  )
+})
