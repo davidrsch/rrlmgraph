@@ -775,7 +775,7 @@ test_that(".make_function_vertex_df maps node fields to vertex columns", {
 test_that(".assemble_edges returns empty df when all edge dfs are empty", {
   vdf <- data.frame(name = c("a", "b"), stringsAsFactors = FALSE)
   result <- rrlmgraph:::.assemble_edges(
-    .empty_edge_df(),
+    rrlmgraph:::.empty_edge_df(),
     data.frame(
       from = character(0),
       to = character(0),
@@ -783,7 +783,7 @@ test_that(".assemble_edges returns empty df when all edge dfs are empty", {
       source = character(0),
       stringsAsFactors = FALSE
     ),
-    .empty_edge_df(),
+    rrlmgraph:::.empty_edge_df(),
     vdf
   )
   expect_s3_class(result, "data.frame")
@@ -808,7 +808,7 @@ test_that(".assemble_edges labels CALLS edges and filters unknown endpoints", {
   result <- rrlmgraph:::.assemble_edges(
     call_df,
     import_df,
-    .empty_edge_df(),
+    rrlmgraph:::.empty_edge_df(),
     vdf
   )
   expect_true("CALLS" %in% result$edge_type)
@@ -826,9 +826,9 @@ test_that(".assemble_edges includes IMPORTS edges for known endpoints", {
     stringsAsFactors = FALSE
   )
   result <- rrlmgraph:::.assemble_edges(
-    .empty_edge_df(),
+    rrlmgraph:::.empty_edge_df(),
     import_df,
-    .empty_edge_df(),
+    rrlmgraph:::.empty_edge_df(),
     vdf
   )
   expect_true("IMPORTS" %in% result$edge_type)
