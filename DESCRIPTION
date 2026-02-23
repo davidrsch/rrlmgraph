@@ -29,10 +29,12 @@ Imports:
     httr2,
     igraph,
     Matrix,
+    methods,
     rlang,
     RSQLite,
     text2vec,
-    tools
+    tools,
+    utils
 Suggests:
     covr,
     digest,
