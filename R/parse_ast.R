@@ -197,7 +197,7 @@ extract_function_nodes <- function(r_files) {
   # Include the immediate parent directory in the stem to disambiguate
   # files with the same name in different directories (e.g. R/utils.R vs
   # tests/utils.R), which would otherwise produce colliding node_ids.
-  dir_part  <- basename(dirname(as.character(file_path)))
+  dir_part <- basename(dirname(as.character(file_path)))
   stem_part <- as.character(fs::path_ext_remove(fs::path_file(file_path)))
   file_stem <- if (nzchar(dir_part) && dir_part != ".") {
     paste0(dir_part, "/", stem_part)
@@ -541,7 +541,8 @@ find_calls_in_body <- function(fn_body) {
     }
 
     # Walk all elements including e[[1L]] so that pkg::fn(arg) is found
-    lapply(as.list(e), walk)  }
+    lapply(as.list(e), walk)
+  }
 
   walk(expr)
   unique(results)

@@ -1,6 +1,6 @@
 # tests/testthat/test-task-trace.R
 # Unit tests for log_task_trace(), update_task_weights(),
-# update_task_polarity()
+# and update_task_polarity().
 # rrlmgraph issue #18 acceptance criteria.
 
 skip_if_not_installed("igraph")
@@ -496,8 +496,8 @@ test_that(".tt_session_id returns non-empty string when env var absent", {
 # ---- update_task_weights — SQLite source (issue #67) ----------------
 
 .make_sqlite_with_traces <- function(sqlite_path, rows) {
-  skip_if_not_installed("DBI")
-  skip_if_not_installed("RSQLite")
+  testthat::skip_if_not_installed("DBI")
+  testthat::skip_if_not_installed("RSQLite")
   con <- DBI::dbConnect(RSQLite::SQLite(), sqlite_path)
   on.exit(DBI::dbDisconnect(con))
   DBI::dbExecute(
@@ -516,7 +516,13 @@ test_that(".tt_session_id returns non-empty string when env var absent", {
       con,
       "INSERT INTO task_traces (query, nodes_json, polarity, session_id, created_at)
        VALUES (?, ?, ?, ?, ?)",
-      params = list(r$query, r$nodes_json, r$polarity, r$session_id, r$created_at)
+      params = list(
+        r$query,
+        r$nodes_json,
+        r$polarity,
+        r$session_id,
+        r$created_at
+      )
     )
   }
   invisible(sqlite_path)
@@ -528,18 +534,24 @@ test_that("update_task_weights reads from SQLite when sqlite_path provided", {
   skip_if_not_installed("jsonlite")
 
   tmp <- withr::local_tempdir()
-  g   <- make_tt_graph(project_root = tmp)
+  g <- make_tt_graph(project_root = tmp)
 
   sqlite_path <- file.path(tmp, "graph.sqlite")
-  .make_sqlite_with_traces(sqlite_path, list(
+  .make_sqlite_with_traces(
+    sqlite_path,
     list(
-      query      = "How does load_data work?",
-      nodes_json = jsonlite::toJSON(list("pkg::load_data"), auto_unbox = FALSE),
-      polarity   = 1.0,
-      session_id = "mcp-s1",
-      created_at = "2024-01-01T00:00:00Z"
+      list(
+        query = "How does load_data work?",
+        nodes_json = jsonlite::toJSON(
+          list("pkg::load_data"),
+          auto_unbox = FALSE
+        ),
+        polarity = 1.0,
+        session_id = "mcp-s1",
+        created_at = "2024-01-01T00:00:00Z"
+      )
     )
-  ))
+  )
 
   g2 <- update_task_weights(g, sqlite_path = sqlite_path)
 
@@ -558,7 +570,7 @@ test_that("update_task_weights merges JSONL and SQLite traces without duplicates
   skip_if_not_installed("jsonlite")
 
   tmp <- withr::local_tempdir()
-  g   <- make_tt_graph(project_root = tmp)
+  g <- make_tt_graph(project_root = tmp)
 
   # Write a JSONL trace for pkg::clean
   trace_dir <- file.path(tmp, ".rrlmgraph")
@@ -567,10 +579,10 @@ test_that("update_task_weights merges JSONL and SQLite traces without duplicates
   writeLines(
     as.character(jsonlite::toJSON(
       list(
-        timestamp  = "2024-01-02T00:00:00Z",
-        query      = "clean data",
-        nodes      = list("pkg::clean"),
-        polarity   = 0.8,
+        timestamp = "2024-01-02T00:00:00Z",
+        query = "clean data",
+        nodes = list("pkg::clean"),
+        polarity = 0.8,
         session_id = "r-s1"
       ),
       auto_unbox = TRUE
@@ -580,15 +592,18 @@ test_that("update_task_weights merges JSONL and SQLite traces without duplicates
 
   # SQLite trace for pkg::model (different session + timestamp => not a dup)
   sqlite_path <- file.path(trace_dir, "graph.sqlite")
-  .make_sqlite_with_traces(sqlite_path, list(
+  .make_sqlite_with_traces(
+    sqlite_path,
     list(
-      query      = "run model",
-      nodes_json = jsonlite::toJSON(list("pkg::model"), auto_unbox = FALSE),
-      polarity   = 0.9,
-      session_id = "mcp-s2",
-      created_at = "2024-01-03T00:00:00Z"
+      list(
+        query = "run model",
+        nodes_json = jsonlite::toJSON(list("pkg::model"), auto_unbox = FALSE),
+        polarity = 0.9,
+        session_id = "mcp-s2",
+        created_at = "2024-01-03T00:00:00Z"
+      )
     )
-  ))
+  )
 
   g2 <- update_task_weights(g, sqlite_path = sqlite_path)
 
@@ -607,12 +622,13 @@ test_that("update_task_weights skips SQLite when sqlite_path = NA", {
   skip_if_not_installed("jsonlite")
 
   tmp <- withr::local_tempdir()
-  g   <- make_tt_graph(project_root = tmp)
+  g <- make_tt_graph(project_root = tmp)
 
   # No SQLite, no JSONL — should fall through to EMA path without error
-  g2 <- update_task_weights(g,
+  g2 <- update_task_weights(
+    g,
     useful_nodes = c("pkg::load_data"),
-    sqlite_path  = NA_character_
+    sqlite_path = NA_character_
   )
   expect_s3_class(g2, "igraph")
   # EMA should have boosted pkg::load_data slightly

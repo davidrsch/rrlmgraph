@@ -172,7 +172,7 @@ test_that("plot.rrlm_graph handles graph smaller than n_hubs gracefully", {
   verts <- data.frame(
     name = node_names,
     node_type = node_type,
-    pagerank = seq_len(length(node_names)) / length(node_names),
+    pagerank = seq_along(node_names) / length(node_names),
     stringsAsFactors = FALSE
   )
   if (add_edges && length(node_names) >= 2L) {

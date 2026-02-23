@@ -72,7 +72,7 @@ make_fake_nodes <- function() {
       file = "/fake/R/benchmark.R",
       calls_list = c("mean"),
       signature = "calculate_mrr(ranked_results)",
-      body_text = "rr <- vapply(ranked_results, function(r) { first_hit <- which(as.logical(r))[1L]; if (is.na(first_hit)) 0 else 1 / first_hit }, numeric(1)); mean(rr)",
+      body_text = "rr <- vapply(ranked_results, function(r) { first_hit <- which(as.logical(r))[1L]; if (is.na(first_hit)) 0 else 1 / first_hit }, numeric(1)); mean(rr)", # nolint: line_length_linter.
       roxygen_text = "#' Calculate MRR"
     )
   )

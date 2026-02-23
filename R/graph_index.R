@@ -57,10 +57,16 @@ update_graph_incremental <- function(
 
   # ---------- 2. Remove nodes from changed files ------------------------
   all_files <- igraph::vertex_attr(graph, "file")
-  changed_files_norm <- normalizePath(changed_files, winslash = "/",
-                                      mustWork = FALSE)
-  all_files_norm <- normalizePath(all_files %||% character(0),
-                                  winslash = "/", mustWork = FALSE)
+  changed_files_norm <- normalizePath(
+    changed_files,
+    winslash = "/",
+    mustWork = FALSE
+  )
+  all_files_norm <- normalizePath(
+    all_files %||% character(0),
+    winslash = "/",
+    mustWork = FALSE
+  )
 
   stale_idx <- which(all_files_norm %in% changed_files_norm)
 
@@ -102,7 +108,8 @@ update_graph_incremental <- function(
 
   # Keep only edges where at least one endpoint is a new node
   new_node_ids <- vapply(new_nodes, `[[`, character(1), "node_id")
-  is_new_edge <- new_call_edges$from %in% new_node_ids |
+  is_new_edge <- new_call_edges$from %in%
+    new_node_ids |
     new_call_edges$to %in% new_node_ids
   new_call_edges <- new_call_edges[is_new_edge, , drop = FALSE]
 
@@ -115,8 +122,14 @@ update_graph_incremental <- function(
     "tfidf"
 
   if (verbose) {
-    cli::cli_inform(paste0("Embedding ", length(new_nodes), " new node(s) ",
-                           "using method '", method, "'."))
+    cli::cli_inform(paste0(
+      "Embedding ",
+      length(new_nodes),
+      " new node(s) ",
+      "using method '",
+      method,
+      "'."
+    ))
   }
 
   # Gather existing corpus so incremental embedding is consistent
@@ -126,18 +139,22 @@ update_graph_incremental <- function(
   embed_result <- embed_nodes(
     new_nodes,
     method = method,
-    existing_corpus = if (length(existing_corpus) > 0L) existing_corpus else NULL
+    existing_corpus = if (length(existing_corpus) > 0L) {
+      existing_corpus
+    } else {
+      NULL
+    }
   )
 
   # ---------- 6. Merge new vertices into graph --------------------------
   new_v_df <- .nodes_to_vertex_df(new_nodes, embed_result)
-  new_e_df  <- rbind(new_call_edges, new_import_edges)
+  new_e_df <- rbind(new_call_edges, new_import_edges)
 
   # Add new vertices
   graph <- igraph::add_vertices(
     graph,
-    nv     = nrow(new_v_df),
-    attr   = as.list(new_v_df)
+    nv = nrow(new_v_df),
+    attr = as.list(new_v_df)
   )
 
   # Add new edges (filter to node_ids present in graph)
@@ -148,17 +165,25 @@ update_graph_incremental <- function(
 
     if (nrow(new_e_df) > 0L) {
       from_idx <- match(new_e_df$from, g_names)
-      to_idx   <- match(new_e_df$to, g_names)
+      to_idx <- match(new_e_df$to, g_names)
       edge_vec <- as.vector(rbind(from_idx, to_idx))
-      graph <- igraph::add_edges(graph, edge_vec,
-                                 weight = new_e_df$weight %||%
-                                   rep(1, nrow(new_e_df)))
+      graph <- igraph::add_edges(
+        graph,
+        edge_vec,
+        weight = new_e_df$weight %||%
+          rep(1, nrow(new_e_df))
+      )
     }
   }
 
   if (verbose) {
-    cli::cli_inform(paste0("Graph now has ", igraph::vcount(graph),
-                           " nodes, ", igraph::ecount(graph), " edges."))
+    cli::cli_inform(paste0(
+      "Graph now has ",
+      igraph::vcount(graph),
+      " nodes, ",
+      igraph::ecount(graph),
+      " edges."
+    ))
   }
 
   # ---------- 7. Recompute PageRank -------------------------------------
@@ -177,7 +202,9 @@ update_graph_incremental <- function(
   if (igraph::vcount(graph) == 0L) {
     return(graph)
   }
-  if (verbose) cli::cli_inform("Recomputing PageRank.")
+  if (verbose) {
+    cli::cli_inform("Recomputing PageRank.")
+  }
   pr <- igraph::page_rank(graph, directed = TRUE)$vector
   igraph::V(graph)$pagerank <- as.numeric(pr)
   graph
@@ -187,7 +214,9 @@ update_graph_incremental <- function(
 .maybe_save_cache <- function(graph, verbose = FALSE) {
   root <- igraph::graph_attr(graph, "project_root") %||% NULL
   if (!is.null(root) && nchar(root) > 0L) {
-    if (verbose) cli::cli_inform("Persisting cache to {.path {root}}.")
+    if (verbose) {
+      cli::cli_inform("Persisting cache to {.path {root}}.")
+    }
     tryCatch(
       save_graph_cache(graph),
       error = function(e) {
@@ -205,16 +234,16 @@ update_graph_incremental <- function(
   if (igraph::vcount(graph) == 0L) {
     return(list())
   }
-  names_v  <- igraph::V(graph)$name
-  calls_v  <- igraph::vertex_attr(graph, "calls_list")
-  pkg_v    <- igraph::vertex_attr(graph, "pkg")
+  names_v <- igraph::V(graph)$name
+  calls_v <- igraph::vertex_attr(graph, "calls_list")
+  pkg_v <- igraph::vertex_attr(graph, "pkg")
 
   lapply(seq_along(names_v), function(i) {
     list(
-      node_id    = names_v[[i]],
-      name       = sub("^.*::", "", names_v[[i]]),
+      node_id = names_v[[i]],
+      name = sub("^.*::", "", names_v[[i]]),
       calls_list = calls_v[[i]] %||% character(0),
-      pkg        = pkg_v[[i]] %||% NA_character_
+      pkg = pkg_v[[i]] %||% NA_character_
     )
   })
 }
@@ -223,16 +252,24 @@ update_graph_incremental <- function(
 #' @keywords internal
 .nodes_to_vertex_df <- function(nodes, embed_result) {
   n <- length(nodes)
-  node_ids  <- vapply(nodes, `[[`, character(1), "node_id")
-  node_nm   <- vapply(nodes, `[[`, character(1), "name")
-  node_type <- vapply(nodes, function(nd) nd$node_type  %||% "function",
-                      character(1))
-  node_file <- vapply(nodes, function(nd) nd$file       %||% NA_character_,
-                      character(1))
-  node_pkg  <- vapply(nodes, function(nd) nd$pkg        %||% NA_character_,
-                      character(1))
-  node_doc  <- vapply(nodes, function(nd) nd$doc        %||% "",
-                      character(1))
+  node_ids <- vapply(nodes, `[[`, character(1), "node_id")
+  node_nm <- vapply(nodes, `[[`, character(1), "name")
+  node_type <- vapply(
+    nodes,
+    function(nd) nd$node_type %||% "function",
+    character(1)
+  )
+  node_file <- vapply(
+    nodes,
+    function(nd) nd$file %||% NA_character_,
+    character(1)
+  )
+  node_pkg <- vapply(
+    nodes,
+    function(nd) nd$pkg %||% NA_character_,
+    character(1)
+  )
+  node_doc <- vapply(nodes, function(nd) nd$doc %||% "", character(1))
 
   # Embeddings: list-column
   mat <- embed_result$matrix
@@ -242,17 +279,17 @@ update_graph_incremental <- function(
     rep(list(NULL), n)
   }
 
-  data.frame(
-    name              = node_ids,
-    label             = node_nm,
-    node_type         = node_type,
-    file              = node_file,
-    pkg               = node_pkg,
-    doc               = node_doc,
+  df <- data.frame(
+    name = node_ids,
+    label = node_nm,
+    node_type = node_type,
+    file = node_file,
+    pkg = node_pkg,
+    doc = node_doc,
     task_trace_weight = rep(0.5, n),
-    pagerank          = rep(0, n),
-    stringsAsFactors  = FALSE
-  ) -> df
+    pagerank = rep(0, n),
+    stringsAsFactors = FALSE
+  )
 
   # Attach embeddings as list-column
   df$embedding <- emb_list
