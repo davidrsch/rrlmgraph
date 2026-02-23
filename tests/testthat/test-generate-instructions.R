@@ -226,7 +226,8 @@ test_that(".gi_project_type respects explicit Type field in DESCRIPTION", {
     file.path(tmp, "DESCRIPTION")
   )
   result <- rrlmgraph:::.gi_project_type(tmp)
-  expect_equal(result, "Package")
+  # read.dcf() returns a named vector; compare using unname()
+  expect_equal(unname(result), "Package")
 })
 
 # ---- .gi_conventions internal ----------------------------------------
