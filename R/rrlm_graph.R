@@ -219,7 +219,7 @@ plot.rrlm_graph <- function(
   # - double-click resets to the original fit-to-screen view
   # All implemented by manipulating the SVG viewBox -- no external libraries.
   project_nm <- igraph::graph_attr(g, "project_name") %||% "rrlm_graph"
-  dot    <- .rrlmgraph_to_dot(sub, k, project_nm, layout)
+  dot <- .rrlmgraph_to_dot(sub, k, project_nm, layout)
   widget <- DiagrammeR::grViz(dot, width = "100%", height = "100%")
   widget <- htmlwidgets::onRender(widget, .rrlmgraph_pan_zoom_js())
 
@@ -311,7 +311,7 @@ plot.rrlm_graph <- function(
   bare_labels <- vapply(
     names_sub,
     function(nm) {
-      lbl <- tail(strsplit(nm, "::", fixed = TRUE)[[1L]], 1L)
+      lbl <- utils::tail(strsplit(nm, "::", fixed = TRUE)[[1L]], 1L)
       lbl <- gsub("\\", "\\\\", lbl, fixed = TRUE)
       gsub('"', '\\"', lbl, fixed = TRUE)
     },

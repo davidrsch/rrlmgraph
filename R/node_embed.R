@@ -248,7 +248,8 @@ cosine_similarity <- function(a, b) {
       if (
         inherits(d, "ddiMatrix") ||
           inherits(d, "Diagonal") ||
-          isVirtualClass("diagonalMatrix") && is(d, "diagonalMatrix")
+          methods::isVirtualClass("diagonalMatrix") &&
+            methods::is(d, "diagonalMatrix")
       ) {
         as.numeric(Matrix::diag(d))
       } else if (is.numeric(d)) {

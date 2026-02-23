@@ -164,7 +164,7 @@ generate_instructions <- function(
 
     ord <- order(pr_num, decreasing = TRUE)
     ord <- ord[fn_mask[ord]]
-    ord <- head(ord, n)
+    ord <- utils::head(ord, n)
 
     data.frame(
         name = nms[ord],
