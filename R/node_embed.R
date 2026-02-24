@@ -134,7 +134,21 @@ embed_query <- function(query, model, method = c("tfidf", "ollama", "openai")) {
         progressbar = FALSE
       )
       dtm <- text2vec::create_dtm(tokens, model$vectorizer)
-      tfidf_m <- model$tfidf$transform(dtm)
+      tfidf_m <- tryCatch(
+        model$tfidf$transform(dtm),
+        error = function(e) {
+          # Fallback: apply pre-extracted IDF weights directly.
+          # model$idf_weights is a plain numeric vector saved by .fit_tfidf()
+          # so it survives igraph round-trips even when the R6 TfIdf object
+          # fails to deserialise cleanly (e.g. missing private fields).
+          idf <- model$idf_weights
+          if (is.numeric(idf) && length(idf) == ncol(dtm)) {
+            dtm %*% Matrix::Diagonal(x = idf)
+          } else {
+            dtm # last-resort: raw TF, better than nothing
+          }
+        }
+      )
       as.numeric(tfidf_m[1L, , drop = TRUE])
     },
     ollama = {
