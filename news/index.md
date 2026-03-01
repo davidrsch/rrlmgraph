@@ -1,5 +1,18 @@
 # Changelog
 
+## rrlmgraph 0.1.1
+
+#### Bug fixes
+
+- [`extract_function_nodes()`](https://davidrsch.github.io/rrlmgraph/reference/extract_function_nodes.md)
+  / `.make_node()`: node IDs now include the parent directory name as a
+  prefix (e.g. `"R/utils::fn"` instead of `"utils::fn"`), matching the
+  seed-node format used by the benchmark task definitions. Previously,
+  [`query_context()`](https://davidrsch.github.io/rrlmgraph/reference/query_context.md)
+  would abort with “seed_node not in graph” for any benchmark task,
+  leaving `retrieved_n = 0` for the `rrlmgraph_tfidf` strategy on every
+  trial ([\#78](https://github.com/davidrsch/rrlmgraph/issues/78)).
+
 ## rrlmgraph 0.1.0
 
 First release.

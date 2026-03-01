@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">rrlmgraph</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.1.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.1.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -32,6 +32,14 @@
       <small>Source: <a href="https://github.com/davidrsch/rrlmgraph/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.1.1" id="rrlmgraph-011">rrlmgraph 0.1.1<a class="anchor" aria-label="anchor" href="#rrlmgraph-011"></a></h2>
+<div class="section level4">
+<h4 id="bug-fixes-0-1-1">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-1-1"></a></h4>
+<ul><li>
+<code><a href="../reference/extract_function_nodes.html">extract_function_nodes()</a></code> / <code>.make_node()</code>: node IDs now include the parent directory name as a prefix (e.g. <code>"R/utils::fn"</code> instead of <code>"utils::fn"</code>), matching the seed-node format used by the benchmark task definitions. Previously, <code><a href="../reference/query_context.html">query_context()</a></code> would abort with “seed_node not in graph” for any benchmark task, leaving <code>retrieved_n = 0</code> for the <code>rrlmgraph_tfidf</code> strategy on every trial (<a href="https://github.com/davidrsch/rrlmgraph/issues/78" class="external-link">#78</a>).</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.1.0" id="rrlmgraph-010">rrlmgraph 0.1.0<a class="anchor" aria-label="anchor" href="#rrlmgraph-010"></a></h2>
 <p>First release.</p>
