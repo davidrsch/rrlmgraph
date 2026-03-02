@@ -1,4 +1,23 @@
-﻿# rrlmgraph 0.1.1
+﻿# rrlmgraph 0.1.2
+
+### New vignettes
+
+- **LLM Chat with Context** (`vignettes/llm-chat.Rmd`): shows real model
+  responses loaded from a pre-captured RDS — no API key required to read
+  the vignette.
+- **Benchmark Results** (`vignettes/benchmark-results.Rmd`): compares the
+  eight context-retrieval strategies from **rrlmgraph-bench** with summary
+  tables and a score plot.
+- **MCP Server Integration** (`vignettes/mcp-integration.Rmd`): narrative
+  guide and VS Code configuration for the **rrlmgraph-mcp** companion.
+
+### Infrastructure
+
+- Added `.github/workflows/precompute-vignettes.yml` (`workflow_dispatch`):
+  calls GitHub Models once, serialises LLM responses and benchmark statistics
+  to `vignettes/precomputed/`, then triggers a pkgdown site rebuild.
+
+# rrlmgraph 0.1.1
 
 ### Bug fixes
 
