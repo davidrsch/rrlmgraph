@@ -1,0 +1,149 @@
+---
+title: "Benchmark Results"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Benchmark Results}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+    collapse = TRUE,
+    comment = "#>",
+    fig.width = 8,
+    fig.height = 5
+)
+```
+
+This vignette compares eight context-retrieval strategies implemented in
+**rrlmgraph-bench** on a suite of realistic R-project tasks.  Results
+were pre-computed by the `run-benchmark` GitHub Actions workflow in
+[rrlmgraph-bench](https://github.com/davidrsch/rrlmgraph-bench) and
+summarised here — no benchmark re-run is needed to render this page.
+
+## Strategies
+
+| Strategy | Description |
+|----------|-------------|
+| `full_files` | Entire source files (baseline) |
+| `bm25` | BM25 keyword retrieval |
+| `tfidf` | TF-IDF cosine similarity |
+| `graph_bfs` | Unweighted BFS from top-scoring nodes |
+| `graph_pagerank` | PageRank-weighted BFS |
+| `graph_combined` | PageRank + TF-IDF hybrid |
+| `rrlmgraph` | Full rrlmgraph relevance pipeline |
+| `rrlmgraph_mcp` | rrlmgraph via MCP server subprocess |
+
+## Results
+
+```{r load-summary}
+# When a vignette is built, cwd = vignettes/ so this relative path works
+# both during R CMD check and pkgdown site builds.
+precomputed_path <- file.path("precomputed", "benchmark_summary.rds")
+if (file.exists(precomputed_path)) {
+    bench <- readRDS(precomputed_path)
+} else {
+    bench <- NULL
+}
+```
+
+```{r show-summary, results = "asis"}
+if (is.null(bench)) {
+    cat(
+        "> **Note:** Benchmark results not yet available.\n",
+        "> Trigger the `run-benchmark` workflow in",
+        "[rrlmgraph-bench](https://github.com/davidrsch/rrlmgraph-bench/actions)",
+        "to generate data, then run the `precompute-vignettes` workflow here.\n"
+    )
+}
+```
+
+```{r summary-table, eval = !is.null(bench)}
+stats <- bench$stats
+knitr::kable(
+    stats$summary[, c(
+        "strategy", "mean_score", "sd_score", "ci_lower", "ci_upper",
+        "mean_tokens", "hallucination_rate", "n_obs"
+    )],
+    digits = 3,
+    caption = paste0(
+        "Mean score ± 95 % CI per strategy.  ",
+        "Captured: ", bench$meta$generated_at, ".  ",
+        "rrlmgraph v", bench$meta$rrlmgraph_version, " / ",
+        "rrlmgraphbench v", bench$meta$rrlmgraphbench_version, "."
+    ),
+    col.names = c(
+        "Strategy", "Mean score", "SD", "CI lower", "CI upper",
+        "Mean tokens", "Hallucination rate", "N"
+    )
+)
+```
+
+```{r score-plot, eval = !is.null(bench), fig.cap = "Mean score ± 95 % CI by strategy.  Dashed line = full_files baseline."}
+stats <- bench$stats
+df <- stats$summary
+df$strategy <- factor(df$strategy, levels = df$strategy[order(df$mean_score)])
+baseline <- df$mean_score[df$strategy == "full_files"]
+
+op <- par(mar = c(5, 10, 3, 2))
+plot(
+    df$mean_score,
+    seq_len(nrow(df)),
+    xlim = c(0, 1),
+    xlab = "Mean score",
+    ylab = "",
+    yaxt = "n",
+    pch = 16,
+    col = ifelse(df$strategy == "rrlmgraph", "steelblue",
+        ifelse(df$strategy == "rrlmgraph_mcp", "seagreen", "grey40")
+    ),
+    main = "Strategy comparison"
+)
+axis(2, at = seq_len(nrow(df)), labels = df$strategy, las = 1, cex.axis = 0.85)
+abline(v = baseline, lty = 2, col = "grey60")
+arrows(
+    df$ci_lower, seq_len(nrow(df)),
+    df$ci_upper, seq_len(nrow(df)),
+    length = 0.05, angle = 90, code = 3,
+    col = ifelse(df$strategy == "rrlmgraph", "steelblue",
+        ifelse(df$strategy == "rrlmgraph_mcp", "seagreen", "grey40")
+    )
+)
+par(op)
+```
+
+## Token efficiency
+
+The Token Efficiency Ratio (TER) measures score gain per token relative
+to the `full_files` baseline.  Values > 1 indicate better score per
+token used.
+
+```{r ter-table, eval = !is.null(bench)}
+ter_df <- data.frame(
+    strategy = names(bench$stats$ter),
+    TER = round(bench$stats$ter, 3),
+    stringsAsFactors = FALSE
+)
+knitr::kable(ter_df, row.names = FALSE, caption = "Token Efficiency Ratio (TER)")
+```
+
+## Pairwise tests
+
+```{r pairwise, eval = !is.null(bench)}
+pw <- bench$stats$pairwise
+knitr::kable(
+    pw[, c("strategy_a", "strategy_b", "p_bonferroni", "cohens_d", "significant")],
+    digits    = 4,
+    col.names = c("Strategy A", "Strategy B", "p (Bonferroni)", "Cohen's d", "Sig."),
+    caption   = "Pairwise Welch t-tests (Bonferroni-corrected)."
+)
+```
+
+## Methodology
+
+Full task definitions and scoring rubrics are in the
+[rrlmgraph-bench](https://github.com/davidrsch/rrlmgraph-bench)
+repository.  Each task is scored 0–1 using `compute_benchmark_statistics()`
+from the **rrlmgraphbench** package.  Hallucinations are detected by
+`detect_hallucination()`.

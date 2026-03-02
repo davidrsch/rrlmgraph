@@ -9,6 +9,7 @@ backoff
 backend
 backends
 BFS
+Bonferroni
 boosted
 boosting
 cacheable
@@ -21,6 +22,7 @@ CLI
 CMD
 centred
 codetools
+Cohen
 Codecov
 colour
 coloured
@@ -48,6 +50,8 @@ GITHUB
 GitHub
 Graphviz
 grey
+hallucination
+Hallucination
 htmlwidgets
 httr2
 IDF
@@ -76,7 +80,10 @@ metadata
 mockery
 mtime
 namespace
+npm
+npx
 NAMESPACE
+NDCG
 neighbours
 normalised
 NSE
@@ -93,12 +100,14 @@ pkgdown
 polarity
 pre
 Pre
+precomputed
 qmd
 rcmdcheck
 Recognised
 regex
 Reingold
 reparse
+RPC
 reparsing
 rlang
 RLM
@@ -109,6 +118,7 @@ Roxygen
 roxygen2
 rrlm
 rrlmgraph
+rrlmgraphbench
 RSQLite
 RStudio
 seagreen
@@ -116,10 +126,14 @@ serialise
 serialised
 serialising
 SQLite
+stdin
+stdio
+stdout
 steelblue
 subgraph
 Summarise
 summarises
+TER
 testthat
 text2vec
 TF
@@ -136,4 +150,5 @@ upsert
 UTF
 walkthrough
 webshot
+Welch
 withr
