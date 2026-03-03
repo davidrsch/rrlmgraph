@@ -100,6 +100,7 @@ pkgdown
 polarity
 pre
 Pre
+precompute
 precomputed
 qmd
 rcmdcheck
@@ -131,7 +132,9 @@ stdio
 stdout
 steelblue
 subgraph
+subprocess
 Summarise
+summarised
 summarises
 TER
 testthat
