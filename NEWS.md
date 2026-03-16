@@ -3,7 +3,7 @@
 ### Bug fixes
 
 - `task_trace_weight` cold-start default changed from `0.5` to `0.0` (#78).
-  Previously the very first BFS when `task_trace_weight` was uninitialised
+  Previously the very first BFS when `task_trace_weight` was uninitialized
   boosted all neighbours equally (0.5), causing spoke nodes to score above
   `min_relevance` even when unrelated to the query, inflating context size.
   The new default keeps spoke influence at zero until an explicit weight is
