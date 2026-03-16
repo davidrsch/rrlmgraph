@@ -28,8 +28,8 @@
 #'   \item{pagerank}{Pre-computed \code{pagerank} vertex attribute,
 #'     min-max normalised across the full graph to \eqn{[0, 1]}.}
 #'   \item{task_trace_weight}{Vertex attribute set by
-#'     \code{update_task_weights()} (issue #13).  Defaults to \eqn{0.5}
-#'     (neutral) when the attribute is absent or \code{NA}.}
+    \code{update_task_weights()} (issue #13).  Defaults to \eqn{0.0}
+    (neutral cold-start) when the attribute is absent or \code{NA}.}
 #'   \item{cochange_score}{Mean weight of \code{CO_CHANGES} edges
 #'     connecting this node to already-visited nodes.  Zero when
 #'     \code{visited} is empty or no such edges exist.}
@@ -112,7 +112,7 @@ compute_relevance <- function(
     NA_real_
   }
   if (is.null(ttw) || length(ttw) == 0L || is.na(ttw)) {
-    ttw <- 0.5 # neutral prior: no history yet, do not suppress the node
+    ttw <- 0.0 # cold-start: no task history yet; do not inflate node priority
   }
   ttw <- max(0, min(1, ttw))
 
@@ -225,4 +225,3 @@ compute_relevance <- function(
   }
   max(0, min(1, sc))
 }
-
