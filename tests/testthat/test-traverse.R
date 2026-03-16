@@ -144,7 +144,8 @@ test_that("hub seed yields spokes in nodes with generous budget", {
     g,
     "spoke traversal",
     seed_node = "pkg::hub",
-    budget_tokens = 5000L
+    budget_tokens = 5000L,
+    min_relevance = 0
   )
 
   expect_equal(ctx$nodes[[1L]], "pkg::hub")
