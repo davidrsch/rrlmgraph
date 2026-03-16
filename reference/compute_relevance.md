@@ -74,8 +74,8 @@ The weights can be overridden globally via
 
   Vertex attribute set by
   [`update_task_weights()`](https://davidrsch.github.io/rrlmgraph/reference/update_task_weights.md)
-  (issue \#13). Defaults to \\0.5\\ (neutral) when the attribute is
-  absent or `NA`.
+  (issue \#13). Defaults to \\0.0\\ (neutral cold-start) when the
+  attribute is absent or `NA`.
 
 - cochange_score:
 

@@ -55,7 +55,7 @@ The function:
 summary(graph)
 #> === rrlm_graph: demo ===
 #> Root:  /home/runner/work/_temp/Library/rrlmgraph/extdata/demo
-#> Built: 2026-03-03 20:07:37
+#> Built: 2026-03-16 22:59:24
 #> Build time: 0.61 s
 #> 
 #> Nodes (27 total):
@@ -123,7 +123,7 @@ The assembled context string – ready to paste into a system prompt:
 ``` r
 cat(ctx$context_string)
 #> # rrlm_graph Context
-#> # Project: demo | R 4.5.2 | ~127 tokens
+#> # Project: demo | R 4.5.3 | ~127 tokens
 #> # Query: How does the data preparation and validation pipeline work?
 #> 
 #> ## CORE FUNCTIONS
@@ -220,17 +220,17 @@ graph_small <- update_graph_incremental(
 #> 
 #> ── Incremental graph update ──
 #> 
-#> Changed files: /tmp/RtmpSUGjkO/mypkg_demo/R/data_prep.R
+#> Changed files: /tmp/RtmpOWTtUs/mypkg_demo/R/data_prep.R
 #> Removing 1 stale node(s).
 #> Re-parsing 1 file(s).
 #> Embedding 1 new node(s) using method 'tfidf'.
 #> Graph now has 2 nodes, 0 edges.
 #> Recomputing PageRank.
-#> Persisting cache to /tmp/RtmpSUGjkO/mypkg_demo.
-#> Graph cached at /tmp/RtmpSUGjkO/mypkg_demo/.rrlmgraph
+#> Persisting cache to /tmp/RtmpOWTtUs/mypkg_demo.
+#> Graph cached at /tmp/RtmpOWTtUs/mypkg_demo/.rrlmgraph
 
 summary(graph_small)
-#> IGRAPH e05f83c DNW- 2 0 -- 
+#> IGRAPH 6dfe7b4 DNW- 2 0 -- 
 #> + attr: project_name (g/c), project_root (g/c), project_type (g/c),
 #> | r_version (g/c), build_time (g/n), build_at (g/c), embed_method
 #> | (g/c), embed_model (g/x), cache_path (g/c), name (v/c), node_type
