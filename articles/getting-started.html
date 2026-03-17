@@ -25,7 +25,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">rrlmgraph</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.1.2</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="Released version">0.1.3</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -110,7 +110,7 @@ package, a scripts folder, or a Shiny app – and returns an
 <span><span class="co">#&gt; Computing PageRank</span></span>
 <span><span class="co">#&gt; Embedding nodes with method 'tfidf'</span></span>
 <span><span class="co">#&gt; Computing semantic similarity edges (threshold 0.7)</span></span>
-<span><span class="co">#&gt; Done in 0.61s -- 27 nodes, 11 edges</span></span></code></pre></div>
+<span><span class="co">#&gt; Done in 0.62s -- 27 nodes, 11 edges</span></span></code></pre></div>
 <p>The function:</p>
 <ol style="list-style-type: decimal">
 <li>Detects the project type (package / scripts / Shiny app)</li>
@@ -127,8 +127,8 @@ analysis</li>
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">graph</span><span class="op">)</span></span>
 <span><span class="co">#&gt; === rrlm_graph: demo ===</span></span>
 <span><span class="co">#&gt; Root:  /home/runner/work/_temp/Library/rrlmgraph/extdata/demo</span></span>
-<span><span class="co">#&gt; Built: 2026-03-16 22:59:24</span></span>
-<span><span class="co">#&gt; Build time: 0.61 s</span></span>
+<span><span class="co">#&gt; Built: 2026-03-17 06:37:31</span></span>
+<span><span class="co">#&gt; Build time: 0.62 s</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Nodes (27 total):</span></span>
 <span><span class="co">#&gt;   package: 18</span></span>
@@ -286,17 +286,17 @@ files:</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── <span style="font-weight: bold;">Incremental graph update</span> ──</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Changed files: <span style="color: #0000BB;">/tmp/RtmpOWTtUs/mypkg_demo/R/data_prep.R</span></span></span>
+<span><span class="co">#&gt; Changed files: <span style="color: #0000BB;">/tmp/RtmpUWPs75/mypkg_demo/R/data_prep.R</span></span></span>
 <span><span class="co">#&gt; Removing 1 stale node(s).</span></span>
 <span><span class="co">#&gt; Re-parsing 1 file(s).</span></span>
 <span><span class="co">#&gt; Embedding 1 new node(s) using method 'tfidf'.</span></span>
 <span><span class="co">#&gt; Graph now has 2 nodes, 0 edges.</span></span>
 <span><span class="co">#&gt; Recomputing PageRank.</span></span>
-<span><span class="co">#&gt; Persisting cache to <span style="color: #0000BB;">/tmp/RtmpOWTtUs/mypkg_demo</span>.</span></span>
-<span><span class="co">#&gt; Graph cached at <span style="color: #0000BB;">/tmp/RtmpOWTtUs/mypkg_demo/.rrlmgraph</span></span></span>
+<span><span class="co">#&gt; Persisting cache to <span style="color: #0000BB;">/tmp/RtmpUWPs75/mypkg_demo</span>.</span></span>
+<span><span class="co">#&gt; Graph cached at <span style="color: #0000BB;">/tmp/RtmpUWPs75/mypkg_demo/.rrlmgraph</span></span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">graph_small</span><span class="op">)</span></span>
-<span><span class="co">#&gt; IGRAPH 6dfe7b4 DNW- 2 0 -- </span></span>
+<span><span class="co">#&gt; IGRAPH d913966 DNW- 2 0 -- </span></span>
 <span><span class="co">#&gt; + attr: project_name (g/c), project_root (g/c), project_type (g/c),</span></span>
 <span><span class="co">#&gt; | r_version (g/c), build_time (g/n), build_at (g/c), embed_method</span></span>
 <span><span class="co">#&gt; | (g/c), embed_model (g/x), cache_path (g/c), name (v/c), node_type</span></span>
