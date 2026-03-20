@@ -20,6 +20,22 @@
   are `"graph_rag_tfidf"` / `"graph_rag_mcp"`, so all data points were
   rendering grey. Closes
   [\#92](https://github.com/davidrsch/rrlmgraph/issues/92).
+- `vignettes/benchmark-results.Rmd`: corrected column names in the
+  `summary-table`, `score-plot`, and `pairwise` code chunks to match the
+  actual output of `rrlmgraphbench::compute_benchmark_statistics()`:
+  `ci_lower` → `ci_lo_95`, `ci_upper` → `ci_hi_95`, `mean_tokens` →
+  `mean_total_tokens`, `n_obs` → `n`, `strategy_a` / `strategy_b` →
+  `strategy_1` / `strategy_2`. Added inline derivation of a
+  `significant` column (absent from the function’s return value). Fixed
+  prose reference `detect_hallucination()` → `count_hallucinations()`.
+  Closes [\#93](https://github.com/davidrsch/rrlmgraph/issues/93).
+- `vignettes/mcp-integration.Rmd`: corrected CLI flag `--db` →
+  `--db-path`, file extension `graph.db` → `graph.sqlite` throughout
+  (architecture diagram, npx example, VS Code JSON config), and added
+  the required `db_path` argument to both
+  [`export_to_sqlite()`](https://davidrsch.github.io/rrlmgraph/reference/export_to_sqlite.md)
+  calls. Closes
+  [\#94](https://github.com/davidrsch/rrlmgraph/issues/94).
 
 #### CI / Security
 

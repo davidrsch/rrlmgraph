@@ -166,8 +166,8 @@ workflow here.</p>
 <code class="sourceCode R"><span><span class="va">stats</span> <span class="op">&lt;-</span> <span class="va">bench</span><span class="op">$</span><span class="va">stats</span></span>
 <span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span></span>
 <span>    <span class="va">stats</span><span class="op">$</span><span class="va">summary</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
-<span>        <span class="st">"strategy"</span>, <span class="st">"mean_score"</span>, <span class="st">"sd_score"</span>, <span class="st">"ci_lower"</span>, <span class="st">"ci_upper"</span>,</span>
-<span>        <span class="st">"mean_tokens"</span>, <span class="st">"hallucination_rate"</span>, <span class="st">"n_obs"</span></span>
+<span>        <span class="st">"strategy"</span>, <span class="st">"mean_score"</span>, <span class="st">"sd_score"</span>, <span class="st">"ci_lo_95"</span>, <span class="st">"ci_hi_95"</span>,</span>
+<span>        <span class="st">"mean_total_tokens"</span>, <span class="st">"hallucination_rate"</span>, <span class="st">"n"</span></span>
 <span>    <span class="op">)</span><span class="op">]</span>,</span>
 <span>    digits <span class="op">=</span> <span class="fl">3</span>,</span>
 <span>    caption <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span></span>
@@ -204,8 +204,8 @@ workflow here.</p>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/axis.html" class="external-link">axis</a></span><span class="op">(</span><span class="fl">2</span>, at <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">df</span><span class="op">)</span><span class="op">)</span>, labels <span class="op">=</span> <span class="va">df</span><span class="op">$</span><span class="va">strategy</span>, las <span class="op">=</span> <span class="fl">1</span>, cex.axis <span class="op">=</span> <span class="fl">0.85</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/abline.html" class="external-link">abline</a></span><span class="op">(</span>v <span class="op">=</span> <span class="va">baseline</span>, lty <span class="op">=</span> <span class="fl">2</span>, col <span class="op">=</span> <span class="st">"grey60"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/arrows.html" class="external-link">arrows</a></span><span class="op">(</span></span>
-<span>    <span class="va">df</span><span class="op">$</span><span class="va">ci_lower</span>, <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">df</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>    <span class="va">df</span><span class="op">$</span><span class="va">ci_upper</span>, <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">df</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>    <span class="va">df</span><span class="op">$</span><span class="va">ci_lo_95</span>, <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">df</span><span class="op">)</span><span class="op">)</span>,</span>
+<span>    <span class="va">df</span><span class="op">$</span><span class="va">ci_hi_95</span>, <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/nrow.html" class="external-link">nrow</a></span><span class="op">(</span><span class="va">df</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>    length <span class="op">=</span> <span class="fl">0.05</span>, angle <span class="op">=</span> <span class="fl">90</span>, code <span class="op">=</span> <span class="fl">3</span>,</span>
 <span>    col <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">df</span><span class="op">$</span><span class="va">strategy</span> <span class="op">==</span> <span class="st">"graph_rag_tfidf"</span>, <span class="st">"steelblue"</span>,</span>
 <span>        <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">df</span><span class="op">$</span><span class="va">strategy</span> <span class="op">==</span> <span class="st">"graph_rag_mcp"</span>, <span class="st">"seagreen"</span>, <span class="st">"grey40"</span><span class="op">)</span></span>
@@ -232,8 +232,9 @@ better score per token used.</p>
 </h2>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pw</span> <span class="op">&lt;-</span> <span class="va">bench</span><span class="op">$</span><span class="va">stats</span><span class="op">$</span><span class="va">pairwise</span></span>
+<span><span class="va">pw</span><span class="op">$</span><span class="va">significant</span> <span class="op">&lt;-</span> <span class="va">pw</span><span class="op">$</span><span class="va">p_bonferroni</span> <span class="op">&lt;</span> <span class="fl">0.05</span></span>
 <span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span></span>
-<span>    <span class="va">pw</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"strategy_a"</span>, <span class="st">"strategy_b"</span>, <span class="st">"p_bonferroni"</span>, <span class="st">"cohens_d"</span>, <span class="st">"significant"</span><span class="op">)</span><span class="op">]</span>,</span>
+<span>    <span class="va">pw</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"strategy_1"</span>, <span class="st">"strategy_2"</span>, <span class="st">"p_bonferroni"</span>, <span class="st">"cohens_d"</span>, <span class="st">"significant"</span><span class="op">)</span><span class="op">]</span>,</span>
 <span>    digits    <span class="op">=</span> <span class="fl">4</span>,</span>
 <span>    col.names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Strategy A"</span>, <span class="st">"Strategy B"</span>, <span class="st">"p (Bonferroni)"</span>, <span class="st">"Cohen's d"</span>, <span class="st">"Sig."</span><span class="op">)</span>,</span>
 <span>    caption   <span class="op">=</span> <span class="st">"Pairwise Welch t-tests (Bonferroni-corrected)."</span></span>
@@ -246,7 +247,7 @@ better score per token used.</p>
 repository. Each task is scored 0–1 using
 <code>compute_benchmark_statistics()</code> from the
 <strong>rrlmgraphbench</strong> package. Hallucinations are detected by
-<code>detect_hallucination()</code>.</p>
+<code>count_hallucinations()</code>.</p>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside>

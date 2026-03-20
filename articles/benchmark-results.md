@@ -54,8 +54,8 @@ if (is.null(bench)) {
 stats <- bench$stats
 knitr::kable(
     stats$summary[, c(
-        "strategy", "mean_score", "sd_score", "ci_lower", "ci_upper",
-        "mean_tokens", "hallucination_rate", "n_obs"
+        "strategy", "mean_score", "sd_score", "ci_lo_95", "ci_hi_95",
+        "mean_total_tokens", "hallucination_rate", "n"
     )],
     digits = 3,
     caption = paste0(
@@ -94,8 +94,8 @@ plot(
 axis(2, at = seq_len(nrow(df)), labels = df$strategy, las = 1, cex.axis = 0.85)
 abline(v = baseline, lty = 2, col = "grey60")
 arrows(
-    df$ci_lower, seq_len(nrow(df)),
-    df$ci_upper, seq_len(nrow(df)),
+    df$ci_lo_95, seq_len(nrow(df)),
+    df$ci_hi_95, seq_len(nrow(df)),
     length = 0.05, angle = 90, code = 3,
     col = ifelse(df$strategy == "graph_rag_tfidf", "steelblue",
         ifelse(df$strategy == "graph_rag_mcp", "seagreen", "grey40")
@@ -123,8 +123,9 @@ knitr::kable(ter_df, row.names = FALSE, caption = "Token Efficiency Ratio (TER)"
 
 ``` r
 pw <- bench$stats$pairwise
+pw$significant <- pw$p_bonferroni < 0.05
 knitr::kable(
-    pw[, c("strategy_a", "strategy_b", "p_bonferroni", "cohens_d", "significant")],
+    pw[, c("strategy_1", "strategy_2", "p_bonferroni", "cohens_d", "significant")],
     digits    = 4,
     col.names = c("Strategy A", "Strategy B", "p (Bonferroni)", "Cohen's d", "Sig."),
     caption   = "Pairwise Welch t-tests (Bonferroni-corrected)."
@@ -137,4 +138,4 @@ Full task definitions and scoring rubrics are in the
 [rrlmgraph-bench](https://github.com/davidrsch/rrlmgraph-bench)
 repository. Each task is scored 0–1 using
 `compute_benchmark_statistics()` from the **rrlmgraphbench** package.
-Hallucinations are detected by `detect_hallucination()`.
+Hallucinations are detected by `count_hallucinations()`.

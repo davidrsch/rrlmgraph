@@ -15,7 +15,7 @@ context without running R code directly.
                                                                  │  SQLite
                                                         ┌────────▼────────┐
                                                         │  .rrlmgraph/    │
-                                                        │   graph.db      │
+                                                        │  graph.sqlite   │
                                                         └─────────────────┘
 
 The SQLite database is written by
@@ -35,7 +35,7 @@ Install the MCP server globally via npm:
 Or use `npx` for a one-off run:
 
 ``` r
-# npx rrlmgraph-mcp --db path/to/.rrlmgraph/graph.db
+# npx rrlmgraph-mcp --db-path path/to/.rrlmgraph/graph.sqlite
 ```
 
 ## Exporting the graph to SQLite
@@ -44,7 +44,7 @@ Or use `npx` for a one-off run:
 library(rrlmgraph)
 
 graph <- build_rrlm_graph("path/to/your/project")
-export_to_sqlite(graph) # writes .rrlmgraph/graph.db
+export_to_sqlite(graph, "path/to/your/project/.rrlmgraph/graph.sqlite")
 ```
 
 ## Configuring VS Code
@@ -60,8 +60,8 @@ Add the following to `.vscode/mcp.json` (or your user-level
       "command": "npx",
       "args": [
         "rrlmgraph-mcp",
-        "--db",
-        "${workspaceFolder}/.rrlmgraph/graph.db"
+        "--db-path",
+        "${workspaceFolder}/.rrlmgraph/graph.sqlite"
       ]
     }
   }
@@ -102,7 +102,7 @@ graph <- update_graph_incremental(
   graph,
   changed_files = "R/my_function.R"
 )
-export_to_sqlite(graph)
+export_to_sqlite(graph, "path/to/your/project/.rrlmgraph/graph.sqlite")
 ```
 
 A [targets](https://docs.ropensci.org/targets/) pipeline or a Git
