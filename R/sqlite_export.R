@@ -241,7 +241,7 @@ export_to_sqlite <- function(graph, db_path) {
     roxygen_text = pull("roxygen_text"),
     complexity = as.numeric(pull("complexity", NA_real_)),
     pagerank = as.numeric(pull("pagerank", NA_real_)),
-    task_weight = as.numeric(pull("task_weight", NA_real_)),
+    task_weight = as.numeric(pull("task_trace_weight", NA_real_)),
     embedding = embedding_json,
     pkg_name = pull("pkg_name"),
     pkg_version = pull("pkg_version"),
