@@ -1,4 +1,19 @@
-﻿# rrlmgraph 0.1.3
+﻿# rrlmgraph (development version)
+
+### Documentation
+
+- `compute_relevance()`: added a `@note` paragraph explaining that the MCP
+  server's TypeScript BFS uses a depth-penalty signal in place of the
+  co-change signal because `CO_CHANGES` edge weights are not stored in the
+  exported SQLite schema. Closes mcp#41.
+
+### CI / Security
+
+- All GitHub Actions workflows are now pinned to full commit SHA digests
+  instead of mutable `@v4`/`@v2` tags, eliminating the supply-chain risk
+  described in OWASP A06. Closes #90.
+
+# rrlmgraph 0.1.3
 
 ### Bug fixes
 

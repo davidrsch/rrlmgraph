@@ -35,6 +35,16 @@
 #'     \code{visited} is empty or no such edges exist.}
 #' }
 #'
+#' @note \strong{MCP server divergence (mcp#41):} The TypeScript BFS in
+#'   \pkg{rrlmgraph-mcp} cannot use the co-change signal because
+#'   \code{CO_CHANGES} edge weights are not stored in the exported SQLite
+#'   schema.  Instead it substitutes a \emph{depth-penalty} term
+#'   \eqn{1 / (1 + \text{depth} \times 0.5)}, which discounts nodes that are
+#'   far from the seed.  Scores produced by the two paths are therefore not
+#'   directly comparable; the R-side scores will generally assign more weight
+#'   to nodes that co-change with the seed node, while the MCP path prefers
+#'   structurally adjacent nodes.
+#'
 #' @param node Character(1).  Name of the vertex (i.e., \code{node_id})
 #'   to score.
 #' @param query_vec Numeric vector.  Dense embedding of the user query
