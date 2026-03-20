@@ -97,8 +97,8 @@ plot(
     ylab = "",
     yaxt = "n",
     pch = 16,
-    col = ifelse(df$strategy == "rrlmgraph", "steelblue",
-        ifelse(df$strategy == "rrlmgraph_mcp", "seagreen", "grey40")
+    col = ifelse(df$strategy == "graph_rag_tfidf", "steelblue",
+        ifelse(df$strategy == "graph_rag_mcp", "seagreen", "grey40")
     ),
     main = "Strategy comparison"
 )
@@ -108,8 +108,8 @@ arrows(
     df$ci_lower, seq_len(nrow(df)),
     df$ci_upper, seq_len(nrow(df)),
     length = 0.05, angle = 90, code = 3,
-    col = ifelse(df$strategy == "rrlmgraph", "steelblue",
-        ifelse(df$strategy == "rrlmgraph_mcp", "seagreen", "grey40")
+    col = ifelse(df$strategy == "graph_rag_tfidf", "steelblue",
+        ifelse(df$strategy == "graph_rag_mcp", "seagreen", "grey40")
     )
 )
 par(op)

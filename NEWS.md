@@ -6,6 +6,15 @@
   server's TypeScript BFS uses a depth-penalty signal in place of the
   co-change signal because `CO_CHANGES` edge weights are not stored in the
   exported SQLite schema. Closes mcp#41.
+- `vignettes/mcp-integration.Rmd`: replaced the **Available MCP tools** table
+  with the complete, correctly-named 8-tool set; previous table listed 4 wrong
+  names (`get_node`, `list_nodes`, `get_neighbours`, `graph_stats`) and omitted
+  `find_callees`, `search_nodes`, `add_task_trace`, and `rebuild_graph`.
+  Closes #91.
+- `vignettes/benchmark-results.Rmd`: fixed stale strategy-name literals
+  `"rrlmgraph"` / `"rrlmgraph_mcp"` in both plot chunks; correct names are
+  `"graph_rag_tfidf"` / `"graph_rag_mcp"`, so all data points were rendering
+  grey. Closes #92.
 
 ### CI / Security
 
