@@ -2,6 +2,11 @@
 
 ### Bug fixes
 
+- `export_to_sqlite()`: `.upsert_nodes()` was reading the non-existent vertex
+  attribute `task_weight` instead of the actual `task_trace_weight` attribute
+  written by `log_task_trace()`.  Every exported `task_weight` value was `NA`,
+  silently breaking the feedback loop that re-ranks nodes after task completion
+  (#89).
 - `task_trace_weight` cold-start default changed from `0.5` to `0.0` (#78).
   Previously the very first BFS when `task_trace_weight` was uninitialized
   boosted all neighbours equally (0.5), causing spoke nodes to score above
