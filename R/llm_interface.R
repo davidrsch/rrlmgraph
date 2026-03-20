@@ -81,36 +81,76 @@ chat_with_context <- function(
     cli::cli_abort("{.arg message} must be a single character string.")
   }
 
-  # ---- RLM-Graph tool-calling (requires ellmer) -----------------------
-  # The LLM drives graph traversal via tool calls (search_nodes,
-  # get_node_info, find_callers, find_callees), deciding what to explore
-  # next before producing its final answer.  ellmer executes each tool
-  # call, appends the result as a tool message, and re-sends until the
-  # model returns a plain text response.  This loop IS the RLM-Graph
-  # execution mechanism.
-  if (!requireNamespace("ellmer", quietly = TRUE)) {
+  # ---- RLM-Graph tool-calling (ellmer) / httr2 fallback (OpenAI only) ------
+  # When ellmer is available the LLM drives graph traversal via tool calls
+  # (search_nodes, get_node_info, find_callers, find_callees).  When ellmer is
+  # absent, an OpenAI-compatible httr2 path is used with a context-window
+  # prompt; other providers require ellmer and will error.
+  if (requireNamespace("ellmer", quietly = TRUE)) {
+    graph_tools <- .build_graph_tools(graph, budget_tokens, min_relevance)
+    system_prompt <- .build_rlm_system_prompt()
+    response_text <- .llm_via_ellmer(
+      system_prompt,
+      message,
+      provider,
+      model,
+      graph_tools,
+      ...
+    )
+  } else if (provider == "openai") {
+    ctx_obj <- tryCatch(
+      query_context(
+        graph,
+        message,
+        budget_tokens = budget_tokens,
+        seed_node = seed_node,
+        min_relevance = min_relevance
+      ),
+      error = function(e) NULL
+    )
+    ctx_str <- if (!is.null(ctx_obj)) {
+      tryCatch(assemble_context_string(ctx_obj), error = function(e) "")
+    } else {
+      ""
+    }
+    system_prompt <- .build_system_prompt(ctx_str)
+    resolved_model <- if (!is.null(model)) model else "gpt-4o-mini"
+    response_text <- .llm_via_httr2(system_prompt, message, resolved_model)
+  } else {
     cli::cli_abort(c(
-      "{.pkg ellmer} is required for {.fn chat_with_context}.",
+      "{.pkg ellmer} is required for {.fn chat_with_context} with provider {.val {provider}}.",
       "i" = "Install it with: {.code install.packages(\"ellmer\")}"
     ))
   }
-
-  graph_tools <- .build_graph_tools(graph, budget_tokens, min_relevance)
-  system_prompt <- .build_rlm_system_prompt()
-  response_text <- .llm_via_ellmer_rlm(
-    system_prompt,
-    message,
-    provider,
-    model,
-    graph_tools,
-    ...
-  )
 
   .log_task_completion(graph, message, character(0L), response_text)
   response_text
 }
 
 # ---- Internal helpers ------------------------------------------------
+
+#' @keywords internal
+.build_system_prompt <- function(context) {
+  ctx_trimmed <- trimws(if (is.null(context)) "" else context)
+  grounding <- paste(
+    "RULES:",
+    "1. Answer based ONLY on the code context provided.",
+    "2. Do not fabricate function signatures or behaviour not in the context.",
+    "3. Cite exact node names where relevant.",
+    sep = "\n"
+  )
+  if (nchar(ctx_trimmed) == 0L) {
+    return(grounding)
+  }
+  paste(
+    grounding,
+    "",
+    "---- BEGIN CODE CONTEXT ----",
+    ctx_trimmed,
+    "---- END CODE CONTEXT ----",
+    sep = "\n"
+  )
+}
 
 #' @keywords internal
 .build_rlm_system_prompt <- function() {
@@ -280,7 +320,35 @@ chat_with_context <- function(
 }
 
 #' @keywords internal
-.llm_via_ellmer_rlm <- function(
+.llm_via_httr2 <- function(system_prompt, message, model) {
+  api_key <- Sys.getenv("OPENAI_API_KEY", unset = "")
+  if (!nchar(api_key)) {
+    cli::cli_abort(
+      "OPENAI_API_KEY environment variable is not set or is empty."
+    )
+  }
+  req <- httr2::request("https://api.openai.com/v1/chat/completions") |>
+    httr2::req_headers(
+      Authorization = paste("Bearer", api_key),
+      `Content-Type` = "application/json"
+    ) |>
+    httr2::req_body_json(list(
+      model = model,
+      messages = list(
+        list(role = "system", content = system_prompt),
+        list(role = "user", content = message)
+      )
+    ))
+  resp <- httr2::req_perform(req)
+  body <- httr2::resp_body_json(resp)
+  if (!is.null(body$error)) {
+    cli::cli_abort("OpenAI API error: {body$error$message}")
+  }
+  body$choices[[1L]]$message$content
+}
+
+#' @keywords internal
+.llm_via_ellmer <- function(
   system_prompt,
   message,
   provider,
@@ -312,6 +380,9 @@ chat_with_context <- function(
   }
   chat$chat(message)
 }
+
+# Alias kept for back-compat; new name is .llm_via_ellmer.
+.llm_via_ellmer_rlm <- .llm_via_ellmer
 
 #' @keywords internal
 .log_task_completion <- function(graph, query, nodes, response) {
