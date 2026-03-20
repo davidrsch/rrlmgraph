@@ -1,11 +1,13 @@
-# Workflow derived from https://github.com/posit-dev/setup-air/tree/main/examples
-#
-# Using `pull_request_target` over `pull_request` for elevated `GITHUB_TOKEN`
-# privileges so we can post suggestion comments even from forks.
-# The step explicitly checks out the PR head SHA to format the contributor code.
-# https://securitylab.github.com/resources/github-actions-preventing-pwn-requests/
+# Using `pull_request` so format runs in the unprivileged PR context.
+# The previous `pull_request_target` + checkout of pull_request.head.sha was
+# a pwn-request: fork code was executed with a GITHUB_TOKEN that had
+# pull-requests:write scope.  `pull_request` restricts secrets/token scope
+# to read-only for fork PRs, which is sufficient for reviewdog suggestions
+# on non-fork PRs; fork PRs will not receive inline suggestions but will
+# receive a check-run status, which is an acceptable trade-off (rrlmgraph#87).
 on:
-  pull_request_target:
+  pull_request:
+    branches: [main, master]
 
 name: format-suggest.yaml
 
@@ -15,6 +17,7 @@ jobs:
     runs-on: ubuntu-latest
 
     permissions:
+      contents: read
       pull-requests: write
 
     steps:

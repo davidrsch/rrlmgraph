@@ -392,6 +392,15 @@ build_co_change_edges <- function(
   }
   project_root <- as.character(fs::path_abs(project_root))
   if (!.git_available(project_root)) {
+    warning(
+      "[rrlmgraph] CO_CHANGE edges skipped: git is unavailable or '",
+      project_root,
+      "' is not inside a git repository. ",
+      "Graphs built without git will have no CO_CHANGES signal. ",
+      "Relevance scores from this graph will differ from those built ",
+      "in an environment where git history is accessible.",
+      call. = FALSE
+    )
     return(.empty_edge_df())
   }
 
@@ -805,4 +814,3 @@ build_dispatch_edges <- function(func_nodes, r_files) {
     error = function(e) list()
   )
 }
-

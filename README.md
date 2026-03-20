@@ -38,7 +38,8 @@ object annotated with PageRank scores.
 library(rrlmgraph)
 
 # Point it at any R project — package, Shiny app, or script directory.
-g <- build_rrlm_graph("path/to/mypkg")
+# verbose = TRUE shows the build progress messages.
+g <- build_rrlm_graph("path/to/mypkg", verbose = TRUE)
 #> ✔ Detected R package: mypkg
 #> ✔ Parsed 14 source files — 38 function nodes, 6 package nodes, 9 test files
 #> ✔ Built CALLS (52), IMPORTS (31), TESTS (9), SEMANTIC (17) edges
@@ -88,19 +89,24 @@ ctx$tokens_used
 
 # The assembled context string is ready to paste into any LLM prompt.
 cat(ctx$context_string)
-#> === preprocess_data (function | data_pipeline.R) ===
-#> Signature: preprocess_data(df, strategy = c("median", "knn", "drop"))
-#> Calls: impute_missing, validate_inputs
-#> Called by: fit_model, run_cv_fold
+#> # rrlm_graph Context
+#> # Project: mypkg | R 4.5.0 | ~1847 tokens
+#> # Query: How does the model fitting pipeline handle missing values?
 #>
-#> Prepares a raw data frame for modelling. Missing values are handled
-#> according to `strategy`. Runs `validate_inputs()` first.
-#>
+#> ## CORE FUNCTIONS
+#> ---
+#> ### preprocess_data
 #> preprocess_data <- function(df, strategy = c("median", "knn", "drop")) {
 #>   strategy <- match.arg(strategy)
 #>   df <- validate_inputs(df)
 #>   impute_missing(df, strategy = strategy)
 #> }
+#>
+#> ## SUPPORTING FUNCTIONS
+#> ---
+#> ### impute_missing
+#> impute_missing(df, strategy)
+#> Imputes missing values using the selected strategy.
 #> ...
 ```
 

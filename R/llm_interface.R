@@ -8,9 +8,8 @@
 #'
 #' Retrieves a token-budgeted context window from the graph via
 #' \code{query_context()}, builds a grounded system prompt, and sends a
-#' message to an LLM.  Uses \pkg{ellmer} when installed (supporting
-#' multiple providers); falls back to a direct \pkg{httr2} call for
-#' the \code{"openai"} provider when \pkg{ellmer} is absent.
+#' message to an LLM.  Requires \pkg{ellmer}, which handles provider
+#' connections and the tool-call loop that implements RLM-Graph traversal.
 #'
 #' @section System prompt structure:
 #' The system prompt combines:
@@ -49,9 +48,7 @@
 #' @param ... Additional arguments forwarded to the \pkg{ellmer}
 #'   \code{chat_*()} constructor (e.g. \code{base_url} for ollama).
 #'
-#' @return Character(1) containing the LLM response text.  Returns a
-#'   descriptive error string (prefixed \code{"[rrlmgraph error]"}) rather
-#'   than throwing when the LLM call fails.
+#' @return Character(1) containing the LLM response text.  Throws on error.
 #'
 #' @seealso [query_context()], [update_task_weights()]
 #' @export
@@ -84,86 +81,213 @@ chat_with_context <- function(
     cli::cli_abort("{.arg message} must be a single character string.")
   }
 
-  # ---- 1. Build context -----------------------------------------------
-  ctx <- query_context(
-    graph = graph,
-    query = message,
-    seed_node = seed_node,
-    budget_tokens = as.integer(budget_tokens),
-    min_relevance = min_relevance
-  )
-
-  # ---- 2. Build system prompt -----------------------------------------
-  system_prompt <- .build_system_prompt(ctx$context_string)
-
-  # ---- 3. Validate provider availability ------------------------------
-  if (!requireNamespace("ellmer", quietly = TRUE) && provider != "openai") {
-    cli::cli_abort(
-      c(
-        "{.pkg ellmer} is required for provider {.val {provider}}.",
-        "i" = "Install it with {.code install.packages('ellmer')}."
-      )
-    )
+  # ---- RLM-Graph tool-calling (requires ellmer) -----------------------
+  # The LLM drives graph traversal via tool calls (search_nodes,
+  # get_node_info, find_callers, find_callees), deciding what to explore
+  # next before producing its final answer.  ellmer executes each tool
+  # call, appends the result as a tool message, and re-sends until the
+  # model returns a plain text response.  This loop IS the RLM-Graph
+  # execution mechanism.
+  if (!requireNamespace("ellmer", quietly = TRUE)) {
+    cli::cli_abort(c(
+      "{.pkg ellmer} is required for {.fn chat_with_context}.",
+      "i" = "Install it with: {.code install.packages(\"ellmer\")}"
+    ))
   }
 
-  # ---- 4. Send to LLM -------------------------------------------------
-  response_text <- tryCatch(
-    {
-      if (requireNamespace("ellmer", quietly = TRUE)) {
-        .llm_via_ellmer(system_prompt, message, provider, model, ...)
-      } else {
-        .llm_via_httr2(
-          system_prompt,
-          message,
-          if (is.null(model)) "gpt-4o-mini" else model
-        )
-      }
-    },
-    error = function(e) {
-      cli::cli_warn("LLM call failed: {conditionMessage(e)}")
-      paste0("[rrlmgraph error] ", conditionMessage(e))
-    }
+  graph_tools <- .build_graph_tools(graph, budget_tokens, min_relevance)
+  system_prompt <- .build_rlm_system_prompt()
+  response_text <- .llm_via_ellmer_rlm(
+    system_prompt,
+    message,
+    provider,
+    model,
+    graph_tools,
+    ...
   )
 
-  # ---- 5. Log task completion -----------------------------------------
-  .log_task_completion(
-    graph = graph,
-    query = message,
-    nodes = ctx$nodes,
-    response = response_text
-  )
-
+  .log_task_completion(graph, message, character(0L), response_text)
   response_text
 }
 
 # ---- Internal helpers ------------------------------------------------
 
 #' @keywords internal
-.build_system_prompt <- function(context_string) {
-  grounding <- paste(
-    "You are a code-assistant that answers questions about an R project.",
+.build_rlm_system_prompt <- function() {
+  paste(
+    "You are an expert R code assistant with access to a structured knowledge",
+    "graph of an R project's codebase. Navigate this graph using the provided",
+    "tools to gather relevant code before answering.",
+    "",
+    "Available tools:",
+    "  search_nodes(query, limit)         -- find functions by keyword",
+    "  get_node_info(node_name)           -- read a function's code and docs",
+    "  find_callers(function_name, limit) -- find what calls a function",
+    "  find_callees(function_name, limit) -- find what a function calls",
+    "",
     "RULES:",
-    "1. Base your answer ONLY on the code context provided below.",
-    "2. If the context does not contain enough information, say so explicitly.",
-    "3. When referencing a function or file from the context, cite its name.",
-    "4. Do not invent function signatures or behaviour not shown in the context.",
+    "1. Use the tools to explore the graph until you have enough context.",
+    "2. Base your final answer ONLY on code you retrieved from the graph.",
+    "3. Cite exact node names where relevant.",
+    "4. Do not invent function signatures or behaviour not shown in the graph.",
     sep = "\n"
-  )
-
-  if (nchar(trimws(context_string)) == 0L) {
-    return(grounding)
-  }
-
-  paste0(
-    grounding,
-    "\n\n--- BEGIN CODE CONTEXT ---\n",
-    context_string,
-    "\n--- END CODE CONTEXT ---"
   )
 }
 
+#' Build ellmer tool definitions that expose graph navigation to the LLM.
+#'
+#' The four tools give the LLM the same graph-traversal primitives available
+#' in the MCP server, allowing it to iteratively explore call relationships and
+#' read function bodies before producing its answer.  This is the RLM-Graph
+#' execution mechanism: the LLM drives traversal, the R environment executes.
 #' @keywords internal
-.llm_via_ellmer <- function(system_prompt, message, provider, model, ...) {
+.build_graph_tools <- function(graph, budget_tokens, min_relevance) {
+  # ellmer 0.4.0: pass name= explicitly so tool objects are addressable by
+  # the LLM's function-calling JSON.  Anonymous functions yield empty names.
+  # ---- search_nodes -------------------------------------------------------
+  search_tool <- ellmer::tool(
+    fun = function(query, limit = 10L) {
+      v_names <- igraph::V(graph)$name
+      v_types <- igraph::vertex_attr(graph, "node_type")
+      v_sigs <- igraph::vertex_attr(graph, "signature")
+      v_bodies <- igraph::vertex_attr(graph, "body_text")
+      limit <- min(as.integer(limit), 50L)
+      terms <- grep(
+        ".",
+        strsplit(tolower(query), "[^a-z0-9]+", perl = TRUE)[[1L]],
+        perl = TRUE,
+        value = TRUE
+      )
+      if (!length(terms)) {
+        return("No search terms provided.")
+      }
+      needle <- paste(terms, collapse = "|")
+      scores <- vapply(
+        seq_along(v_names),
+        function(i) {
+          haystack <- paste(
+            tolower(v_names[[i]] %||% ""),
+            tolower(v_sigs[[i]] %||% ""),
+            tolower(v_bodies[[i]] %||% ""),
+            sep = " "
+          )
+          sum(gregexpr(needle, haystack, perl = TRUE)[[1L]] > 0L)
+        },
+        integer(1L)
+      )
+      ord <- order(scores, decreasing = TRUE)
+      top <- head(ord[scores[ord] > 0L], limit)
+      if (!length(top)) {
+        return("No matching nodes found.")
+      }
+      lines <- vapply(
+        seq_along(top),
+        function(i) {
+          tp <- if (!is.na(v_types[top[[i]]])) v_types[top[[i]]] else "node"
+          sprintf("%d. `%s` (%s)", i, v_names[top[[i]]], tp)
+        },
+        character(1L)
+      )
+      paste(lines, collapse = "\n")
+    },
+    description = "Search the code graph for relevant nodes by keyword. Returns a numbered list of matching functions and their types.",
+    name = "search_nodes",
+    query = ellmer::type_string(
+      "Keywords to search across function names and code bodies"
+    ),
+    limit = ellmer::type_integer(
+      "Maximum results to return (default 10, max 50)",
+      required = FALSE
+    )
+  )
+
+  # ---- get_node_info ------------------------------------------------------
+  info_tool <- ellmer::tool(
+    fun = function(node_name) {
+      v_names <- igraph::V(graph)$name
+      if (!node_name %in% v_names) {
+        return(sprintf(
+          "Node '%s' not found. Use search_nodes to find the correct name.",
+          node_name
+        ))
+      }
+      build_node_context(node_name, graph, mode = "full")
+    },
+    description = "Get the full source code, signature, and documentation for a specific named function node in the graph.",
+    name = "get_node_info",
+    node_name = ellmer::type_string(
+      "Exact node name as returned by search_nodes"
+    )
+  )
+
+  # ---- find_callers -------------------------------------------------------
+  callers_tool <- ellmer::tool(
+    fun = function(function_name, limit = 10L) {
+      v_names <- igraph::V(graph)$name
+      if (!function_name %in% v_names) {
+        return(sprintf("Node '%s' not found.", function_name))
+      }
+      in_nbrs <- unique(igraph::V(graph)$name[
+        igraph::neighbors(graph, function_name, mode = "in")
+      ])
+      in_nbrs <- in_nbrs[!is.na(in_nbrs)]
+      if (!length(in_nbrs)) {
+        return(sprintf("No callers found for '%s'.", function_name))
+      }
+      top <- head(in_nbrs, as.integer(limit))
+      paste(sprintf("%d. `%s`", seq_along(top), top), collapse = "\n")
+    },
+    description = "Find functions that call the specified function (callers / upstream dependencies).",
+    name = "find_callers",
+    function_name = ellmer::type_string(
+      "Exact node name of the function to find callers for"
+    ),
+    limit = ellmer::type_integer(
+      "Maximum callers to return (default 10)",
+      required = FALSE
+    )
+  )
+
+  # ---- find_callees -------------------------------------------------------
+  callees_tool <- ellmer::tool(
+    fun = function(function_name, limit = 10L) {
+      v_names <- igraph::V(graph)$name
+      if (!function_name %in% v_names) {
+        return(sprintf("Node '%s' not found.", function_name))
+      }
+      out_nbrs <- unique(igraph::V(graph)$name[
+        igraph::neighbors(graph, function_name, mode = "out")
+      ])
+      out_nbrs <- out_nbrs[!is.na(out_nbrs)]
+      if (!length(out_nbrs)) {
+        return(sprintf("No callees found for '%s'.", function_name))
+      }
+      top <- head(out_nbrs, as.integer(limit))
+      paste(sprintf("%d. `%s`", seq_along(top), top), collapse = "\n")
+    },
+    description = "Find functions called by the specified function (callees / downstream dependencies).",
+    name = "find_callees",
+    function_name = ellmer::type_string(
+      "Exact node name of the function to find callees of"
+    ),
+    limit = ellmer::type_integer(
+      "Maximum callees to return (default 10)",
+      required = FALSE
+    )
+  )
+
+  list(search_tool, info_tool, callers_tool, callees_tool)
+}
+
+#' @keywords internal
+.llm_via_ellmer_rlm <- function(
+  system_prompt,
+  message,
+  provider,
+  model,
+  tools,
+  ...
+) {
   default_models <- c(
     openai = "gpt-4o-mini",
     ollama = "llama3.2",
@@ -171,7 +295,6 @@ chat_with_context <- function(
     anthropic = "claude-3-5-haiku-latest"
   )
   resolved_model <- if (!is.null(model)) model else default_models[[provider]]
-
   chat_fn_name <- switch(
     provider,
     openai = "chat_openai",
@@ -181,48 +304,13 @@ chat_with_context <- function(
   )
   chat_fn <- getExportedValue("ellmer", chat_fn_name)
   chat <- chat_fn(system_prompt = system_prompt, model = resolved_model, ...)
+  # Register each graph navigation tool.  ellmer executes tool calls, appends
+  # results as tool messages, and re-sends to the model until it returns a
+  # plain text response.  This loop IS the RLM-Graph execution mechanism.
+  for (tool_def in tools) {
+    chat$register_tool(tool_def)
+  }
   chat$chat(message)
-}
-
-#' @keywords internal
-.llm_via_httr2 <- function(system_prompt, message, model) {
-  if (!requireNamespace("httr2", quietly = TRUE)) {
-    cli::cli_abort(
-      "Neither {.pkg ellmer} nor {.pkg httr2} is installed. ",
-      "Install one to use {.fn chat_with_context}."
-    )
-  }
-
-  api_key <- Sys.getenv("OPENAI_API_KEY", unset = "")
-  if (nchar(api_key) == 0L) {
-    cli::cli_abort(
-      "OPENAI_API_KEY is not set. ",
-      "Call {.code Sys.setenv(OPENAI_API_KEY = 'sk-...')}."
-    )
-  }
-
-  body <- list(
-    model = model,
-    messages = list(
-      list(role = "system", content = system_prompt),
-      list(role = "user", content = message)
-    )
-  )
-
-  req <- httr2::request("https://api.openai.com/v1/chat/completions") |>
-    httr2::req_auth_bearer_token(api_key) |>
-    httr2::req_headers("Content-Type" = "application/json") |>
-    httr2::req_body_json(body) |>
-    httr2::req_error(is_error = function(resp) FALSE)
-
-  resp <- httr2::req_perform(req)
-  resp_obj <- httr2::resp_body_json(resp)
-
-  if (!is.null(resp_obj$error)) {
-    cli::cli_abort("OpenAI API error: {resp_obj$error$message}")
-  }
-
-  resp_obj$choices[[1L]]$message$content
 }
 
 #' @keywords internal

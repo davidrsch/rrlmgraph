@@ -113,8 +113,13 @@ update_graph_incremental <- function(
     new_call_edges$to %in% new_node_ids
   new_call_edges <- new_call_edges[is_new_edge, , drop = FALSE]
 
-  # Similarly build import edges for new nodes
-  new_import_edges <- build_import_edges(new_nodes)
+  # Similarly build import edges for new nodes.
+  # build_import_edges() expects a character vector of file paths, not a node
+  # list -- extract paths from the node records (graph_index.R#82).
+  new_import_edges <- build_import_edges(
+    unique(vapply(new_nodes, `[[`, character(1L), "file")),
+    root = igraph::graph_attr(graph, "project_root") %||% "."
+  )
 
   # ---------- 5. Embed new nodes ----------------------------------------
   method <- embed_method %||%
@@ -170,8 +175,8 @@ update_graph_incremental <- function(
       graph <- igraph::add_edges(
         graph,
         edge_vec,
-        weight = new_e_df$weight %||%
-          rep(1, nrow(new_e_df))
+        weight = new_e_df$weight %||% rep(1, nrow(new_e_df)),
+        edge_type = new_e_df$edge_type %||% rep(NA_character_, nrow(new_e_df))
       )
     }
   }
