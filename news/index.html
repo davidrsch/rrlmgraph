@@ -44,6 +44,10 @@
 <h4 id="documentation-development-version">Documentation<a class="anchor" aria-label="anchor" href="#documentation-development-version"></a></h4>
 <ul><li>
 <code><a href="../reference/compute_relevance.html">compute_relevance()</a></code>: added a <code>@note</code> paragraph explaining that the MCP server’s TypeScript BFS uses a depth-penalty signal in place of the co-change signal because <code>CO_CHANGES</code> edge weights are not stored in the exported SQLite schema. Closes mcp#41.</li>
+<li>
+<code>vignettes/mcp-integration.Rmd</code>: replaced the <strong>Available MCP tools</strong> table with the complete, correctly-named 8-tool set; previous table listed 4 wrong names (<code>get_node</code>, <code>list_nodes</code>, <code>get_neighbours</code>, <code>graph_stats</code>) and omitted <code>find_callees</code>, <code>search_nodes</code>, <code>add_task_trace</code>, and <code>rebuild_graph</code>. Closes <a href="https://github.com/davidrsch/rrlmgraph/issues/91" class="external-link">#91</a>.</li>
+<li>
+<code>vignettes/benchmark-results.Rmd</code>: fixed stale strategy-name literals <code>"rrlmgraph"</code> / <code>"rrlmgraph_mcp"</code> in both plot chunks; correct names are <code>"graph_rag_tfidf"</code> / <code>"graph_rag_mcp"</code>, so all data points were rendering grey. Closes <a href="https://github.com/davidrsch/rrlmgraph/issues/92" class="external-link">#92</a>.</li>
 </ul></div>
 <div class="section level4">
 <h4 id="ci--security-development-version">CI / Security<a class="anchor" aria-label="anchor" href="#ci--security-development-version"></a></h4>

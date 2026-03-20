@@ -76,13 +76,16 @@ available MCP tool. Ask it questions like:
 
 ## Available MCP tools
 
-| Tool             | Description                                            |
-|------------------|--------------------------------------------------------|
-| `query_context`  | Relevance-guided BFS context window for a query string |
-| `get_node`       | Return full metadata / source snippet for a named node |
-| `list_nodes`     | Paginated list of all graph nodes with type filter     |
-| `get_neighbours` | Direct CALLS / IMPORTS / TEST neighbours of a node     |
-| `graph_stats`    | Summary statistics (node count, edge count, coverage)  |
+| Tool             | Description                                                         |
+|------------------|---------------------------------------------------------------------|
+| `query_context`  | Relevance-guided BFS context window for a coding task               |
+| `get_node_info`  | Full metadata, callers, callees, and source for a named node        |
+| `list_functions` | Functions ranked by PageRank, with optional file-path filter        |
+| `find_callers`   | All functions that call a given function (incoming CALLS edges)     |
+| `find_callees`   | All functions called by a given function (outgoing CALLS edges)     |
+| `search_nodes`   | Full-text keyword search across node names, bodies, and docs        |
+| `add_task_trace` | Record accepted / rejected task outcome to improve future retrieval |
+| `rebuild_graph`  | Trigger an Rscript rebuild of the project graph in-process          |
 
 ## Keeping the database fresh
 
@@ -96,8 +99,8 @@ for large projects:
 
 ``` r
 graph <- update_graph_incremental(
-    graph,
-    changed_files = "R/my_function.R"
+  graph,
+  changed_files = "R/my_function.R"
 )
 export_to_sqlite(graph)
 ```

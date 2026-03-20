@@ -156,23 +156,36 @@ pipeline?”</em></p>
 <tbody>
 <tr class="odd">
 <td><code>query_context</code></td>
-<td>Relevance-guided BFS context window for a query string</td>
+<td>Relevance-guided BFS context window for a coding task</td>
 </tr>
 <tr class="even">
-<td><code>get_node</code></td>
-<td>Return full metadata / source snippet for a named node</td>
+<td><code>get_node_info</code></td>
+<td>Full metadata, callers, callees, and source for a named node</td>
 </tr>
 <tr class="odd">
-<td><code>list_nodes</code></td>
-<td>Paginated list of all graph nodes with type filter</td>
+<td><code>list_functions</code></td>
+<td>Functions ranked by PageRank, with optional file-path filter</td>
 </tr>
 <tr class="even">
-<td><code>get_neighbours</code></td>
-<td>Direct CALLS / IMPORTS / TEST neighbours of a node</td>
+<td><code>find_callers</code></td>
+<td>All functions that call a given function (incoming CALLS edges)</td>
 </tr>
 <tr class="odd">
-<td><code>graph_stats</code></td>
-<td>Summary statistics (node count, edge count, coverage)</td>
+<td><code>find_callees</code></td>
+<td>All functions called by a given function (outgoing CALLS edges)</td>
+</tr>
+<tr class="even">
+<td><code>search_nodes</code></td>
+<td>Full-text keyword search across node names, bodies, and docs</td>
+</tr>
+<tr class="odd">
+<td><code>add_task_trace</code></td>
+<td>Record accepted / rejected task outcome to improve future
+retrieval</td>
+</tr>
+<tr class="even">
+<td><code>rebuild_graph</code></td>
+<td>Trigger an Rscript rebuild of the project graph in-process</td>
 </tr>
 </tbody>
 </table>
@@ -185,8 +198,8 @@ or use <code><a href="../reference/update_graph_incremental.html">update_graph_i
 <code><a href="../reference/export_to_sqlite.html">export_to_sqlite()</a></code> for large projects:</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">graph</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/update_graph_incremental.html">update_graph_incremental</a></span><span class="op">(</span></span>
-<span>    <span class="va">graph</span>,</span>
-<span>    changed_files <span class="op">=</span> <span class="st">"R/my_function.R"</span></span>
+<span>  <span class="va">graph</span>,</span>
+<span>  changed_files <span class="op">=</span> <span class="st">"R/my_function.R"</span></span>
 <span><span class="op">)</span></span>
 <span><span class="fu"><a href="../reference/export_to_sqlite.html">export_to_sqlite</a></span><span class="op">(</span><span class="va">graph</span><span class="op">)</span></span></code></pre></div>
 <p>A <a href="https://docs.ropensci.org/targets/" class="external-link">targets</a> pipeline or a Git pre-commit hook that runs
