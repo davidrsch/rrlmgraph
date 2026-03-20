@@ -2,9 +2,9 @@
 
 Retrieves a token-budgeted context window from the graph via
 [`query_context()`](https://davidrsch.github.io/rrlmgraph/reference/query_context.md),
-builds a grounded system prompt, and sends a message to an LLM. Uses
-ellmer when installed (supporting multiple providers); falls back to a
-direct httr2 call for the `"openai"` provider when ellmer is absent.
+builds a grounded system prompt, and sends a message to an LLM. Requires
+ellmer, which handles provider connections and the tool-call loop that
+implements RLM-Graph traversal.
 
 ## Usage
 
@@ -66,9 +66,7 @@ chat_with_context(
 
 ## Value
 
-Character(1) containing the LLM response text. Returns a descriptive
-error string (prefixed `"[rrlmgraph error]"`) rather than throwing when
-the LLM call fails.
+Character(1) containing the LLM response text. Throws on error.
 
 ## System prompt structure
 

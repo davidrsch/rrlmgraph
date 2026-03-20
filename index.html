@@ -89,7 +89,8 @@
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://davidrsch.github.io/rrlmgraph/">rrlmgraph</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># Point it at any R project — package, Shiny app, or script directory.</span></span>
-<span><span class="va">g</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/build_rrlm_graph.html">build_rrlm_graph</a></span><span class="op">(</span><span class="st">"path/to/mypkg"</span><span class="op">)</span></span>
+<span><span class="co"># verbose = TRUE shows the build progress messages.</span></span>
+<span><span class="va">g</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/build_rrlm_graph.html">build_rrlm_graph</a></span><span class="op">(</span><span class="st">"path/to/mypkg"</span>, verbose <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="co">#&gt; ✔ Detected R package: mypkg</span></span>
 <span><span class="co">#&gt; ✔ Parsed 14 source files — 38 function nodes, 6 package nodes, 9 test files</span></span>
 <span><span class="co">#&gt; ✔ Built CALLS (52), IMPORTS (31), TESTS (9), SEMANTIC (17) edges</span></span>
@@ -136,19 +137,24 @@
 <span></span>
 <span><span class="co"># The assembled context string is ready to paste into any LLM prompt.</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="va">ctx</span><span class="op">$</span><span class="va">context_string</span><span class="op">)</span></span>
-<span><span class="co">#&gt; === preprocess_data (function | data_pipeline.R) ===</span></span>
-<span><span class="co">#&gt; Signature: preprocess_data(df, strategy = c("median", "knn", "drop"))</span></span>
-<span><span class="co">#&gt; Calls: impute_missing, validate_inputs</span></span>
-<span><span class="co">#&gt; Called by: fit_model, run_cv_fold</span></span>
+<span><span class="co">#&gt; # rrlm_graph Context</span></span>
+<span><span class="co">#&gt; # Project: mypkg | R 4.5.0 | ~1847 tokens</span></span>
+<span><span class="co">#&gt; # Query: How does the model fitting pipeline handle missing values?</span></span>
 <span><span class="co">#&gt;</span></span>
-<span><span class="co">#&gt; Prepares a raw data frame for modelling. Missing values are handled</span></span>
-<span><span class="co">#&gt; according to `strategy`. Runs `validate_inputs()` first.</span></span>
-<span><span class="co">#&gt;</span></span>
+<span><span class="co">#&gt; ## CORE FUNCTIONS</span></span>
+<span><span class="co">#&gt; ---</span></span>
+<span><span class="co">#&gt; ### preprocess_data</span></span>
 <span><span class="co">#&gt; preprocess_data &lt;- function(df, strategy = c("median", "knn", "drop")) {</span></span>
 <span><span class="co">#&gt;   strategy &lt;- match.arg(strategy)</span></span>
 <span><span class="co">#&gt;   df &lt;- validate_inputs(df)</span></span>
 <span><span class="co">#&gt;   impute_missing(df, strategy = strategy)</span></span>
 <span><span class="co">#&gt; }</span></span>
+<span><span class="co">#&gt;</span></span>
+<span><span class="co">#&gt; ## SUPPORTING FUNCTIONS</span></span>
+<span><span class="co">#&gt; ---</span></span>
+<span><span class="co">#&gt; ### impute_missing</span></span>
+<span><span class="co">#&gt; impute_missing(df, strategy)</span></span>
+<span><span class="co">#&gt; Imputes missing values using the selected strategy.</span></span>
 <span><span class="co">#&gt; ...</span></span></code></pre></div>
 <p>You can inspect the relevance scores to understand why each node was selected:</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
