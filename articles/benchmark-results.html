@@ -72,7 +72,7 @@
 
     
     
-<p>This vignette compares eight context-retrieval strategies implemented
+<p>This vignette compares ten context-retrieval strategies implemented
 in <strong>rrlmgraph-bench</strong> on a suite of realistic R-project
 tasks. Results were pre-computed by the <code>run-benchmark</code>
 GitHub Actions workflow in <a href="https://github.com/davidrsch/rrlmgraph-bench" class="external-link">rrlmgraph-bench</a>
@@ -82,42 +82,55 @@ page.</p>
 <h2 id="strategies">Strategies<a class="anchor" aria-label="anchor" href="#strategies"></a>
 </h2>
 <table class="table">
+<colgroup>
+<col width="43%">
+<col width="56%">
+</colgroup>
 <thead><tr class="header">
 <th>Strategy</th>
 <th>Description</th>
 </tr></thead>
 <tbody>
 <tr class="odd">
+<td><code>graph_rag_tfidf</code></td>
+<td>Graph-RAG: BFS from TF-IDF seed nodes</td>
+</tr>
+<tr class="even">
+<td><code>graph_rag_tfidf_noseed</code></td>
+<td>Graph-RAG: TF-IDF traversal seeded by the query itself</td>
+</tr>
+<tr class="odd">
+<td><code>graph_rag_ollama</code></td>
+<td>Graph-RAG: BFS from Ollama vector-similarity seed nodes</td>
+</tr>
+<tr class="even">
+<td><code>graph_rag_mcp</code></td>
+<td>Graph-RAG: traversal via the rrlmgraph-mcp MCP server</td>
+</tr>
+<tr class="odd">
+<td><code>graph_rag_agentic</code></td>
+<td>RLM-Graph: LLM drives MCP tool calls iteratively</td>
+</tr>
+<tr class="even">
 <td><code>full_files</code></td>
-<td>Entire source files (baseline)</td>
-</tr>
-<tr class="even">
-<td><code>bm25</code></td>
-<td>BM25 keyword retrieval</td>
+<td>Entire source files (<strong>upper baseline</strong>)</td>
 </tr>
 <tr class="odd">
-<td><code>tfidf</code></td>
-<td>TF-IDF cosine similarity</td>
+<td><code>bm25_retrieval</code></td>
+<td>BM25 keyword retrieval (no graph)</td>
 </tr>
 <tr class="even">
-<td><code>graph_bfs</code></td>
-<td>Unweighted BFS from top-scoring nodes</td>
+<td><code>term_overlap</code></td>
+<td>Word-overlap ranking (no graph)</td>
 </tr>
 <tr class="odd">
-<td><code>graph_pagerank</code></td>
-<td>PageRank-weighted BFS</td>
+<td><code>no_context</code></td>
+<td>No context — LLM answers from training data (<strong>lower
+baseline</strong>)</td>
 </tr>
 <tr class="even">
-<td><code>graph_combined</code></td>
-<td>PageRank + TF-IDF hybrid</td>
-</tr>
-<tr class="odd">
-<td><code>rrlmgraph</code></td>
-<td>Full rrlmgraph relevance pipeline</td>
-</tr>
-<tr class="even">
-<td><code>rrlmgraph_mcp</code></td>
-<td>rrlmgraph via MCP server subprocess</td>
+<td><code>random_k</code></td>
+<td>Five randomly sampled code chunks (random baseline)</td>
 </tr>
 </tbody>
 </table>

@@ -4,6 +4,14 @@
 
 #### Bug fixes
 
+- [`export_to_sqlite()`](https://davidrsch.github.io/rrlmgraph/reference/export_to_sqlite.md):
+  `.upsert_nodes()` was reading the non-existent vertex attribute
+  `task_weight` instead of the actual `task_trace_weight` attribute
+  written by
+  [`log_task_trace()`](https://davidrsch.github.io/rrlmgraph/reference/log_task_trace.md).
+  Every exported `task_weight` value was `NA`, silently breaking the
+  feedback loop that re-ranks nodes after task completion
+  ([\#89](https://github.com/davidrsch/rrlmgraph/issues/89)).
 - `task_trace_weight` cold-start default changed from `0.5` to `0.0`
   ([\#78](https://github.com/davidrsch/rrlmgraph/issues/78)). Previously
   the very first BFS when `task_trace_weight` was uninitialized boosted
