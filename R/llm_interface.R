@@ -86,42 +86,49 @@ chat_with_context <- function(
   # (search_nodes, get_node_info, find_callers, find_callees).  When ellmer is
   # absent, an OpenAI-compatible httr2 path is used with a context-window
   # prompt; other providers require ellmer and will error.
-  if (requireNamespace("ellmer", quietly = TRUE)) {
-    graph_tools <- .build_graph_tools(graph, budget_tokens, min_relevance)
-    system_prompt <- .build_rlm_system_prompt()
-    response_text <- .llm_via_ellmer(
-      system_prompt,
-      message,
-      provider,
-      model,
-      graph_tools,
-      ...
-    )
-  } else if (provider == "openai") {
-    ctx_obj <- tryCatch(
-      query_context(
-        graph,
-        message,
-        budget_tokens = budget_tokens,
-        seed_node = seed_node,
-        min_relevance = min_relevance
-      ),
-      error = function(e) NULL
-    )
-    ctx_str <- if (!is.null(ctx_obj)) {
-      tryCatch(assemble_context_string(ctx_obj), error = function(e) "")
-    } else {
-      ""
+  response_text <- tryCatch(
+    {
+      if (requireNamespace("ellmer", quietly = TRUE)) {
+        graph_tools <- .build_graph_tools(graph, budget_tokens, min_relevance)
+        system_prompt <- .build_rlm_system_prompt()
+        .llm_via_ellmer(
+          system_prompt,
+          message,
+          provider,
+          model,
+          graph_tools,
+          ...
+        )
+      } else if (provider == "openai") {
+        ctx_obj <- tryCatch(
+          query_context(
+            graph,
+            message,
+            budget_tokens = budget_tokens,
+            seed_node = seed_node,
+            min_relevance = min_relevance
+          ),
+          error = function(e) NULL
+        )
+        ctx_str <- if (!is.null(ctx_obj)) {
+          tryCatch(assemble_context_string(ctx_obj), error = function(e) "")
+        } else {
+          ""
+        }
+        system_prompt <- .build_system_prompt(ctx_str)
+        resolved_model <- if (!is.null(model)) model else "gpt-4o-mini"
+        .llm_via_httr2(system_prompt, message, resolved_model)
+      } else {
+        cli::cli_abort(c(
+          "{.pkg ellmer} is required for {.fn chat_with_context} with provider {.val {provider}}.",
+          "i" = "Install it with: {.code install.packages(\"ellmer\")}"
+        ))
+      }
+    },
+    error = function(e) {
+      paste0("[rrlmgraph error] ", conditionMessage(e))
     }
-    system_prompt <- .build_system_prompt(ctx_str)
-    resolved_model <- if (!is.null(model)) model else "gpt-4o-mini"
-    response_text <- .llm_via_httr2(system_prompt, message, resolved_model)
-  } else {
-    cli::cli_abort(c(
-      "{.pkg ellmer} is required for {.fn chat_with_context} with provider {.val {provider}}.",
-      "i" = "Install it with: {.code install.packages(\"ellmer\")}"
-    ))
-  }
+  )
 
   .log_task_completion(graph, message, character(0L), response_text)
   response_text
