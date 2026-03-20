@@ -125,6 +125,7 @@ roxygen2
 rrlm
 rrlmgraph
 rrlmgraphbench
+Rscript
 RSQLite
 RStudio
 seagreen
