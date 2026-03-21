@@ -7,15 +7,15 @@
 - `context_assemble.R`: fixed token-count heuristic from `/ 4` to
   `/ 3.5`, matching all other token-counting sites in the codebase
   ([\#95](https://github.com/davidrsch/rrlmgraph/issues/95)).
-- `task_trace.R`: weight normalisation floor changed from `0.1` to `0`
+- `task_trace.R`: weight normalization floor changed from `0.1` to `0`
   so that zero-weight tasks are achievable as documented
   ([\#96](https://github.com/davidrsch/rrlmgraph/issues/96)).
 
 #### Documentation
 
-- `DESCRIPTION`: version now carries `.9000` dev suffix on `main` branch
-  to distinguish development snapshots from the CRAN release
-  ([\#100](https://github.com/davidrsch/rrlmgraph/issues/100)).
+- `DESCRIPTION`: version now carries `.9000` development suffix on
+  `main` branch to distinguish development snapshots from the CRAN
+  release ([\#100](https://github.com/davidrsch/rrlmgraph/issues/100)).
 
 #### Documentation
 
