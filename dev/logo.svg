@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 120" width="120" height="120">
+  <!-- Background rounded square -->
+  <rect width="120" height="120" rx="18" fill="#1A4F74"/>
+
+  <!-- Graph edges -->
+  <line x1="60" y1="28" x2="28" y2="72" stroke="#5AB4E8" stroke-width="2.5" stroke-linecap="round" opacity="0.7"/>
+  <line x1="60" y1="28" x2="92" y2="72" stroke="#5AB4E8" stroke-width="2.5" stroke-linecap="round" opacity="0.7"/>
+  <line x1="28" y1="72" x2="60" y2="95" stroke="#5AB4E8" stroke-width="2.5" stroke-linecap="round" opacity="0.7"/>
+  <line x1="92" y1="72" x2="60" y2="95" stroke="#5AB4E8" stroke-width="2.5" stroke-linecap="round" opacity="0.7"/>
+  <line x1="28" y1="72" x2="92" y2="72" stroke="#5AB4E8" stroke-width="2" stroke-linecap="round" opacity="0.45"/>
+
+  <!-- Graph nodes -->
+  <circle cx="60" cy="28" r="10" fill="#7ECFF5" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="28" cy="72" r="10" fill="#7ECFF5" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="92" cy="72" r="10" fill="#7ECFF5" stroke="#FFFFFF" stroke-width="1.5"/>
+  <circle cx="60" cy="95" r="8" fill="#AADFF8" stroke="#FFFFFF" stroke-width="1.5"/>
+</svg>

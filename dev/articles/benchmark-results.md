@@ -1,0 +1,141 @@
+# Benchmark Results
+
+This vignette compares ten context-retrieval strategies implemented in
+**rrlmgraph-bench** on a suite of realistic R-project tasks. Results
+were pre-computed by the `run-benchmark` GitHub Actions workflow in
+[rrlmgraph-bench](https://github.com/davidrsch/rrlmgraph-bench) and
+summarised here — no benchmark re-run is needed to render this page.
+
+## Strategies
+
+| Strategy                 | Description                                                      |
+|--------------------------|------------------------------------------------------------------|
+| `graph_rag_tfidf`        | Graph-RAG: BFS from TF-IDF seed nodes                            |
+| `graph_rag_tfidf_noseed` | Graph-RAG: TF-IDF traversal seeded by the query itself           |
+| `graph_rag_ollama`       | Graph-RAG: BFS from Ollama vector-similarity seed nodes          |
+| `graph_rag_mcp`          | Graph-RAG: traversal via the rrlmgraph-mcp MCP server            |
+| `graph_rag_agentic`      | RLM-Graph: LLM drives MCP tool calls iteratively                 |
+| `full_files`             | Entire source files (**upper baseline**)                         |
+| `bm25_retrieval`         | BM25 keyword retrieval (no graph)                                |
+| `term_overlap`           | Word-overlap ranking (no graph)                                  |
+| `no_context`             | No context — LLM answers from training data (**lower baseline**) |
+| `random_k`               | Five randomly sampled code chunks (random baseline)              |
+
+## Results
+
+``` r
+# When a vignette is built, cwd = vignettes/ so this relative path works
+# both during R CMD check and pkgdown site builds.
+precomputed_path <- file.path("precomputed", "benchmark_summary.rds")
+if (file.exists(precomputed_path)) {
+    bench <- readRDS(precomputed_path)
+} else {
+    bench <- NULL
+}
+```
+
+``` r
+if (is.null(bench)) {
+    cat(
+        "> **Note:** Benchmark results not yet available.\n",
+        "> Trigger the `run-benchmark` workflow in",
+        "[rrlmgraph-bench](https://github.com/davidrsch/rrlmgraph-bench/actions)",
+        "to generate data, then run the `precompute-vignettes` workflow here.\n"
+    )
+}
+```
+
+> **Note:** Benchmark results not yet available. Trigger the
+> `run-benchmark` workflow in
+> [rrlmgraph-bench](https://github.com/davidrsch/rrlmgraph-bench/actions)
+> to generate data, then run the `precompute-vignettes` workflow here.
+
+``` r
+stats <- bench$stats
+knitr::kable(
+    stats$summary[, c(
+        "strategy", "mean_score", "sd_score", "ci_lo_95", "ci_hi_95",
+        "mean_total_tokens", "hallucination_rate", "n"
+    )],
+    digits = 3,
+    caption = paste0(
+        "Mean score ± 95 % CI per strategy.  ",
+        "Captured: ", bench$meta$generated_at, ".  ",
+        "rrlmgraph v", bench$meta$rrlmgraph_version, " / ",
+        "rrlmgraphbench v", bench$meta$rrlmgraphbench_version, "."
+    ),
+    col.names = c(
+        "Strategy", "Mean score", "SD", "CI lower", "CI upper",
+        "Mean tokens", "Hallucination rate", "N"
+    )
+)
+```
+
+``` r
+stats <- bench$stats
+df <- stats$summary
+df$strategy <- factor(df$strategy, levels = df$strategy[order(df$mean_score)])
+baseline <- df$mean_score[df$strategy == "full_files"]
+
+op <- par(mar = c(5, 10, 3, 2))
+plot(
+    df$mean_score,
+    seq_len(nrow(df)),
+    xlim = c(0, 1),
+    xlab = "Mean score",
+    ylab = "",
+    yaxt = "n",
+    pch = 16,
+    col = ifelse(df$strategy == "graph_rag_tfidf", "steelblue",
+        ifelse(df$strategy == "graph_rag_mcp", "seagreen", "grey40")
+    ),
+    main = "Strategy comparison"
+)
+axis(2, at = seq_len(nrow(df)), labels = df$strategy, las = 1, cex.axis = 0.85)
+abline(v = baseline, lty = 2, col = "grey60")
+arrows(
+    df$ci_lo_95, seq_len(nrow(df)),
+    df$ci_hi_95, seq_len(nrow(df)),
+    length = 0.05, angle = 90, code = 3,
+    col = ifelse(df$strategy == "graph_rag_tfidf", "steelblue",
+        ifelse(df$strategy == "graph_rag_mcp", "seagreen", "grey40")
+    )
+)
+par(op)
+```
+
+## Token efficiency
+
+The Token Efficiency Ratio (TER) measures score gain per token relative
+to the `full_files` baseline. Values \> 1 indicate better score per
+token used.
+
+``` r
+ter_df <- data.frame(
+    strategy = names(bench$stats$ter),
+    TER = round(bench$stats$ter, 3),
+    stringsAsFactors = FALSE
+)
+knitr::kable(ter_df, row.names = FALSE, caption = "Token Efficiency Ratio (TER)")
+```
+
+## Pairwise tests
+
+``` r
+pw <- bench$stats$pairwise
+pw$significant <- pw$p_bonferroni < 0.05
+knitr::kable(
+    pw[, c("strategy_1", "strategy_2", "p_bonferroni", "cohens_d", "significant")],
+    digits    = 4,
+    col.names = c("Strategy A", "Strategy B", "p (Bonferroni)", "Cohen's d", "Sig."),
+    caption   = "Pairwise Welch t-tests (Bonferroni-corrected)."
+)
+```
+
+## Methodology
+
+Full task definitions and scoring rubrics are in the
+[rrlmgraph-bench](https://github.com/davidrsch/rrlmgraph-bench)
+repository. Each task is scored 0–1 using
+`compute_benchmark_statistics()` from the **rrlmgraphbench** package.
+Hallucinations are detected by `count_hallucinations()`.

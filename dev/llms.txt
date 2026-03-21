@@ -1,0 +1,304 @@
+# rrlmgraph
+
+The goal of `rrlmgraph` is to give large language models the *right*
+context about your R project — not the whole codebase. It builds a typed
+knowledge graph that encodes functions, files, packages, and tests as
+nodes, then performs a relevance-guided traversal to extract a
+token-budgeted context window for every LLM query. Compared to pasting
+entire source files, `rrlmgraph` reduces hallucinations by grounding
+responses in verified code and cuts token consumption by orders of
+magnitude.
+
+## Installation
+
+You can install the development version of `rrlmgraph` from GitHub with:
+
+``` r
+# install.packages("pak")
+pak::pak("davidrsch/rrlmgraph")
+```
+
+## Example
+
+### Example 1: Build a knowledge graph for your R project
+
+[`build_rrlm_graph()`](https://davidrsch.github.io/rrlmgraph/dev/reference/build_rrlm_graph.md)
+parses every R source file in your project, extracts function
+definitions, resolves cross-file calls and package imports, computes
+TF-IDF embeddings for each node, and assembles everything into an
+`igraph` object annotated with PageRank scores.
+
+``` r
+library(rrlmgraph)
+
+# Point it at any R project — package, Shiny app, or script directory.
+# verbose = TRUE shows the build progress messages.
+g <- build_rrlm_graph("path/to/mypkg", verbose = TRUE)
+#> ✔ Detected R package: mypkg
+#> ✔ Parsed 14 source files — 38 function nodes, 6 package nodes, 9 test files
+#> ✔ Built CALLS (52), IMPORTS (31), TESTS (9), SEMANTIC (17) edges
+#> ✔ TF-IDF embeddings computed (vocab size: 1 204)
+#> ✔ PageRank computed
+#> ✔ Graph cached at path/to/mypkg/.rrlmgraph/
+
+# The object is a plain igraph, so all igraph tools work.
+igraph::vcount(g)
+#> [1] 53
+igraph::ecount(g)
+#> [1] 109
+
+# A typed summary is available via print/summary.
+g
+#> <rrlm_graph>  mypkg 0.1.0
+#>   Nodes : 53  (38 function, 6 package, 9 testfile)
+#>   Edges : 109 (52 CALLS, 31 IMPORTS, 9 TESTS, 17 SEMANTIC)
+#>   Embed : tfidf  (vocab 1 204)
+#>   Cached: path/to/mypkg/.rrlmgraph/graph.rds
+```
+
+### Example 2: Query context for a coding task
+
+[`query_context()`](https://davidrsch.github.io/rrlmgraph/dev/reference/query_context.md)
+performs a relevance-guided breadth-first search from the most
+informative seed node. The token budget is a **hard constraint** — the
+returned context string is guaranteed to fit within it.
+
+``` r
+# Ask for the most relevant code for a specific task.
+ctx <- query_context(
+  g,
+  query        = "How does the model fitting pipeline handle missing values?",
+  budget_tokens = 2000L
+)
+
+# ctx is a list with class "rrlm_context".
+ctx$seed_node
+#> [1] "preprocess_data"
+
+ctx$nodes
+#> [1] "preprocess_data" "impute_missing"  "fit_model"       "validate_inputs"
+#> [5] "load_data"
+
+ctx$tokens_used
+#> [1] 1847
+
+# The assembled context string is ready to paste into any LLM prompt.
+cat(ctx$context_string)
+#> # rrlm_graph Context
+#> # Project: mypkg | R 4.5.0 | ~1847 tokens
+#> # Query: How does the model fitting pipeline handle missing values?
+#>
+#> ## CORE FUNCTIONS
+#> ---
+#> ### preprocess_data
+#> preprocess_data <- function(df, strategy = c("median", "knn", "drop")) {
+#>   strategy <- match.arg(strategy)
+#>   df <- validate_inputs(df)
+#>   impute_missing(df, strategy = strategy)
+#> }
+#>
+#> ## SUPPORTING FUNCTIONS
+#> ---
+#> ### impute_missing
+#> impute_missing(df, strategy)
+#> Imputes missing values using the selected strategy.
+#> ...
+```
+
+You can inspect the relevance scores to understand why each node was
+selected:
+
+``` r
+sort(ctx$relevance_scores, decreasing = TRUE)
+#>  preprocess_data   impute_missing        fit_model validate_inputs
+#>        0.8341           0.7129            0.6803            0.5512
+#>    load_data
+#>        0.3204
+```
+
+### Example 3: Chat with an LLM grounded in project code
+
+[`chat_with_context()`](https://davidrsch.github.io/rrlmgraph/dev/reference/chat_with_context.md)
+wraps
+[`query_context()`](https://davidrsch.github.io/rrlmgraph/dev/reference/query_context.md)
+and sends a grounded prompt to an LLM via the `ellmer` package. The
+model is instructed to answer only from the provided code snippets and
+cite node names. Supports OpenAI, Anthropic, GitHub Models, and Ollama.
+
+``` r
+# GitHub Models — uses GITHUB_PAT, no extra secret needed.
+answer <- chat_with_context(
+  g,
+  message       = "Refactor preprocess_data() to support a 'mode' imputation strategy.",
+  provider      = "github",
+  budget_tokens = 3000L
+)
+cat(answer)
+#> Based on `preprocess_data` (data_pipeline.R) and `impute_missing`
+#> (impute.R), here is a minimal refactor:
+#>
+#> ```r
+#> preprocess_data <- function(df,
+#>                              strategy = c("median", "knn", "drop", "mode")) {
+#>   strategy <- match.arg(strategy)
+#>   df <- validate_inputs(df)
+#>   impute_missing(df, strategy = strategy)
+#> }
+#> ```
+#>
+#> `impute_missing()` already dispatches on `strategy` via a switch statement
+#> (impute.R line 34), so adding `"mode"` there is the only other change needed.
+
+# Ollama (local, no API key required).
+# answer <- chat_with_context(g, "...", provider = "ollama", model = "llama3.2")
+```
+
+### Example 4: Export to SQLite for the rrlmgraph-mcp server
+
+[`export_to_sqlite()`](https://davidrsch.github.io/rrlmgraph/dev/reference/export_to_sqlite.md)
+writes the full graph — nodes with body text, embeddings, and PageRank,
+edges with types and weights, and the TF-IDF vocabulary — to a single
+SQLite file that the
+[rrlmgraph-mcp](https://github.com/davidrsch/rrlmgraph-mcp) TypeScript
+server reads directly.
+
+``` r
+# Export once after building (or rebuilding) the graph.
+export_to_sqlite(g, db_path = "path/to/mypkg/.rrlmgraph/graph.sqlite")
+#> ✔ Graph exported to path/to/mypkg/.rrlmgraph/graph.sqlite
+
+# Then point the MCP server at the file.
+# In ~/.cursor/mcp.json (or equivalent):
+# {
+#   "mcpServers": {
+#     "rrlmgraph": {
+#       "command": "node",
+#       "args": [
+#         "/path/to/rrlmgraph-mcp/dist/index.js",
+#         "--db-path", "path/to/mypkg/.rrlmgraph/graph.sqlite"
+#       ]
+#     }
+#   }
+# }
+```
+
+The SQLite file is self-contained and can be committed alongside your
+project so teammates benefit from graph context without running R.
+
+## Learn more
+
+- [Getting
+  Started](https://davidrsch.github.io/rrlmgraph/dev/articles/getting-started.md)
+  — end-to-end walkthrough
+- [Reference](https://davidrsch.github.io/rrlmgraph/dev/reference/index.md)
+  — full function documentation
+- [rrlmgraph-mcp](https://github.com/davidrsch/rrlmgraph-mcp) — MCP
+  server for Cursor, Claude Desktop, and other MCP hosts
+
+# Package index
+
+## Core API
+
+Primary user-facing functions for building a project graph, querying it
+for LLM context, and generating static instructions.
+
+- [`build_rrlm_graph()`](https://davidrsch.github.io/rrlmgraph/dev/reference/build_rrlm_graph.md)
+  : Build an RLM-Graph for an R project
+- [`query_context()`](https://davidrsch.github.io/rrlmgraph/dev/reference/query_context.md)
+  : Query the rrlm graph and retrieve a token-budgeted context
+- [`chat_with_context()`](https://davidrsch.github.io/rrlmgraph/dev/reference/chat_with_context.md)
+  : Chat with an LLM using graph-derived context
+- [`generate_instructions()`](https://davidrsch.github.io/rrlmgraph/dev/reference/generate_instructions.md)
+  : Generate a Copilot-style instruction file from the project graph
+- [`update_graph_incremental()`](https://davidrsch.github.io/rrlmgraph/dev/reference/update_graph_incremental.md)
+  : Incrementally update the graph for changed files
+
+## Graph Construction
+
+Parse R source files into nodes and edges.
+
+- [`detect_rproject()`](https://davidrsch.github.io/rrlmgraph/dev/reference/detect_rproject.md)
+  : Detect an R project type and discover its files
+- [`extract_function_nodes()`](https://davidrsch.github.io/rrlmgraph/dev/reference/extract_function_nodes.md)
+  : Extract function nodes from R source files
+- [`build_call_edges()`](https://davidrsch.github.io/rrlmgraph/dev/reference/build_call_edges.md)
+  : Build CALLS edges between function nodes
+- [`build_import_edges()`](https://davidrsch.github.io/rrlmgraph/dev/reference/build_import_edges.md)
+  : Build IMPORTS edges from R files to package dependencies
+- [`build_test_edges()`](https://davidrsch.github.io/rrlmgraph/dev/reference/build_test_edges.md)
+  : Build TEST edges from test files to user-defined functions
+- [`build_co_change_edges()`](https://davidrsch.github.io/rrlmgraph/dev/reference/build_co_change_edges.md)
+  : Build CO_CHANGES edges from git commit history
+- [`build_dispatch_edges()`](https://davidrsch.github.io/rrlmgraph/dev/reference/build_dispatch_edges.md)
+  : Build DISPATCHES_ON and EXTENDS edges for OOP patterns
+- [`find_calls_in_body()`](https://davidrsch.github.io/rrlmgraph/dev/reference/find_calls_in_body.md)
+  : Find function calls within an R function body
+- [`embed_nodes()`](https://davidrsch.github.io/rrlmgraph/dev/reference/embed_nodes.md)
+  : Embed function nodes with TF-IDF, Ollama, or OpenAI vectors
+- [`embed_query()`](https://davidrsch.github.io/rrlmgraph/dev/reference/embed_query.md)
+  : Embed a free-text query into the model's vector space
+- [`build_node_context()`](https://davidrsch.github.io/rrlmgraph/dev/reference/build_node_context.md)
+  : Build a text representation of a single graph node
+- [`assemble_context_string()`](https://davidrsch.github.io/rrlmgraph/dev/reference/assemble_context_string.md)
+  : Assemble a structured, LLM-ready context string from ranked hits
+- [`compute_relevance()`](https://davidrsch.github.io/rrlmgraph/dev/reference/compute_relevance.md)
+  : Compute composite relevance score for a graph node
+- [`cosine_similarity()`](https://davidrsch.github.io/rrlmgraph/dev/reference/cosine_similarity.md)
+  : Compute cosine similarity between two numeric vectors
+
+## Caching & Persistence
+
+Save, load, and export the graph.
+
+- [`save_graph_cache()`](https://davidrsch.github.io/rrlmgraph/dev/reference/save_graph_cache.md)
+  : Save an rrlm_graph to a local cache directory
+- [`load_graph_cache()`](https://davidrsch.github.io/rrlmgraph/dev/reference/load_graph_cache.md)
+  : Load an rrlm_graph from a local cache
+- [`is_cache_stale()`](https://davidrsch.github.io/rrlmgraph/dev/reference/is_cache_stale.md)
+  : Check whether the graph cache is stale
+- [`export_to_sqlite()`](https://davidrsch.github.io/rrlmgraph/dev/reference/export_to_sqlite.md)
+  : Export an rrlm_graph to a SQLite database
+
+## Task Trace
+
+Record and weight LLM interaction feedback.
+
+- [`log_task_trace()`](https://davidrsch.github.io/rrlmgraph/dev/reference/log_task_trace.md)
+  : Log a task-trace entry to the JSONL feedback file
+- [`update_task_weights()`](https://davidrsch.github.io/rrlmgraph/dev/reference/update_task_weights.md)
+  : Update task-trace weights on graph vertices
+- [`update_task_polarity()`](https://davidrsch.github.io/rrlmgraph/dev/reference/update_task_polarity.md)
+  : Update the polarity of recent task-trace entries
+
+## Utilities
+
+- [`ollama_available()`](https://davidrsch.github.io/rrlmgraph/dev/reference/ollama_available.md)
+  : Check whether Ollama is available
+
+## S3 Methods
+
+Print, summary, and plot for `rrlm_graph` / `rrlm_context`.
+
+- [`print(`*`<rrlm_graph>`*`)`](https://davidrsch.github.io/rrlmgraph/dev/reference/print.rrlm_graph.md)
+  : Print a compact one-line summary of an rrlm_graph
+- [`summary(`*`<rrlm_graph>`*`)`](https://davidrsch.github.io/rrlmgraph/dev/reference/summary.rrlm_graph.md)
+  : Detailed summary of an rrlm_graph
+- [`plot(`*`<rrlm_graph>`*`)`](https://davidrsch.github.io/rrlmgraph/dev/reference/plot.rrlm_graph.md)
+  : Plot an rrlm_graph
+- [`print(`*`<rrlm_context>`*`)`](https://davidrsch.github.io/rrlmgraph/dev/reference/print.rrlm_context.md)
+  : Print an rrlm_context object
+- [`summary(`*`<rrlm_context>`*`)`](https://davidrsch.github.io/rrlmgraph/dev/reference/summary.rrlm_context.md)
+  : Summarise an rrlm_context object
+
+# Articles
+
+### All vignettes
+
+- [Benchmark
+  Results](https://davidrsch.github.io/rrlmgraph/dev/articles/benchmark-results.md):
+- [Getting Started with
+  rrlmgraph](https://davidrsch.github.io/rrlmgraph/dev/articles/getting-started.md):
+- [LLM Chat with
+  Context](https://davidrsch.github.io/rrlmgraph/dev/articles/llm-chat.md):
+- [MCP Server
+  Integration](https://davidrsch.github.io/rrlmgraph/dev/articles/mcp-integration.md):
