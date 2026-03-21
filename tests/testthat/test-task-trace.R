@@ -124,7 +124,7 @@ test_that("update_task_weights boosts useful nodes (EMA path)", {
   expect_lt(w_after[other_idx[1L]], w_before[other_idx[1L]])
 })
 
-test_that("update_task_weights weights stay in [0.1, 1.0]", {
+test_that("update_task_weights weights stay in [0, 1]", {
   skip_if_not_installed("jsonlite")
   tmp <- withr::local_tempdir()
   g <- make_tt_graph(project_root = tmp)
@@ -142,7 +142,8 @@ test_that("update_task_weights weights stay in [0.1, 1.0]", {
   g_out <- update_task_weights(g)
   w <- igraph::V(g_out)$task_trace_weight
 
-  expect_true(all(w >= 0.1))
+  # rrlmgraph#96: floor is 0 (not 0.1); range is [0, 1] as documented
+  expect_true(all(w >= 0))
   expect_true(all(w <= 1.0))
 })
 

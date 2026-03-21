@@ -236,8 +236,8 @@ assemble_context_string <- function(hits, graph, query = "") {
 
   body <- paste(sections, collapse = "\n")
 
-  # Approximate token count (chars / 4 heuristic) ------------------------
-  n_tokens <- ceiling(nchar(body, type = "chars") / 4L)
+  # Approximate token count (chars / 3.5 heuristic — matches all other sites, rrlmgraph#95)
+  n_tokens <- ceiling(nchar(body, type = "chars") / 3.5)
 
   # Header ---------------------------------------------------------------
   header <- paste0(

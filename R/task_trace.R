@@ -236,10 +236,11 @@ update_task_weights <- function(
       }
     }
 
-    # min-max normalise to [0.1, 1.0]
+    # min-max normalise to [0, 1] — rrlmgraph#96: floor was 0.1, but the
+    # documented range is [0, 1] and a zero weight should be achievable.
     mx <- max(accum)
     if (mx > 0) {
-      cur <- 0.1 + 0.9 * (accum / mx)
+      cur <- accum / mx
     }
 
     igraph::V(graph)$task_trace_weight <- cur

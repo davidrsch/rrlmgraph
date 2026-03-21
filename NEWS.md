@@ -1,5 +1,17 @@
 ﻿# rrlmgraph (development version)
 
+### Bug fixes
+
+- `context_assemble.R`: fixed token-count heuristic from `/ 4` to `/ 3.5`,
+  matching all other token-counting sites in the codebase (#95).
+- `task_trace.R`: weight normalisation floor changed from `0.1` to `0` so
+  that zero-weight tasks are achievable as documented (#96).
+
+### Documentation
+
+- `DESCRIPTION`: version now carries `.9000` dev suffix on `main` branch
+  to distinguish development snapshots from the CRAN release (#100).
+
 ### Documentation
 
 - `compute_relevance()`: added a `@note` paragraph explaining that the MCP
