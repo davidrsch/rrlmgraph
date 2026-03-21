@@ -113,6 +113,7 @@ qmd
 rcmdcheck
 Recognised
 regex
+repo
 Reingold
 reparse
 RPC
