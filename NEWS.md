@@ -6,6 +6,27 @@
   matching all other token-counting sites in the codebase (#95).
 - `task_trace.R`: weight normalization floor changed from `0.1` to `0` so
   that zero-weight tasks are achievable as documented (#96).
+- `relevance.R` `.count_tokens()`: added cross-repo sync note directing
+  maintainers to also update `.bench_estimate_tokens()` in `rrlmgraph-bench`
+  when changing the formula (#101).
+
+### CI / infrastructure
+
+- Added top-level `permissions: {}` deny-all block to `format-suggest.yaml`
+  so runtime permissions are granted per-job only (#97).
+- Added `concurrency:` groups to `R-CMD-check.yaml`, `test-coverage.yaml`,
+  and `format-suggest.yaml` to cancel stale runs on new pushes (#97).
+- SHA-pinned all remaining mutable action tags: `posit-dev/setup-air@v1`,
+  `reviewdog/action-suggester@v1`, `JamesIves/github-pages-deploy-action@v4.5.0`,
+  `codecov/codecov-action@v5`, `r-lib/actions/pr-fetch@v2`, and
+  `r-lib/actions/pr-push@v2` (#98).
+- `pkgdown.yaml`: deployment now triggered by `workflow_run` on `R-CMD-check`
+  completion instead of directly on `push`, so broken packages can no longer
+  produce a published documentation site (#99).
+- `pr-commands.yaml`: removed `continue-on-error: true` from the style-job
+  commit step; the `|| echo "No changes to commit"` guard in the `run:`
+  block already handles the empty-commit case without hiding genuine errors
+  (#102).
 
 ### Documentation
 

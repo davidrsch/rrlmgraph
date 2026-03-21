@@ -144,7 +144,9 @@ compute_relevance <- function(
 #' @keywords internal
 #' Estimate the number of language-model tokens in \code{text}.
 #' Uses \pkg{tokenizers} word-level splitting (×1.3 for subword expansion)
-#' when available; otherwise falls back to \code{nchar(text) / 4}.
+#' when available; otherwise falls back to \code{nchar(text) / 3.5}.
+#' NOTE: rrlmgraph-bench `.bench_estimate_tokens()` mirrors this function;
+#' keep both in sync when changing the formula.
 .count_tokens <- function(text) {
   if (!nzchar(text)) {
     return(0L)

@@ -25,17 +25,17 @@ jobs:
         permissions:
             contents: write
         steps:
-            - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+            - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-            - uses: r-lib/actions/pr-fetch@v2
+            - uses: r-lib/actions/pr-fetch@6f6e5bc62fba3a704f74e7ad7ef7676c5c6a2590 # v2
               with:
                   repo-token: ${{ secrets.GITHUB_TOKEN }}
 
-            - uses: r-lib/actions/setup-r@6f6e5bc62fba3a704f74e7ad7ef7676c5c6a2590  # v2
+            - uses: r-lib/actions/setup-r@6f6e5bc62fba3a704f74e7ad7ef7676c5c6a2590 # v2
               with:
                   use-public-rspm: true
 
-            - uses: r-lib/actions/setup-r-dependencies@6f6e5bc62fba3a704f74e7ad7ef7676c5c6a2590  # v2
+            - uses: r-lib/actions/setup-r-dependencies@6f6e5bc62fba3a704f74e7ad7ef7676c5c6a2590 # v2
               with:
                   extra-packages: any::devtools
                   needs: pr-document
@@ -51,7 +51,7 @@ jobs:
                   git add man/* NAMESPACE
                   git commit -m 'Document' || echo "No changes to commit"
 
-            - uses: r-lib/actions/pr-push@v2
+            - uses: r-lib/actions/pr-push@6f6e5bc62fba3a704f74e7ad7ef7676c5c6a2590 # v2
               with:
                   repo-token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -68,14 +68,14 @@ jobs:
         permissions:
             contents: write
         steps:
-            - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+            - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-            - uses: r-lib/actions/pr-fetch@v2
+            - uses: r-lib/actions/pr-fetch@6f6e5bc62fba3a704f74e7ad7ef7676c5c6a2590 # v2
               with:
                   repo-token: ${{ secrets.GITHUB_TOKEN }}
 
             - name: Install air
-              uses: posit-dev/setup-air@v1
+              uses: posit-dev/setup-air@63e80dedb6d275c94a3841e15e5ff8691e1ab237 # v1
 
             - name: Format
               run: air format .
@@ -85,8 +85,7 @@ jobs:
                   git config --local user.name "$GITHUB_ACTOR"
                   git config --local user.email "$GITHUB_ACTOR@users.noreply.github.com"
                   git commit -am 'Format with air' || echo "No changes to commit"
-              continue-on-error: true
 
-            - uses: r-lib/actions/pr-push@v2
+            - uses: r-lib/actions/pr-push@6f6e5bc62fba3a704f74e7ad7ef7676c5c6a2590 # v2
               with:
                   repo-token: ${{ secrets.GITHUB_TOKEN }}
