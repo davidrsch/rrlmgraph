@@ -46,6 +46,18 @@
 <code>context_assemble.R</code>: fixed token-count heuristic from <code>/ 4</code> to <code>/ 3.5</code>, matching all other token-counting sites in the codebase (<a href="https://github.com/davidrsch/rrlmgraph/issues/95" class="external-link">#95</a>).</li>
 <li>
 <code>task_trace.R</code>: weight normalization floor changed from <code>0.1</code> to <code>0</code> so that zero-weight tasks are achievable as documented (<a href="https://github.com/davidrsch/rrlmgraph/issues/96" class="external-link">#96</a>).</li>
+<li>
+<code>relevance.R</code> <code>.count_tokens()</code>: added cross-repo sync note directing maintainers to also update <code>.bench_estimate_tokens()</code> in <code>rrlmgraph-bench</code> when changing the formula (<a href="https://github.com/davidrsch/rrlmgraph/issues/101" class="external-link">#101</a>).</li>
+</ul></div>
+<div class="section level4">
+<h4 id="ci--infrastructure-development-version">CI / infrastructure<a class="anchor" aria-label="anchor" href="#ci--infrastructure-development-version"></a></h4>
+<ul><li>Added top-level <code>permissions: {}</code> deny-all block to <code>format-suggest.yaml</code> so runtime permissions are granted per-job only (<a href="https://github.com/davidrsch/rrlmgraph/issues/97" class="external-link">#97</a>).</li>
+<li>Added <code>concurrency:</code> groups to <code>R-CMD-check.yaml</code>, <code>test-coverage.yaml</code>, and <code>format-suggest.yaml</code> to cancel stale runs on new pushes (<a href="https://github.com/davidrsch/rrlmgraph/issues/97" class="external-link">#97</a>).</li>
+<li>SHA-pinned all remaining mutable action tags: <code>posit-dev/setup-air@v1</code>, <code>reviewdog/action-suggester@v1</code>, <code>JamesIves/github-pages-deploy-action@v4.5.0</code>, <code>codecov/codecov-action@v5</code>, <code>r-lib/actions/pr-fetch@v2</code>, and <code>r-lib/actions/pr-push@v2</code> (<a href="https://github.com/davidrsch/rrlmgraph/issues/98" class="external-link">#98</a>).</li>
+<li>
+<code>pkgdown.yaml</code>: deployment now triggered by <code>workflow_run</code> on <code>R-CMD-check</code> completion instead of directly on <code>push</code>, so broken packages can no longer produce a published documentation site (<a href="https://github.com/davidrsch/rrlmgraph/issues/99" class="external-link">#99</a>).</li>
+<li>
+<code>pr-commands.yaml</code>: removed <code>continue-on-error: true</code> from the style-job commit step; the <code>|| echo "No changes to commit"</code> guard in the <code>run:</code> block already handles the empty-commit case without hiding genuine errors (<a href="https://github.com/davidrsch/rrlmgraph/issues/102" class="external-link">#102</a>).</li>
 </ul></div>
 <div class="section level4">
 <h4 id="documentation-development-version">Documentation<a class="anchor" aria-label="anchor" href="#documentation-development-version"></a></h4>
