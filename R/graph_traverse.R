@@ -187,12 +187,12 @@ query_context <- function(
         break
       } # all remaining are below threshold
 
-      # Estimate token cost using the same rendering mode that
-      # assemble_context_string() will use: "full" for the seed only,
-      # "compressed" (>=3x smaller) for all supporting nodes.  Using
-      # "full" here (the previous behaviour) over-counted by ~3x, causing
-      # the BFS to terminate far too early.  See issue #48.
-      cost_mode <- if (nodes_added == 0L) "full" else "compressed"
+      # Estimate token cost using "compressed" mode for all BFS-discovered
+      # supporting nodes.  The seed node is already accounted for above the
+      # loop in "full" mode.  Using "full" here (the previous behaviour, fixed
+      # in #48) over-counted the first supporting node by ~3x causing premature
+      # BFS termination.  rrlmgraph#103: always "compressed" inside the loop.
+      cost_mode <- "compressed"
       node_ctx <- build_node_context(fn, graph, mode = cost_mode)
       node_tokens <- .count_tokens(node_ctx)
 

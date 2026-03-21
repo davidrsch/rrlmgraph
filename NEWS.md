@@ -2,6 +2,11 @@
 
 ### Bug fixes
 
+- `graph_traverse.R` `query_context()`: BFS token-cost estimation inside the
+  loop now always uses `"compressed"` mode for all supporting (non-seed) nodes.
+  Previously the condition `if (nodes_added == 0L)` caused the first
+  BFS-discovered node to be costed as `"full"` (~3× larger), leading to
+  premature termination of the traversal (#103).
 - `context_assemble.R`: fixed token-count heuristic from `/ 4` to `/ 3.5`,
   matching all other token-counting sites in the codebase (#95).
 - `task_trace.R`: weight normalization floor changed from `0.1` to `0` so
