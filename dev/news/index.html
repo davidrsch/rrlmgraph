@@ -53,7 +53,11 @@
 </ul></div>
 <div class="section level4">
 <h4 id="ci--infrastructure-development-version">CI / infrastructure<a class="anchor" aria-label="anchor" href="#ci--infrastructure-development-version"></a></h4>
-<ul><li>Added top-level <code>permissions: {}</code> deny-all block to <code>format-suggest.yaml</code> so runtime permissions are granted per-job only (<a href="https://github.com/davidrsch/rrlmgraph/issues/97" class="external-link">#97</a>).</li>
+<ul><li>
+<code>pkgdown.yaml</code>: added a <code>Gate on R-CMD-check</code> step that verifies the most recent R-CMD-check run has a <code>success</code> conclusion before allowing docs to be deployed on <code>release</code> and <code>workflow_dispatch</code> events, preventing documentation from being published from a broken commit (<a href="https://github.com/davidrsch/rrlmgraph/issues/104" class="external-link">#104</a>).</li>
+<li>
+<code>precompute-vignettes.yml</code>, <code>pr-commands.yaml</code>: added <code>concurrency:</code> blocks to prevent redundant concurrent runs (<a href="https://github.com/davidrsch/rrlmgraph/issues/105" class="external-link">#105</a>).</li>
+<li>Added top-level <code>permissions: {}</code> deny-all block to <code>format-suggest.yaml</code> so runtime permissions are granted per-job only (<a href="https://github.com/davidrsch/rrlmgraph/issues/97" class="external-link">#97</a>).</li>
 <li>Added <code>concurrency:</code> groups to <code>R-CMD-check.yaml</code>, <code>test-coverage.yaml</code>, and <code>format-suggest.yaml</code> to cancel stale runs on new pushes (<a href="https://github.com/davidrsch/rrlmgraph/issues/97" class="external-link">#97</a>).</li>
 <li>SHA-pinned all remaining mutable action tags: <code>posit-dev/setup-air@v1</code>, <code>reviewdog/action-suggester@v1</code>, <code>JamesIves/github-pages-deploy-action@v4.5.0</code>, <code>codecov/codecov-action@v5</code>, <code>r-lib/actions/pr-fetch@v2</code>, and <code>r-lib/actions/pr-push@v2</code> (<a href="https://github.com/davidrsch/rrlmgraph/issues/98" class="external-link">#98</a>).</li>
 <li>
