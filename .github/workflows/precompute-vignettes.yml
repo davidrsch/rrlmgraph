@@ -3,6 +3,10 @@ on:
 
 name: precompute-vignettes
 
+concurrency:
+    group: ${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: false # do not cancel a running vignette precompute (closes rrlmgraph#105)
+
 permissions:
     contents: write # needed to commit the precomputed RDS files
 

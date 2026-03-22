@@ -17,6 +17,12 @@
 
 ### CI / infrastructure
 
+- `pkgdown.yaml`: added a `Gate on R-CMD-check` step that verifies the most recent
+  R-CMD-check run has a `success` conclusion before allowing docs to be deployed on
+  `release` and `workflow_dispatch` events, preventing documentation from being
+  published from a broken commit (#104).
+- `precompute-vignettes.yml`, `pr-commands.yaml`: added `concurrency:` blocks to
+  prevent redundant concurrent runs (#105).
 - Added top-level `permissions: {}` deny-all block to `format-suggest.yaml`
   so runtime permissions are granted per-job only (#97).
 - Added `concurrency:` groups to `R-CMD-check.yaml`, `test-coverage.yaml`,

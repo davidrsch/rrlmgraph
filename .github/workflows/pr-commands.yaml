@@ -9,6 +9,10 @@ on:
 
 name: pr-commands.yaml
 
+concurrency:
+    group: ${{ github.workflow }}-${{ github.event.issue.number }}
+    cancel-in-progress: true # cancel stale /document or /style runs for the same PR (closes rrlmgraph#105)
+
 permissions: {}
 
 jobs:
