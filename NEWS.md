@@ -14,6 +14,10 @@
 - `relevance.R` `.count_tokens()`: added cross-repo sync note directing
   maintainers to also update `.bench_estimate_tokens()` in `rrlmgraph-bench`
   when changing the formula (#101).
+- `generate_instructions.R` `generate_instructions()`: token-budget computation
+  changed from `max_tokens * 4L` (4 chars/token) to `ceiling(max_tokens * 3.5)`
+  (3.5 chars/token), matching `.count_tokens()`, `context_assemble.R`, and the
+  MCP `estimateTokens()` helper. `@param max_tokens` doc updated accordingly (#107).
 
 ### CI / infrastructure
 
@@ -43,9 +47,8 @@
 
 - `DESCRIPTION`: version now carries `.9000` development suffix on `main` branch
   to distinguish development snapshots from the CRAN release (#100).
-
-### Documentation
-
+- `NEWS.md`: merged duplicate `### Documentation` subsection heading in the
+  development section into a single heading (#106).
 - `compute_relevance()`: added a `@note` paragraph explaining that the MCP
   server's TypeScript BFS uses a depth-penalty signal in place of the
   co-change signal because `CO_CHANGES` edge weights are not stored in the

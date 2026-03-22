@@ -18,7 +18,7 @@
 #'   \file{.github/copilot-instructions.md} inside the project root stored
 #'   in \code{graph_attr(graph, "project_root")}.
 #' @param max_tokens Integer(1).  Soft upper bound on output size in tokens
-#'   (approximated as \code{nchar / 4}).  Content is trimmed to stay under
+#'   (approximated as \code{nchar / 3.5}).  Content is trimmed to stay under
 #'   this limit.  Default \code{2000L}.
 #'
 #' @return The path to the written file, invisibly.
@@ -377,8 +377,8 @@ generate_instructions <- function(
     ""
   )
 
-  # Token budget: approx 4 chars per token
-  budget_chars <- max_tokens * 4L
+  # Token budget: approx 3.5 chars per token (matches .count_tokens() and context_assemble.R)
+  budget_chars <- as.integer(ceiling(max_tokens * 3.5))
   full_text <- paste(lines, collapse = "\n")
 
   if (nchar(full_text) > budget_chars) {
