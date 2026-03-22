@@ -27,7 +27,7 @@ generate_instructions(graph, output_path = NULL, max_tokens = 2000L)
 - max_tokens:
 
   Integer(1). Soft upper bound on output size in tokens (approximated as
-  `nchar / 4`). Content is trimmed to stay under this limit. Default
+  `nchar / 3.5`). Content is trimmed to stay under this limit. Default
   `2000L`.
 
 ## Value

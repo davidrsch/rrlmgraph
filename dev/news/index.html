@@ -50,6 +50,8 @@
 <code>task_trace.R</code>: weight normalization floor changed from <code>0.1</code> to <code>0</code> so that zero-weight tasks are achievable as documented (<a href="https://github.com/davidrsch/rrlmgraph/issues/96" class="external-link">#96</a>).</li>
 <li>
 <code>relevance.R</code> <code>.count_tokens()</code>: added cross-repo sync note directing maintainers to also update <code>.bench_estimate_tokens()</code> in <code>rrlmgraph-bench</code> when changing the formula (<a href="https://github.com/davidrsch/rrlmgraph/issues/101" class="external-link">#101</a>).</li>
+<li>
+<code>generate_instructions.R</code> <code><a href="../reference/generate_instructions.html">generate_instructions()</a></code>: token-budget computation changed from <code>max_tokens * 4L</code> (4 chars/token) to <code>ceiling(max_tokens * 3.5)</code> (3.5 chars/token), matching <code>.count_tokens()</code>, <code>context_assemble.R</code>, and the MCP <code>estimateTokens()</code> helper. <code>@param max_tokens</code> doc updated accordingly (<a href="https://github.com/davidrsch/rrlmgraph/issues/107" class="external-link">#107</a>).</li>
 </ul></div>
 <div class="section level4">
 <h4 id="ci--infrastructure-development-version">CI / infrastructure<a class="anchor" aria-label="anchor" href="#ci--infrastructure-development-version"></a></h4>
@@ -69,10 +71,9 @@
 <h4 id="documentation-development-version">Documentation<a class="anchor" aria-label="anchor" href="#documentation-development-version"></a></h4>
 <ul><li>
 <code>DESCRIPTION</code>: version now carries <code>.9000</code> development suffix on <code>main</code> branch to distinguish development snapshots from the CRAN release (<a href="https://github.com/davidrsch/rrlmgraph/issues/100" class="external-link">#100</a>).</li>
-</ul></div>
-<div class="section level4">
-<h4 id="documentation-development-version-1">Documentation<a class="anchor" aria-label="anchor" href="#documentation-development-version-1"></a></h4>
-<ul><li>
+<li>
+<code>NEWS.md</code>: merged duplicate <code>### Documentation</code> subsection heading in the development section into a single heading (<a href="https://github.com/davidrsch/rrlmgraph/issues/106" class="external-link">#106</a>).</li>
+<li>
 <code><a href="../reference/compute_relevance.html">compute_relevance()</a></code>: added a <code>@note</code> paragraph explaining that the MCP server’s TypeScript BFS uses a depth-penalty signal in place of the co-change signal because <code>CO_CHANGES</code> edge weights are not stored in the exported SQLite schema. Closes mcp#41.</li>
 <li>
 <code>vignettes/mcp-integration.Rmd</code>: replaced the <strong>Available MCP tools</strong> table with the complete, correctly-named 8-tool set; previous table listed 4 wrong names (<code>get_node</code>, <code>list_nodes</code>, <code>get_neighbours</code>, <code>graph_stats</code>) and omitted <code>find_callees</code>, <code>search_nodes</code>, <code>add_task_trace</code>, and <code>rebuild_graph</code>. Closes <a href="https://github.com/davidrsch/rrlmgraph/issues/91" class="external-link">#91</a>.</li>
