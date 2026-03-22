@@ -4,6 +4,14 @@
 
 #### Bug fixes
 
+- `graph_traverse.R`
+  [`query_context()`](https://davidrsch.github.io/rrlmgraph/dev/reference/query_context.md):
+  BFS token-cost estimation inside the loop now always uses
+  `"compressed"` mode for all supporting (non-seed) nodes. Previously
+  the condition `if (nodes_added == 0L)` caused the first BFS-discovered
+  node to be costed as `"full"` (~3× larger), leading to premature
+  termination of the traversal
+  ([\#103](https://github.com/davidrsch/rrlmgraph/issues/103)).
 - `context_assemble.R`: fixed token-count heuristic from `/ 4` to
   `/ 3.5`, matching all other token-counting sites in the codebase
   ([\#95](https://github.com/davidrsch/rrlmgraph/issues/95)).

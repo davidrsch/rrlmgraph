@@ -43,6 +43,8 @@
 <div class="section level4">
 <h4 id="bug-fixes-development-version">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-development-version"></a></h4>
 <ul><li>
+<code>graph_traverse.R</code> <code><a href="../reference/query_context.html">query_context()</a></code>: BFS token-cost estimation inside the loop now always uses <code>"compressed"</code> mode for all supporting (non-seed) nodes. Previously the condition <code>if (nodes_added == 0L)</code> caused the first BFS-discovered node to be costed as <code>"full"</code> (~3× larger), leading to premature termination of the traversal (<a href="https://github.com/davidrsch/rrlmgraph/issues/103" class="external-link">#103</a>).</li>
+<li>
 <code>context_assemble.R</code>: fixed token-count heuristic from <code>/ 4</code> to <code>/ 3.5</code>, matching all other token-counting sites in the codebase (<a href="https://github.com/davidrsch/rrlmgraph/issues/95" class="external-link">#95</a>).</li>
 <li>
 <code>task_trace.R</code>: weight normalization floor changed from <code>0.1</code> to <code>0</code> so that zero-weight tasks are achievable as documented (<a href="https://github.com/davidrsch/rrlmgraph/issues/96" class="external-link">#96</a>).</li>
