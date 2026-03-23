@@ -2,6 +2,20 @@
 
 ## rrlmgraph (development version)
 
+#### Code organisation
+
+- All R source files capped at 400 lines. Oversized files split at
+  natural function boundaries into focused modules:
+  - `edge_builders.R` → `edge_builders.R` + `edge_builders_cochange.R` +
+    `edge_builder_utils.R`
+  - `graph_build.R` → `graph_build.R` + `graph_build_helpers.R`
+  - `rrlm_graph.R` → `rrlm_graph.R` + `rrlm_graph_helpers.R`
+  - `sqlite_export.R` → `sqlite_export.R` + `sqlite_export_helpers.R`
+  - `task_trace.R` → `task_trace.R` + `task_trace_io.R`
+  - `llm_interface.R` → `llm_interface.R` + `llm_backend.R`
+  - `context_assemble.R` → `context_assemble.R` + `context_formatters.R`
+    No public API changes.
+
 #### Bug fixes
 
 - `graph_traverse.R`

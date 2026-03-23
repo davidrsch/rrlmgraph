@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">rrlmgraph</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.1.3.9000</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.1.4.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,6 +40,31 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="rrlmgraph-development-version">rrlmgraph (development version)<a class="anchor" aria-label="anchor" href="#rrlmgraph-development-version"></a></h2>
+<div class="section level4">
+<h4 id="code-organisation-development-version">Code organisation<a class="anchor" aria-label="anchor" href="#code-organisation-development-version"></a></h4>
+<ul><li>All R source files capped at 400 lines. Oversized files split at natural function boundaries into focused modules:
+<ul><li>
+<code>edge_builders.R</code> → <code>edge_builders.R</code> + <code>edge_builders_cochange.R</code> + <code>edge_builder_utils.R</code>
+</li>
+<li>
+<code>graph_build.R</code> → <code>graph_build.R</code> + <code>graph_build_helpers.R</code>
+</li>
+<li>
+<code>rrlm_graph.R</code> → <code>rrlm_graph.R</code> + <code>rrlm_graph_helpers.R</code>
+</li>
+<li>
+<code>sqlite_export.R</code> → <code>sqlite_export.R</code> + <code>sqlite_export_helpers.R</code>
+</li>
+<li>
+<code>task_trace.R</code> → <code>task_trace.R</code> + <code>task_trace_io.R</code>
+</li>
+<li>
+<code>llm_interface.R</code> → <code>llm_interface.R</code> + <code>llm_backend.R</code>
+</li>
+<li>
+<code>context_assemble.R</code> → <code>context_assemble.R</code> + <code>context_formatters.R</code> No public API changes.</li>
+</ul></li>
+</ul></div>
 <div class="section level4">
 <h4 id="bug-fixes-development-version">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-development-version"></a></h4>
 <ul><li>
