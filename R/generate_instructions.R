@@ -1,4 +1,4 @@
-﻿# R/generate_instructions.R
+# R/generate_instructions.R
 # AI coding-assistant instruction generator for rrlmgraph.
 # Covers rrlmgraph issue #21 (Sprint 3).
 

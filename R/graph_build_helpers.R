@@ -1,4 +1,4 @@
-﻿# ---- internal assembly helpers ---------------------------------------
+# ---- internal assembly helpers ---------------------------------------
 
 #' @keywords internal
 # audit/expert-review fix: body_text and roxygen_text were silently

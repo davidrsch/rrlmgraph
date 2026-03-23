@@ -1,4 +1,4 @@
-﻿# R/llm_interface.R
+# R/llm_interface.R
 # LLM chat integration using rrlm graph context.
 # Covers rrlmgraph issue #13 (Sprint 2).
 
@@ -325,4 +325,3 @@ chat_with_context <- function(
 
   list(search_tool, info_tool, callers_tool, callees_tool)
 }
-

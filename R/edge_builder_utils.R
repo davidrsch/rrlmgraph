@@ -1,4 +1,4 @@
-﻿# ---- internal helpers -----------------------------------------------
+# ---- internal helpers -----------------------------------------------
 
 #' @keywords internal
 .empty_edge_df <- function() {

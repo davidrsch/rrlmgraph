@@ -174,4 +174,3 @@ is_cache_stale <- function(project_path = ".") {
   r_mtimes <- file.info(as.character(r_files))$mtime
   any(!is.na(r_mtimes) & r_mtimes > cache_mtime)
 }
-

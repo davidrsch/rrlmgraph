@@ -299,4 +299,3 @@ cosine_similarity <- function(a, b) {
     n_dims = ncol(dtm_tfidf)
   )
 }
-

@@ -1,4 +1,4 @@
-﻿# ---- build_co_change_edges ------------------------------------------
+# ---- build_co_change_edges ------------------------------------------
 
 #' Build CO_CHANGES edges from git commit history
 #'
@@ -292,4 +292,3 @@ build_dispatch_edges <- function(func_nodes, r_files) {
     stringsAsFactors = FALSE
   ))
 }
-

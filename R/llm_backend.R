@@ -1,4 +1,4 @@
-﻿#' @keywords internal
+#' @keywords internal
 .llm_via_httr2 <- function(system_prompt, message, model) {
   api_key <- Sys.getenv("OPENAI_API_KEY", unset = "")
   if (!nchar(api_key)) {

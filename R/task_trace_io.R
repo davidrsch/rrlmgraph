@@ -1,4 +1,4 @@
-﻿# ---- Internal helpers ------------------------------------------------
+# ---- Internal helpers ------------------------------------------------
 
 #' Read task-trace rows from a SQLite \code{task_traces} table.
 #'

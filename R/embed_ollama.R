@@ -136,4 +136,3 @@ ollama_available <- function() {
     matrix = mat
   )
 }
-

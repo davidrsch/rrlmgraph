@@ -1,4 +1,4 @@
-﻿# R/context_assemble.R
+# R/context_assemble.R
 # Node-context compression and LLM-ready string assembly.
 # Covers rrlmgraph issues #11 and #12 (Sprint 2).
 
@@ -254,4 +254,3 @@ assemble_context_string <- function(hits, graph, query = "") {
 
   enc2utf8(paste0(header, "\n", body))
 }
-

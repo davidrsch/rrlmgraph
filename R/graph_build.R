@@ -1,4 +1,4 @@
-﻿# ---- build_rrlm_graph -----------------------------------------------
+# ---- build_rrlm_graph -----------------------------------------------
 
 #' Build an RLM-Graph for an R project
 #'
@@ -356,4 +356,3 @@ build_rrlm_graph <- function(
   )
   g
 }
-

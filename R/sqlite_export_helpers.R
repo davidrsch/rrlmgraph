@@ -1,4 +1,4 @@
-﻿#' @keywords internal
+#' @keywords internal
 .upsert_tfidf_vocab <- function(con, graph) {
   model <- tryCatch(
     igraph::graph_attr(graph, "embed_model"),

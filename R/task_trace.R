@@ -1,4 +1,4 @@
-﻿# R/task_trace.R
+# R/task_trace.R
 # Recursive task-trace feedback loop for rrlmgraph.
 # Covers rrlmgraph issue #18 (Sprint 3).
 
@@ -363,4 +363,3 @@ update_task_polarity <- function(graph, context, polarity, n_recent = 3L) {
   writeLines(lines, trace_file)
   invisible(graph)
 }
-

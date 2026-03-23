@@ -1,4 +1,4 @@
-﻿# ---- internal: Graphviz DOT string builder ---------------------------
+# ---- internal: Graphviz DOT string builder ---------------------------
 
 #' Build a Graphviz DOT string from an rrlm_graph subgraph
 #'

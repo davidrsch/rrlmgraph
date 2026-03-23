@@ -1,4 +1,4 @@
-﻿# R/rrlm_graph.R
+# R/rrlm_graph.R
 # S3 methods for the "rrlm_graph" class
 # Covers rrlmgraph issue #7 (Sprint 1)
 
@@ -262,4 +262,3 @@ plot.rrlm_graph <- function(
 
   widget
 }
-

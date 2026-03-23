@@ -287,4 +287,3 @@ extract_function_nodes <- function(r_files) {
   }
   nodes
 }
-

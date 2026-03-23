@@ -1,4 +1,4 @@
-﻿#' Build CALLS edges between function nodes
+#' Build CALLS edges between function nodes
 #'
 #' Cross-references each function node's `calls_list` against the set of
 #' known user-defined node identifiers.  Each matched call produces one
@@ -350,4 +350,3 @@ build_test_edges <- function(func_nodes, test_files) {
     stringsAsFactors = FALSE
   ))
 }
-

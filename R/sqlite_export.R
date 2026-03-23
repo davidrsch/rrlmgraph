@@ -1,4 +1,4 @@
-﻿# ---- export_to_sqlite ------------------------------------------------
+# ---- export_to_sqlite ------------------------------------------------
 
 #' Export an rrlm_graph to a SQLite database
 #'
@@ -296,4 +296,3 @@ export_to_sqlite <- function(graph, db_path) {
   DBI::dbExecute(con, "DELETE FROM edges")
   DBI::dbWriteTable(con, "edges", rows, append = TRUE, row.names = FALSE)
 }
-
