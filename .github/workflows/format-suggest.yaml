@@ -1,11 +1,14 @@
-# Using `pull_request` so format runs in the unprivileged PR context.
+# Using `pull_request` so format suggestions run in the unprivileged PR context.
 # The previous `pull_request_target` + checkout of pull_request.head.sha was
 # a pwn-request: fork code was executed with a GITHUB_TOKEN that had
 # pull-requests:write scope.  `pull_request` restricts secrets/token scope
 # to read-only for fork PRs, which is sufficient for reviewdog suggestions
 # on non-fork PRs; fork PRs will not receive inline suggestions but will
 # receive a check-run status, which is an acceptable trade-off (rrlmgraph#87).
+# push trigger added so direct commits to main also fail the check.
 on:
+  push:
+    branches: [main, master]
   pull_request:
     branches: [main, master]
 
@@ -29,7 +32,8 @@ jobs:
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
         with:
-          ref: ${{ github.event.pull_request.head.sha }}
+          # On pull_request check out the head commit; on push the default is correct.
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
 
       - name: Install air
         uses: posit-dev/setup-air@63e80dedb6d275c94a3841e15e5ff8691e1ab237 # v1
@@ -37,7 +41,17 @@ jobs:
       - name: Format
         run: air format .
 
-      - name: Suggest
+      # On direct pushes to main there is no PR to comment on, so just fail
+      # the job if air changed anything.
+      - name: Fail if not formatted (push)
+        if: github.event_name == 'push'
+        run: |
+          git diff --name-only
+          git diff --exit-code
+
+      # On pull requests post inline suggestions via reviewdog.
+      - name: Suggest (pull_request)
+        if: github.event_name == 'pull_request'
         uses: reviewdog/action-suggester@aa38384ceb608d00f84b4690cacc83a5aba307ff # v1
         with:
           level: error
