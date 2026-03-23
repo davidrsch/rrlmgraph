@@ -1,145 +1,145 @@
 on:
-    workflow_dispatch: # run manually from the Actions tab
+  workflow_dispatch: # run manually from the Actions tab
 
 name: precompute-vignettes
 
 concurrency:
-    group: ${{ github.workflow }}-${{ github.ref }}
-    cancel-in-progress: false # do not cancel a running vignette precompute (closes rrlmgraph#105)
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false # do not cancel a running vignette precompute (closes rrlmgraph#105)
 
 permissions:
-    contents: write # needed to commit the precomputed RDS files
+  contents: write # needed to commit the precomputed RDS files
 
 jobs:
-    precompute:
-        runs-on: ubuntu-latest
+  precompute:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+      - uses: r-lib/actions/setup-pandoc@6f6e5bc62fba3a704f74e7ad7ef7676c5c6a2590 # v2
+
+      - uses: r-lib/actions/setup-r@6f6e5bc62fba3a704f74e7ad7ef7676c5c6a2590 # v2
+        with:
+          use-public-rspm: true
+
+      - uses: r-lib/actions/setup-r-dependencies@6f6e5bc62fba3a704f74e7ad7ef7676c5c6a2590 # v2
+        with:
+          extra-packages: |
+            any::ellmer
+            any::jsonlite
+            any::knitr
+            github::davidrsch/rrlmgraph-bench
+            local::.
+          needs: local
+
+      # ------------------------------------------------------------------ #
+      # 1. LLM-chat precompute                                               #
+      # Calls chat_with_context() with GITHUB_TOKEN (free, always available) #
+      # and serialises a list of {query, context_nodes, response, ...} to   #
+      # vignettes/precomputed/llm_chat_outputs.rds.                         #
+      # ------------------------------------------------------------------ #
+      - name: Precompute LLM chat outputs
+        run: |
+          Rscript -e '
+            library(rrlmgraph)
+
+            demo_dir <- system.file("extdata", "demo", package = "rrlmgraph")
+            graph    <- build_rrlm_graph(demo_dir, verbose = FALSE)
+
+            queries <- c(
+              "How does the data preparation and validation pipeline work?",
+              "Which function is called by fit_model() and what does it do?",
+              "What are the main entry points of the package?"
+            )
+
+            gh_pat  <- Sys.getenv("GITHUB_PAT", "")
+            cred_fn <- (function(k) function() k)(gh_pat)
+
+            outputs <- lapply(queries, function(q) {
+              ctx <- query_context(graph, q, budget_tokens = 600L, verbose = FALSE)
+              chat <- ellmer::chat_openai_compatible(
+                base_url    = "https://models.github.ai/inference/",
+                model       = "gpt-4o-mini",
+                credentials = cred_fn,
+                system_prompt = paste0(
+                  "You are a helpful R programming assistant.\n\n",
+                  "CONTEXT:\n", ctx$context_string
+                )
+              )
+              resp <- tryCatch(chat$chat(q), error = function(e) paste("ERROR:", conditionMessage(e)))
+              list(
+                query         = q,
+                context_nodes = ctx$nodes,
+                tokens_used   = ctx$tokens_used,
+                response      = resp,
+                provider      = "github",
+                model         = "gpt-4o-mini",
+                captured_at   = format(Sys.time(), "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")
+              )
+            })
+
+            dir.create("vignettes/precomputed", recursive = TRUE, showWarnings = FALSE)
+            saveRDS(outputs, "vignettes/precomputed/llm_chat_outputs.rds")
+            message("Saved ", length(outputs), " responses to vignettes/precomputed/llm_chat_outputs.rds")
+          '
+
+      # ------------------------------------------------------------------ #
+      # 2. Benchmark summary precompute                                      #
+      # Reads the latest committed bench results from rrlmgraphbench and    #
+      # runs compute_benchmark_statistics(), serialising to                 #
+      # vignettes/precomputed/benchmark_summary.rds.                        #
+      # ------------------------------------------------------------------ #
+      - name: Precompute benchmark summary
+        run: |
+          Rscript -e '
+            results_path <- system.file(
+              "results", "benchmark_results.rds",
+              package = "rrlmgraphbench"
+            )
+            if (!nzchar(results_path) || !file.exists(results_path)) {
+              message("No benchmark_results.rds found in rrlmgraphbench -- skipping.")
+              quit(status = 0)
+            }
+
+            results <- readRDS(results_path)
+            stats   <- rrlmgraphbench::compute_benchmark_statistics(results)
+
+            meta <- list(
+              generated_at              = format(Sys.time(), "%Y-%m-%dT%H:%M:%SZ", tz = "UTC"),
+              rrlmgraph_version         = as.character(utils::packageVersion("rrlmgraph")),
+              rrlmgraphbench_version    = as.character(utils::packageVersion("rrlmgraphbench"))
+            )
+
+            dir.create("vignettes/precomputed", recursive = TRUE, showWarnings = FALSE)
+            saveRDS(
+              list(stats = stats, meta = meta),
+              "vignettes/precomputed/benchmark_summary.rds"
+            )
+            message("Saved benchmark summary to vignettes/precomputed/benchmark_summary.rds")
+          '
+
+      # ------------------------------------------------------------------ #
+      # 3. Commit updated RDS files                                          #
+      # ------------------------------------------------------------------ #
+      - name: Commit precomputed artefacts
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add vignettes/precomputed/
+          git diff --cached --quiet || git commit -m "chore: refresh precomputed vignette data"
+          git push
+
+      # ------------------------------------------------------------------ #
+      # 4. Trigger pkgdown rebuild so the published site reflects new data  #
+      # ------------------------------------------------------------------ #
+      - name: Trigger pkgdown rebuild
+        continue-on-error: true
+        run: |
+          gh workflow run pkgdown.yaml \
+            --repo davidrsch/rrlmgraph \
+            --ref main
         env:
-            GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
-
-        steps:
-            - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
-
-            - uses: r-lib/actions/setup-pandoc@6f6e5bc62fba3a704f74e7ad7ef7676c5c6a2590  # v2
-
-            - uses: r-lib/actions/setup-r@6f6e5bc62fba3a704f74e7ad7ef7676c5c6a2590  # v2
-              with:
-                  use-public-rspm: true
-
-            - uses: r-lib/actions/setup-r-dependencies@6f6e5bc62fba3a704f74e7ad7ef7676c5c6a2590  # v2
-              with:
-                  extra-packages: |
-                      any::ellmer
-                      any::jsonlite
-                      any::knitr
-                      github::davidrsch/rrlmgraph-bench
-                      local::.
-                  needs: local
-
-            # ------------------------------------------------------------------ #
-            # 1. LLM-chat precompute                                               #
-            # Calls chat_with_context() with GITHUB_TOKEN (free, always available) #
-            # and serialises a list of {query, context_nodes, response, ...} to   #
-            # vignettes/precomputed/llm_chat_outputs.rds.                         #
-            # ------------------------------------------------------------------ #
-            - name: Precompute LLM chat outputs
-              run: |
-                  Rscript -e '
-                    library(rrlmgraph)
-
-                    demo_dir <- system.file("extdata", "demo", package = "rrlmgraph")
-                    graph    <- build_rrlm_graph(demo_dir, verbose = FALSE)
-
-                    queries <- c(
-                      "How does the data preparation and validation pipeline work?",
-                      "Which function is called by fit_model() and what does it do?",
-                      "What are the main entry points of the package?"
-                    )
-
-                    gh_pat  <- Sys.getenv("GITHUB_PAT", "")
-                    cred_fn <- (function(k) function() k)(gh_pat)
-
-                    outputs <- lapply(queries, function(q) {
-                      ctx <- query_context(graph, q, budget_tokens = 600L, verbose = FALSE)
-                      chat <- ellmer::chat_openai_compatible(
-                        base_url    = "https://models.github.ai/inference/",
-                        model       = "gpt-4o-mini",
-                        credentials = cred_fn,
-                        system_prompt = paste0(
-                          "You are a helpful R programming assistant.\n\n",
-                          "CONTEXT:\n", ctx$context_string
-                        )
-                      )
-                      resp <- tryCatch(chat$chat(q), error = function(e) paste("ERROR:", conditionMessage(e)))
-                      list(
-                        query         = q,
-                        context_nodes = ctx$nodes,
-                        tokens_used   = ctx$tokens_used,
-                        response      = resp,
-                        provider      = "github",
-                        model         = "gpt-4o-mini",
-                        captured_at   = format(Sys.time(), "%Y-%m-%dT%H:%M:%SZ", tz = "UTC")
-                      )
-                    })
-
-                    dir.create("vignettes/precomputed", recursive = TRUE, showWarnings = FALSE)
-                    saveRDS(outputs, "vignettes/precomputed/llm_chat_outputs.rds")
-                    message("Saved ", length(outputs), " responses to vignettes/precomputed/llm_chat_outputs.rds")
-                  '
-
-            # ------------------------------------------------------------------ #
-            # 2. Benchmark summary precompute                                      #
-            # Reads the latest committed bench results from rrlmgraphbench and    #
-            # runs compute_benchmark_statistics(), serialising to                 #
-            # vignettes/precomputed/benchmark_summary.rds.                        #
-            # ------------------------------------------------------------------ #
-            - name: Precompute benchmark summary
-              run: |
-                  Rscript -e '
-                    results_path <- system.file(
-                      "results", "benchmark_results.rds",
-                      package = "rrlmgraphbench"
-                    )
-                    if (!nzchar(results_path) || !file.exists(results_path)) {
-                      message("No benchmark_results.rds found in rrlmgraphbench -- skipping.")
-                      quit(status = 0)
-                    }
-
-                    results <- readRDS(results_path)
-                    stats   <- rrlmgraphbench::compute_benchmark_statistics(results)
-
-                    meta <- list(
-                      generated_at              = format(Sys.time(), "%Y-%m-%dT%H:%M:%SZ", tz = "UTC"),
-                      rrlmgraph_version         = as.character(utils::packageVersion("rrlmgraph")),
-                      rrlmgraphbench_version    = as.character(utils::packageVersion("rrlmgraphbench"))
-                    )
-
-                    dir.create("vignettes/precomputed", recursive = TRUE, showWarnings = FALSE)
-                    saveRDS(
-                      list(stats = stats, meta = meta),
-                      "vignettes/precomputed/benchmark_summary.rds"
-                    )
-                    message("Saved benchmark summary to vignettes/precomputed/benchmark_summary.rds")
-                  '
-
-            # ------------------------------------------------------------------ #
-            # 3. Commit updated RDS files                                          #
-            # ------------------------------------------------------------------ #
-            - name: Commit precomputed artefacts
-              run: |
-                  git config user.name  "github-actions[bot]"
-                  git config user.email "github-actions[bot]@users.noreply.github.com"
-                  git add vignettes/precomputed/
-                  git diff --cached --quiet || git commit -m "chore: refresh precomputed vignette data"
-                  git push
-
-            # ------------------------------------------------------------------ #
-            # 4. Trigger pkgdown rebuild so the published site reflects new data  #
-            # ------------------------------------------------------------------ #
-            - name: Trigger pkgdown rebuild
-              continue-on-error: true
-              run: |
-                  gh workflow run pkgdown.yaml \
-                    --repo davidrsch/rrlmgraph \
-                    --ref main
-              env:
-                  GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
