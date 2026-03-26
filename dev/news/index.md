@@ -2,6 +2,19 @@
 
 ## rrlmgraph (development version)
 
+#### Bug fixes (adversarial audit)
+
+- `graph_traverse.R`
+  [`query_context()`](https://davidrsch.github.io/rrlmgraph/dev/reference/query_context.md):
+  Hard-truncation ceiling now uses 3.5 chars/token (matching
+  `context_assemble.R`, `generate_instructions.R`, and `rrlmgraph-mcp`)
+  instead of the previous 4 chars/token
+  ([\#114](https://github.com/davidrsch/rrlmgraph/issues/114)).
+- `vignettes/benchmark-results.Rmd`: Corrected `graph_rag_agentic`
+  description from “LLM drives MCP tool calls iteratively” to “REPL loop
+  (Algorithm 1, arXiv:2512.24601)”
+  ([\#113](https://github.com/davidrsch/rrlmgraph/issues/113)).
+
 #### Code organisation
 
 - All R source files capped at 400 lines. Oversized files split at

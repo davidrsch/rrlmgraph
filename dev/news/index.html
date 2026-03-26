@@ -41,6 +41,13 @@
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="rrlmgraph-development-version">rrlmgraph (development version)<a class="anchor" aria-label="anchor" href="#rrlmgraph-development-version"></a></h2>
 <div class="section level4">
+<h4 id="bug-fixes-adversarial-audit-development-version">Bug fixes (adversarial audit)<a class="anchor" aria-label="anchor" href="#bug-fixes-adversarial-audit-development-version"></a></h4>
+<ul><li>
+<code>graph_traverse.R</code> <code><a href="../reference/query_context.html">query_context()</a></code>: Hard-truncation ceiling now uses 3.5 chars/token (matching <code>context_assemble.R</code>, <code>generate_instructions.R</code>, and <code>rrlmgraph-mcp</code>) instead of the previous 4 chars/token (<a href="https://github.com/davidrsch/rrlmgraph/issues/114" class="external-link">#114</a>).</li>
+<li>
+<code>vignettes/benchmark-results.Rmd</code>: Corrected <code>graph_rag_agentic</code> description from “LLM drives MCP tool calls iteratively” to “REPL loop (Algorithm 1, arXiv:2512.24601)” (<a href="https://github.com/davidrsch/rrlmgraph/issues/113" class="external-link">#113</a>).</li>
+</ul></div>
+<div class="section level4">
 <h4 id="code-organisation-development-version">Code organisation<a class="anchor" aria-label="anchor" href="#code-organisation-development-version"></a></h4>
 <ul><li>All R source files capped at 400 lines. Oversized files split at natural function boundaries into focused modules:
 <ul><li>

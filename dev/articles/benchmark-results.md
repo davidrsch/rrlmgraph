@@ -8,18 +8,18 @@ summarised here — no benchmark re-run is needed to render this page.
 
 ## Strategies
 
-| Strategy                 | Description                                                      |
-|--------------------------|------------------------------------------------------------------|
-| `graph_rag_tfidf`        | Graph-RAG: BFS from TF-IDF seed nodes                            |
-| `graph_rag_tfidf_noseed` | Graph-RAG: TF-IDF traversal seeded by the query itself           |
-| `graph_rag_ollama`       | Graph-RAG: BFS from Ollama vector-similarity seed nodes          |
-| `graph_rag_mcp`          | Graph-RAG: traversal via the rrlmgraph-mcp MCP server            |
-| `graph_rag_agentic`      | RLM-Graph: LLM drives MCP tool calls iteratively                 |
-| `full_files`             | Entire source files (**upper baseline**)                         |
-| `bm25_retrieval`         | BM25 keyword retrieval (no graph)                                |
-| `term_overlap`           | Word-overlap ranking (no graph)                                  |
-| `no_context`             | No context — LLM answers from training data (**lower baseline**) |
-| `random_k`               | Five randomly sampled code chunks (random baseline)              |
+| Strategy                 | Description                                                                                                                |
+|--------------------------|----------------------------------------------------------------------------------------------------------------------------|
+| `graph_rag_tfidf`        | Graph-RAG: BFS from TF-IDF seed nodes                                                                                      |
+| `graph_rag_tfidf_noseed` | Graph-RAG: TF-IDF traversal seeded by the query itself                                                                     |
+| `graph_rag_ollama`       | Graph-RAG: BFS from Ollama vector-similarity seed nodes                                                                    |
+| `graph_rag_mcp`          | Graph-RAG: traversal via the rrlmgraph-mcp MCP server                                                                      |
+| `graph_rag_agentic`      | RLM-Graph: LLM writes R code in sandboxed REPL (Algorithm 1, arXiv:2512.24601); only compact stdout returned per iteration |
+| `full_files`             | Entire source files (**upper baseline**)                                                                                   |
+| `bm25_retrieval`         | BM25 keyword retrieval (no graph)                                                                                          |
+| `term_overlap`           | Word-overlap ranking (no graph)                                                                                            |
+| `no_context`             | No context — LLM answers from training data (**lower baseline**)                                                           |
+| `random_k`               | Five randomly sampled code chunks (random baseline)                                                                        |
 
 ## Results
 
