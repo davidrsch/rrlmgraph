@@ -243,8 +243,10 @@ query_context <- function(
   # the BFS loop, so the assembled string can slightly exceed budget_tokens.
   # Truncate at the last newline before the limit so we never split mid-line
   # (which could produce malformed code blocks / invalid UTF-8 sequences).
+  # NOTE: uses 3.5 chars/token to match context_assemble.R and MCP TypeScript
+  # (rrlmgraph#114: was previously 4 chars/token, inconsistent with everything else).
   if (final_tokens > budget_tokens) {
-    char_limit <- budget_tokens * 4L
+    char_limit <- as.integer(ceiling(budget_tokens * 3.5))
     truncated <- substr(context_string, 1L, char_limit)
     last_nl <- max(c(0L, gregexpr("\n", truncated, fixed = TRUE)[[1L]]))
     context_string <- if (last_nl > 0L) {
