@@ -15,6 +15,13 @@
 
 - `graph_traverse.R`
   [`query_context()`](https://davidrsch.github.io/rrlmgraph/dev/reference/query_context.md):
+  Seed-context overflow truncation now uses 3.5 chars/token (matching
+  the final-assembly truncation fixed in
+  [\#114](https://github.com/davidrsch/rrlmgraph/issues/114)) instead of
+  4 chars/token
+  ([\#118](https://github.com/davidrsch/rrlmgraph/issues/118)).
+- `graph_traverse.R`
+  [`query_context()`](https://davidrsch.github.io/rrlmgraph/dev/reference/query_context.md):
   Hard-truncation ceiling now uses 3.5 chars/token (matching
   `context_assemble.R`, `generate_instructions.R`, and `rrlmgraph-mcp`)
   instead of the previous 4 chars/token
