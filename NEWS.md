@@ -10,6 +10,9 @@
 
 ### Bug fixes (adversarial audit)
 
+- `graph_traverse.R` `query_context()`: Seed-context overflow truncation now
+  uses 3.5 chars/token (matching the final-assembly truncation fixed in #114)
+  instead of 4 chars/token (#118).
 - `graph_traverse.R` `query_context()`: Hard-truncation ceiling now uses
   3.5 chars/token (matching `context_assemble.R`, `generate_instructions.R`,
   and `rrlmgraph-mcp`) instead of the previous 4 chars/token (#114).

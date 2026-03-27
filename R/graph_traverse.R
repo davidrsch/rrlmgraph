@@ -142,7 +142,7 @@ query_context <- function(
   seed_tokens <- .count_tokens(seed_ctx)
 
   if (seed_tokens > budget_tokens) {
-    seed_ctx <- substr(seed_ctx, 1L, budget_tokens * 4L)
+    seed_ctx <- substr(seed_ctx, 1L, as.integer(ceiling(budget_tokens * 3.5)))
     seed_tokens <- budget_tokens
   }
 
