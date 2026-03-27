@@ -136,7 +136,6 @@ jobs:
       # 4. Trigger pkgdown rebuild so the published site reflects new data  #
       # ------------------------------------------------------------------ #
       - name: Trigger pkgdown rebuild
-        continue-on-error: true
         run: |
           gh workflow run pkgdown.yaml \
             --repo davidrsch/rrlmgraph \

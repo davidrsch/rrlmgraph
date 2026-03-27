@@ -1,5 +1,13 @@
 ﻿# rrlmgraph (development version)
 
+### CI fix (adversarial audit)
+
+- `precompute-vignettes.yml`: Removed `continue-on-error: true` from the
+  "Trigger pkgdown rebuild" step. Previously, a failure to dispatch the
+  pkgdown workflow (e.g. insufficient token permissions or missing workflow
+  file) was silently swallowed, causing the precompute workflow to report
+  green even though the published site would not be refreshed (rrlmgraph#115).
+
 ### Bug fixes (adversarial audit)
 
 - `graph_traverse.R` `query_context()`: Hard-truncation ceiling now uses
