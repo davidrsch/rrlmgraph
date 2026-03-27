@@ -1,4 +1,4 @@
-# R/graph_traverse.R
+# R/relevance.R
 # Traversal and relevance-scoring helpers for rrlm_graph objects.
 # Covers rrlmgraph issue #10 (Sprint 2).
 

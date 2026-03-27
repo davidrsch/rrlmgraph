@@ -219,7 +219,7 @@ update_task_weights <- function(
       entry_ts <- tryCatch(
         as.numeric(as.POSIXct(
           row$created_at[[1L]],
-          format = "%Y-%m-%dT%H:%M:%SZ",
+          format = "%Y-%m-%dT%H:%M:%OSZ",
           tz = "UTC"
         )),
         error = function(e) now_ts

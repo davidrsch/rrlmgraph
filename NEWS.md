@@ -1,12 +1,40 @@
 ﻿# rrlmgraph (development version)
 
-### CI fix (adversarial audit)
+### CI fixes (adversarial audit)
 
-- `precompute-vignettes.yml`: Removed `continue-on-error: true` from the
-  "Trigger pkgdown rebuild" step. Previously, a failure to dispatch the
-  pkgdown workflow (e.g. insufficient token permissions or missing workflow
-  file) was silently swallowed, causing the precompute workflow to report
-  green even though the published site would not be refreshed (rrlmgraph#115).
+- `precompute-vignettes.yml`: Added R CMD check gate step (runs
+  `rcmdcheck::rcmdcheck(args=c("--no-manual","--ignore-vignettes"),
+error_on="error")`) before committing precomputed artefacts; commit step
+  now has `if: success()` to prevent committing on check failure
+  (#119, #126).
+- All workflow files: Updated `r-lib/actions/*` pins from stale Dec-2021 SHA
+  (`6f6e5bc`) to floating `v2` tag (#122). Added `.github/dependabot.yml` to
+  auto-update GitHub Actions monthly.
+- `test-coverage.yaml`: Moved `GITHUB_PAT` from job-level `env:` to the
+  specific "Test coverage" step that needs it (#123).
+- `pkgdown.yaml`: Replaced `| first // empty | . == "success"` jq filter with
+  `| if length == 0 then false else all(. == "success") end` so that ALL
+  R-CMD-check matrix legs must pass before docs deploy (#125).
+
+### Bug fixes (adversarial audit)
+
+- `task_trace.R`: Changed timestamp parse format from `"%Y-%m-%dT%H:%M:%SZ"`
+  to `"%Y-%m-%dT%H:%M:%OSZ"` so that millisecond-precision ISO 8601 strings
+  emitted by TypeScript (e.g. `"2025-06-19T14:32:07.123Z"`) are parsed
+  correctly (#120).
+- `node_embed.R` `.fit_tfidf()`: Added explicit NULL guard after accessing
+  `tfidf$.__enclos_env__$private$idf` so that a changed text2vec internal API
+  produces a clear error instead of silent `NULL` propagation (#121).
+- `sqlite_export.R`: Changed `task_traces` schema default for `polarity` from
+  `1.0` to `0.0`, aligning with the application cold-start default (#127).
+- `relevance.R`: Corrected stale file-header comment from `R/graph_traverse.R`
+  to `R/relevance.R` (#128).
+
+### Process note
+
+- Future version bumps should be made as standalone commits using
+  `usethis::use_dev_version()` rather than buried inside refactoring commits
+  (#124).
 
 ### Bug fixes (adversarial audit)
 

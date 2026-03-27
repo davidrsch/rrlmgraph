@@ -35,21 +35,21 @@ jobs:
         run: |
           CONCLUSION=$(gh api \
             "repos/${{ github.repository }}/commits/${{ github.sha }}/check-runs" \
-            --jq '[.check_runs[] | select(.name | startswith("R-CMD-check")) | .conclusion] | first // empty')
-          if [ "$CONCLUSION" != "success" ]; then
+            --jq '([.check_runs[] | select(.name | startswith("R-CMD-check")) | .conclusion] | if length == 0 then false else all(. == "success") end)')
+          if [ "$CONCLUSION" != "true" ]; then
             echo "R-CMD-check not passing (conclusion: ${CONCLUSION:-none}). Refusing to deploy docs (closes rrlmgraph#104)."
             exit 1
           fi
 
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
 
-      - uses: r-lib/actions/setup-pandoc@6f6e5bc62fba3a704f74e7ad7ef7676c5c6a2590 # v2
+      - uses: r-lib/actions/setup-pandoc@v2 # v2
 
-      - uses: r-lib/actions/setup-r@6f6e5bc62fba3a704f74e7ad7ef7676c5c6a2590 # v2
+      - uses: r-lib/actions/setup-r@v2 # v2
         with:
           use-public-rspm: true
 
-      - uses: r-lib/actions/setup-r-dependencies@6f6e5bc62fba3a704f74e7ad7ef7676c5c6a2590 # v2
+      - uses: r-lib/actions/setup-r-dependencies@v2 # v2
         with:
           extra-packages: any::pkgdown, any::magick, any::devtools, local::.
           needs: website

@@ -259,6 +259,13 @@ cosine_similarity <- function(a, b) {
   idf_weights <- tryCatch(
     {
       d <- tfidf$.__enclos_env__$private$idf
+      if (is.null(d)) {
+        stop(
+          "Cannot extract IDF weights from text2vec TfIdf object: private$idf is NULL. ",
+          "This likely means text2vec's internal API changed. Please report this issue. ",
+          "As a workaround, try downgrading text2vec or computing IDF weights manually."
+        )
+      }
       if (
         inherits(d, "ddiMatrix") ||
           inherits(d, "Diagonal") ||

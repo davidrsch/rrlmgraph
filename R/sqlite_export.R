@@ -139,7 +139,7 @@ export_to_sqlite <- function(graph, db_path) {
       trace_id   INTEGER PRIMARY KEY AUTOINCREMENT,
       query      TEXT,
       nodes_json TEXT,
-      polarity   REAL DEFAULT 1.0,
+      polarity   REAL DEFAULT 0.0,
       session_id TEXT,
       created_at TEXT
     )
