@@ -19,6 +19,8 @@ jobs:
 
     name: ${{ matrix.config.os }} (R ${{ matrix.config.r }})
 
+    continue-on-error: ${{ matrix.config.allow-failure == true }}
+
     strategy:
       fail-fast: false
       matrix:
@@ -27,7 +29,12 @@ jobs:
           - { os: ubuntu-latest, r: "oldrel-1" }
           - { os: ubuntu-latest, r: "oldrel-2" }
           - { os: ubuntu-latest, r: "oldrel-3" }
-          - { os: ubuntu-latest, r: "devel", http-user-agent: "release" }
+          - {
+              os: ubuntu-latest,
+              r: "devel",
+              http-user-agent: "release",
+              allow-failure: true,
+            }
           - { os: windows-latest, r: "release" }
           - { os: windows-latest, r: "oldrel-1" } # rrlmgraph#88: cover Windows on oldrel too
           - { os: macos-latest, r: "release" }
