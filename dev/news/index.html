@@ -41,12 +41,32 @@
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="rrlmgraph-development-version">rrlmgraph (development version)<a class="anchor" aria-label="anchor" href="#rrlmgraph-development-version"></a></h2>
 <div class="section level4">
-<h4 id="ci-fix-adversarial-audit-development-version">CI fix (adversarial audit)<a class="anchor" aria-label="anchor" href="#ci-fix-adversarial-audit-development-version"></a></h4>
+<h4 id="ci-fixes-adversarial-audit-development-version">CI fixes (adversarial audit)<a class="anchor" aria-label="anchor" href="#ci-fixes-adversarial-audit-development-version"></a></h4>
 <ul><li>
-<code>precompute-vignettes.yml</code>: Removed <code>continue-on-error: true</code> from the “Trigger pkgdown rebuild” step. Previously, a failure to dispatch the pkgdown workflow (e.g. insufficient token permissions or missing workflow file) was silently swallowed, causing the precompute workflow to report green even though the published site would not be refreshed (rrlmgraph#115).</li>
+<code>precompute-vignettes.yml</code>: Added R CMD check gate step (runs <code>rcmdcheck::rcmdcheck(args=c("--no-manual","--ignore-vignettes"), error_on="error")</code>) before committing precomputed artefacts; commit step now has <code>if: success()</code> to prevent committing on check failure (<a href="https://github.com/davidrsch/rrlmgraph/issues/119" class="external-link">#119</a>, <a href="https://github.com/davidrsch/rrlmgraph/issues/126" class="external-link">#126</a>).</li>
+<li>All workflow files: Updated <code>r-lib/actions/*</code> pins from stale Dec-2021 SHA (<code>6f6e5bc</code>) to floating <code>v2</code> tag (<a href="https://github.com/davidrsch/rrlmgraph/issues/122" class="external-link">#122</a>). Added <code>.github/dependabot.yml</code> to auto-update GitHub Actions monthly.</li>
+<li>
+<code>test-coverage.yaml</code>: Moved <code>GITHUB_PAT</code> from job-level <code>env:</code> to the specific “Test coverage” step that needs it (<a href="https://github.com/davidrsch/rrlmgraph/issues/123" class="external-link">#123</a>).</li>
+<li>
+<code>pkgdown.yaml</code>: Replaced <code>| first // empty | . == "success"</code> jq filter with <code>| if length == 0 then false else all(. == "success") end</code> so that ALL R-CMD-check matrix legs must pass before docs deploy (<a href="https://github.com/davidrsch/rrlmgraph/issues/125" class="external-link">#125</a>).</li>
 </ul></div>
 <div class="section level4">
 <h4 id="bug-fixes-adversarial-audit-development-version">Bug fixes (adversarial audit)<a class="anchor" aria-label="anchor" href="#bug-fixes-adversarial-audit-development-version"></a></h4>
+<ul><li>
+<code>task_trace.R</code>: Changed timestamp parse format from <code>"%Y-%m-%dT%H:%M:%SZ"</code> to <code>"%Y-%m-%dT%H:%M:%OSZ"</code> so that millisecond-precision ISO 8601 strings emitted by TypeScript (e.g. <code>"2025-06-19T14:32:07.123Z"</code>) are parsed correctly (<a href="https://github.com/davidrsch/rrlmgraph/issues/120" class="external-link">#120</a>).</li>
+<li>
+<code>node_embed.R</code> <code>.fit_tfidf()</code>: Added explicit NULL guard after accessing <code>tfidf$.__enclos_env__$private$idf</code> so that a changed text2vec internal API produces a clear error instead of silent <code>NULL</code> propagation (<a href="https://github.com/davidrsch/rrlmgraph/issues/121" class="external-link">#121</a>).</li>
+<li>
+<code>sqlite_export.R</code>: Changed <code>task_traces</code> schema default for <code>polarity</code> from <code>1.0</code> to <code>0.0</code>, aligning with the application cold-start default (<a href="https://github.com/davidrsch/rrlmgraph/issues/127" class="external-link">#127</a>).</li>
+<li>
+<code>relevance.R</code>: Corrected stale file-header comment from <code>R/graph_traverse.R</code> to <code>R/relevance.R</code> (<a href="https://github.com/davidrsch/rrlmgraph/issues/128" class="external-link">#128</a>).</li>
+</ul></div>
+<div class="section level4">
+<h4 id="process-note-development-version">Process note<a class="anchor" aria-label="anchor" href="#process-note-development-version"></a></h4>
+<ul><li>Future version bumps should be made as standalone commits using <code><a href="https://usethis.r-lib.org/reference/use_version.html" class="external-link">usethis::use_dev_version()</a></code> rather than buried inside refactoring commits (<a href="https://github.com/davidrsch/rrlmgraph/issues/124" class="external-link">#124</a>).</li>
+</ul></div>
+<div class="section level4">
+<h4 id="bug-fixes-adversarial-audit-development-version-1">Bug fixes (adversarial audit)<a class="anchor" aria-label="anchor" href="#bug-fixes-adversarial-audit-development-version-1"></a></h4>
 <ul><li>
 <code>graph_traverse.R</code> <code><a href="../reference/query_context.html">query_context()</a></code>: Seed-context overflow truncation now uses 3.5 chars/token (matching the final-assembly truncation fixed in <a href="https://github.com/davidrsch/rrlmgraph/issues/114" class="external-link">#114</a>) instead of 4 chars/token (<a href="https://github.com/davidrsch/rrlmgraph/issues/118" class="external-link">#118</a>).</li>
 <li>
