@@ -9,6 +9,26 @@ on:
 
 name: pr-commands.yaml
 
+# ---------------------------------------------------------------------------
+# Security model
+# ---------------------------------------------------------------------------
+# This workflow is triggered by `issue_comment` events, which run in the
+# context of the BASE branch (not the PR head).  That means:
+#   - Secrets are available.
+#   - The workflow code cannot be tampered with by a contributor's PR.
+#
+# To prevent arbitrary command execution by external contributors, every
+# job has an `if:` guard that requires ALL of the following to be true:
+#   1. The comment is on a pull request (not a plain issue).
+#   2. The commenter's `author_association` is 'MEMBER' or 'OWNER', i.e.
+#      someone with write access to the repository.
+#   3. The comment body starts with a recognised slash-command.
+#
+# GitHub's `author_association` field is set server-side and cannot be
+# spoofed by a pull-request author, so this check is safe even for PRs
+# from forks.
+# ---------------------------------------------------------------------------
+
 concurrency:
     group: ${{ github.workflow }}-${{ github.event.issue.number }}
     cancel-in-progress: true # cancel stale /document or /style runs for the same PR (closes rrlmgraph#105)
