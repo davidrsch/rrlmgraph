@@ -102,7 +102,9 @@ A named list with class `c("rrlm_context", "list")`:
     function-type vertex with the highest pre-computed PageRank;
     otherwise validate and use the supplied name.
 
-3.  Initialise `visited = {seed}` and `frontier = neighbours(seed)`.
+3.  Initialise `visited = {seed}` and `frontier = out-neighbours(seed)`
+    (forward-directed: follows dependency edges from callers to
+    callees).
 
 4.  BFS loop while `tokens_used < budget_tokens` and `frontier` is
     non-empty:

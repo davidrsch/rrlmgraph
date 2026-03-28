@@ -146,7 +146,8 @@ scores for every absorbed node (seed included).</p></dd>
 select the function-type vertex with the highest pre-computed
 PageRank; otherwise validate and use the supplied name.</p></li>
 <li><p>Initialise <code>visited = {seed}</code> and
-<code>frontier = neighbours(seed)</code>.</p></li>
+<code>frontier = out-neighbours(seed)</code> (forward-directed: follows
+dependency edges from callers to callees).</p></li>
 <li><p>BFS loop while <code>tokens_used &lt; budget_tokens</code> and
 <code>frontier</code> is non-empty:</p><ul><li><p>Score every frontier node with <code><a href="compute_relevance.html">compute_relevance()</a></code>.</p></li>
 <li><p>Select the best-scoring node with score
