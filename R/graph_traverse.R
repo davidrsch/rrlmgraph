@@ -14,7 +14,8 @@
 #'         select the function-type vertex with the highest pre-computed
 #'         PageRank; otherwise validate and use the supplied name.
 #'   \item Initialise \code{visited = \{seed\}} and
-#'         \code{frontier = neighbours(seed)}.
+#'         \code{frontier = out-neighbours(seed)} (forward-directed: follows
+#'         dependency edges from callers to callees).
 #'   \item BFS loop while \code{tokens_used < budget_tokens} and
 #'         \code{frontier} is non-empty:
 #'         \itemize{
@@ -152,8 +153,10 @@ query_context <- function(
   relevance_scores <- c(setNames(1.0, seed_node))
 
   # ---- BFS loop -----------------------------------------------
+  # mode = "out" follows edges in the forward direction (callers -> callees),
+  # consistent with the forward-directed BFS described in arXiv:2512.24601.
   frontier <- unique(igraph::V(graph)$name[
-    igraph::neighbors(graph, seed_node, mode = "all")
+    igraph::neighbors(graph, seed_node, mode = "out")
   ])
   frontier <- setdiff(frontier, visited)
 
@@ -210,9 +213,9 @@ query_context <- function(
           )
         }
 
-        # expand neighbours
+        # expand out-neighbours (forward-directed, mode = "out")
         nb <- unique(igraph::V(graph)$name[
-          igraph::neighbors(graph, fn, mode = "all")
+          igraph::neighbors(graph, fn, mode = "out")
         ])
         frontier <- unique(c(
           frontier[-k],
