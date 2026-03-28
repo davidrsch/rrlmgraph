@@ -39,9 +39,9 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="development version" id="rrlmgraph-development-version">rrlmgraph (development version)<a class="anchor" aria-label="anchor" href="#rrlmgraph-development-version"></a></h2>
+<h2 class="pkg-version" data-toc-text="0.1.4.9000" id="rrlmgraph-0149000-development-version">rrlmgraph 0.1.4.9000 (development version)<a class="anchor" aria-label="anchor" href="#rrlmgraph-0149000-development-version"></a></h2>
 <div class="section level4">
-<h4 id="ci-fixes-adversarial-audit-development-version">CI fixes (adversarial audit)<a class="anchor" aria-label="anchor" href="#ci-fixes-adversarial-audit-development-version"></a></h4>
+<h4 id="ci-fixes-adversarial-audit-0-1-4-9000">CI fixes (adversarial audit)<a class="anchor" aria-label="anchor" href="#ci-fixes-adversarial-audit-0-1-4-9000"></a></h4>
 <ul><li>
 <code>precompute-vignettes.yml</code>: Added R CMD check gate step (runs <code>rcmdcheck::rcmdcheck(args=c("--no-manual","--ignore-vignettes"), error_on="error")</code>) before committing precomputed artefacts; commit step now has <code>if: success()</code> to prevent committing on check failure (<a href="https://github.com/davidrsch/rrlmgraph/issues/119" class="external-link">#119</a>, <a href="https://github.com/davidrsch/rrlmgraph/issues/126" class="external-link">#126</a>).</li>
 <li>All workflow files: Re-pinned <code>r-lib/actions/*</code> from floating <code>v2</code> tag to full 40-character commit SHA <code>6f6e5bc62fba3a704f74e7ad7ef7676c5c6a2590</code> (v2.11.4, 2025-10-08) to eliminate supply-chain risk (OWASP A06) (<a href="https://github.com/davidrsch/rrlmgraph/issues/134" class="external-link">#134</a>).</li>
@@ -54,7 +54,7 @@
 <code>pkgdown.yaml</code>: Replaced <code>| first // empty | . == "success"</code> jq filter with <code>| if length == 0 then false else all(. == "success") end</code> so that ALL R-CMD-check matrix legs must pass before docs deploy (<a href="https://github.com/davidrsch/rrlmgraph/issues/125" class="external-link">#125</a>).</li>
 </ul></div>
 <div class="section level4">
-<h4 id="bug-fixes-adversarial-audit-development-version">Bug fixes (adversarial audit)<a class="anchor" aria-label="anchor" href="#bug-fixes-adversarial-audit-development-version"></a></h4>
+<h4 id="bug-fixes-adversarial-audit-0-1-4-9000">Bug fixes (adversarial audit)<a class="anchor" aria-label="anchor" href="#bug-fixes-adversarial-audit-0-1-4-9000"></a></h4>
 <ul><li>
 <code>graph_traverse.R</code> <code><a href="../reference/query_context.html">query_context()</a></code>: BFS traversal now uses <code>mode = "out"</code> instead of <code>mode = "all"</code> in both <code><a href="https://r.igraph.org/reference/neighbors.html" class="external-link">igraph::neighbors()</a></code> calls (initial frontier and inner-loop expansion). Directed graphs require <code>mode = "out"</code> for forward traversal (following dependency edges from callers to callees), consistent with the forward-directed BFS described in arXiv:2512.24601 (<a href="https://github.com/davidrsch/rrlmgraph/issues/133" class="external-link">#133</a>).</li>
 <li>
@@ -67,11 +67,11 @@
 <code>relevance.R</code>: Corrected stale file-header comment from <code>R/graph_traverse.R</code> to <code>R/relevance.R</code> (<a href="https://github.com/davidrsch/rrlmgraph/issues/128" class="external-link">#128</a>).</li>
 </ul></div>
 <div class="section level4">
-<h4 id="process-note-development-version">Process note<a class="anchor" aria-label="anchor" href="#process-note-development-version"></a></h4>
+<h4 id="process-note-0-1-4-9000">Process note<a class="anchor" aria-label="anchor" href="#process-note-0-1-4-9000"></a></h4>
 <ul><li>Future version bumps should be made as standalone commits using <code><a href="https://usethis.r-lib.org/reference/use_version.html" class="external-link">usethis::use_dev_version()</a></code> rather than buried inside refactoring commits (<a href="https://github.com/davidrsch/rrlmgraph/issues/124" class="external-link">#124</a>).</li>
 </ul></div>
 <div class="section level4">
-<h4 id="bug-fixes-adversarial-audit-development-version-1">Bug fixes (adversarial audit)<a class="anchor" aria-label="anchor" href="#bug-fixes-adversarial-audit-development-version-1"></a></h4>
+<h4 id="bug-fixes-adversarial-audit-0-1-4-9000-1">Bug fixes (adversarial audit)<a class="anchor" aria-label="anchor" href="#bug-fixes-adversarial-audit-0-1-4-9000-1"></a></h4>
 <ul><li>
 <code>graph_traverse.R</code> <code><a href="../reference/query_context.html">query_context()</a></code>: Seed-context overflow truncation now uses 3.5 chars/token (matching the final-assembly truncation fixed in <a href="https://github.com/davidrsch/rrlmgraph/issues/114" class="external-link">#114</a>) instead of 4 chars/token (<a href="https://github.com/davidrsch/rrlmgraph/issues/118" class="external-link">#118</a>).</li>
 <li>
@@ -80,7 +80,7 @@
 <code>vignettes/benchmark-results.Rmd</code>: Corrected <code>graph_rag_agentic</code> description from “LLM drives MCP tool calls iteratively” to “REPL loop (Algorithm 1, arXiv:2512.24601)” (<a href="https://github.com/davidrsch/rrlmgraph/issues/113" class="external-link">#113</a>).</li>
 </ul></div>
 <div class="section level4">
-<h4 id="code-organisation-development-version">Code organisation<a class="anchor" aria-label="anchor" href="#code-organisation-development-version"></a></h4>
+<h4 id="code-organisation-0-1-4-9000">Code organisation<a class="anchor" aria-label="anchor" href="#code-organisation-0-1-4-9000"></a></h4>
 <ul><li>All R source files capped at 400 lines. Oversized files split at natural function boundaries into focused modules:
 <ul><li>
 <code>edge_builders.R</code> → <code>edge_builders.R</code> + <code>edge_builders_cochange.R</code> + <code>edge_builder_utils.R</code>
@@ -105,7 +105,7 @@
 </ul></li>
 </ul></div>
 <div class="section level4">
-<h4 id="bug-fixes-development-version">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-development-version"></a></h4>
+<h4 id="bug-fixes-0-1-4-9000">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-1-4-9000"></a></h4>
 <ul><li>
 <code>graph_traverse.R</code> <code><a href="../reference/query_context.html">query_context()</a></code>: BFS token-cost estimation inside the loop now always uses <code>"compressed"</code> mode for all supporting (non-seed) nodes. Previously the condition <code>if (nodes_added == 0L)</code> caused the first BFS-discovered node to be costed as <code>"full"</code> (~3× larger), leading to premature termination of the traversal (<a href="https://github.com/davidrsch/rrlmgraph/issues/103" class="external-link">#103</a>).</li>
 <li>
@@ -118,7 +118,7 @@
 <code>generate_instructions.R</code> <code><a href="../reference/generate_instructions.html">generate_instructions()</a></code>: token-budget computation changed from <code>max_tokens * 4L</code> (4 chars/token) to <code>ceiling(max_tokens * 3.5)</code> (3.5 chars/token), matching <code>.count_tokens()</code>, <code>context_assemble.R</code>, and the MCP <code>estimateTokens()</code> helper. <code>@param max_tokens</code> doc updated accordingly (<a href="https://github.com/davidrsch/rrlmgraph/issues/107" class="external-link">#107</a>).</li>
 </ul></div>
 <div class="section level4">
-<h4 id="ci--infrastructure-development-version">CI / infrastructure<a class="anchor" aria-label="anchor" href="#ci--infrastructure-development-version"></a></h4>
+<h4 id="ci--infrastructure-0-1-4-9000">CI / infrastructure<a class="anchor" aria-label="anchor" href="#ci--infrastructure-0-1-4-9000"></a></h4>
 <ul><li>
 <code>pkgdown.yaml</code>: added a <code>Gate on R-CMD-check</code> step that verifies the most recent R-CMD-check run has a <code>success</code> conclusion before allowing docs to be deployed on <code>release</code> and <code>workflow_dispatch</code> events, preventing documentation from being published from a broken commit (<a href="https://github.com/davidrsch/rrlmgraph/issues/104" class="external-link">#104</a>).</li>
 <li>
@@ -132,7 +132,7 @@
 <code>pr-commands.yaml</code>: removed <code>continue-on-error: true</code> from the style-job commit step; the <code>|| echo "No changes to commit"</code> guard in the <code>run:</code> block already handles the empty-commit case without hiding genuine errors (<a href="https://github.com/davidrsch/rrlmgraph/issues/102" class="external-link">#102</a>).</li>
 </ul></div>
 <div class="section level4">
-<h4 id="documentation-development-version">Documentation<a class="anchor" aria-label="anchor" href="#documentation-development-version"></a></h4>
+<h4 id="documentation-0-1-4-9000">Documentation<a class="anchor" aria-label="anchor" href="#documentation-0-1-4-9000"></a></h4>
 <ul><li>
 <code>DESCRIPTION</code>: version now carries <code>.9000</code> development suffix on <code>main</code> branch to distinguish development snapshots from the CRAN release (<a href="https://github.com/davidrsch/rrlmgraph/issues/100" class="external-link">#100</a>).</li>
 <li>
@@ -149,7 +149,7 @@
 <code>vignettes/mcp-integration.Rmd</code>: corrected CLI flag <code>--db</code> → <code>--db-path</code>, file extension <code>graph.db</code> → <code>graph.sqlite</code> throughout (architecture diagram, npx example, VS Code JSON config), and added the required <code>db_path</code> argument to both <code><a href="../reference/export_to_sqlite.html">export_to_sqlite()</a></code> calls. Closes <a href="https://github.com/davidrsch/rrlmgraph/issues/94" class="external-link">#94</a>.</li>
 </ul></div>
 <div class="section level4">
-<h4 id="ci--security-development-version">CI / Security<a class="anchor" aria-label="anchor" href="#ci--security-development-version"></a></h4>
+<h4 id="ci--security-0-1-4-9000">CI / Security<a class="anchor" aria-label="anchor" href="#ci--security-0-1-4-9000"></a></h4>
 <ul><li>All GitHub Actions workflows are now pinned to full commit SHA digests instead of mutable <code>@v4</code>/<code>@v2</code> tags, eliminating the supply-chain risk described in OWASP A06. Closes <a href="https://github.com/davidrsch/rrlmgraph/issues/90" class="external-link">#90</a>.</li>
 </ul></div>
 </div>
