@@ -1,4 +1,31 @@
-﻿# rrlmgraph 0.1.4.9000 (development version)
+﻿# rrlmgraph 0.1.5.9000 (development version)
+
+### Workflow and documentation fixes (adversarial audit)
+
+- `precompute-vignettes.yml`: Added `push` trigger scoped to `main` with
+  path filters on `R/**`, `inst/extdata/**`, and `vignettes/**` so the
+  precompute workflow runs automatically when relevant source files change;
+  previously it was `workflow_dispatch` only and had never been triggered,
+  causing the precomputed RDS artefacts to be absent (#141).
+- `pkgdown.yaml`: Added `cancel-in-progress: true` to the concurrency
+  config to prevent race conditions when multiple pkgdown runs queue on
+  rapid successive pushes (#145).
+- `CONTRIBUTING.md`: Created with version bump discipline guidelines so
+  version bumps are in dedicated commits and `NEWS.md` entries are
+  correctly attributed (#144).
+
+### Bug fixes (adversarial audit — 2026-03-29)
+
+- `R/sqlite_export_helpers.R` `.import_task_traces()`: polarity default
+  corrected from `1.0` to `0.0`; a task trace with no explicit polarity should
+  be neutral, not maximum-positive (#139, #142).
+- `R/sqlite_export_helpers.R` `.upsert_tfidf_vocab()`: IDF fallback now uses
+  `sum(doc_count)` as the corpus-size proxy instead of `max(doc_count)`.
+  `max(doc_count)` is the most-frequent term's count, which gives the _lowest_
+  IDF as the fallback — the opposite of the correct behaviour for unseen terms
+  (#143).
+
+# rrlmgraph 0.1.4.9000 (development version)
 
 ### CI fixes (adversarial audit)
 

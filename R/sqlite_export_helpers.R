@@ -35,9 +35,16 @@
   }
 
   # Final fallback: estimate from document frequencies stored in vocab.
-  # IDF(t) = log(1 + N / df(t)); use max(doc_count) as proxy for N.
+  # IDF(t) = log(1 + N / df(t)); N = total number of documents in corpus.
+  # rrlmgraph#143 (issue #143): was using max(doc_count) as proxy for N,
+  # which gives the LOWEST IDF (most common term) as the fallback. Unseen
+  # terms should get HIGH IDF (maximum specificity). Use sum of doc_count as
+  # a corpus-size proxy since total_docs is not separately tracked here.
   if (is.null(idf_weights) || length(idf_weights) == 0L) {
-    n_docs <- max(as.integer(vocab$doc_count), na.rm = TRUE)
+    n_docs <- sum(as.integer(vocab$doc_count), na.rm = TRUE)
+    if (n_docs == 0L) {
+      n_docs <- nrow(vocab)
+    }
     idf_weights <- log(1 + n_docs / pmax(as.integer(vocab$doc_count), 1L))
   }
 
@@ -110,7 +117,7 @@
             # as.character() strips the S3 json class so rbind() works on R 4.2
             as.character(jsonlite::toJSON(entry$nodes, auto_unbox = FALSE))
           },
-          polarity = as.numeric(entry$polarity %||% 1.0),
+          polarity = as.numeric(entry$polarity %||% 0.0),
           session_id = as.character(entry$session_id %||% NA_character_),
           created_at = as.character(entry$timestamp %||% NA_character_),
           stringsAsFactors = FALSE

@@ -16,6 +16,7 @@ permissions:
 
 concurrency:
   group: pkgdown-${{ github.event_name != 'pull_request' || github.run_id }}
+  cancel-in-progress: true # cancel stale pkgdown builds on rapid pushes (closes rrlmgraph#145)
 
 jobs:
   pkgdown:

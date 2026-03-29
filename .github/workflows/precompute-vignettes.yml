@@ -1,5 +1,11 @@
 on:
   workflow_dispatch: # run manually from the Actions tab
+  push:
+    branches: [main]
+    paths:
+      - "R/**"
+      - "inst/extdata/**"
+      - "vignettes/**"
 
 name: precompute-vignettes
 
