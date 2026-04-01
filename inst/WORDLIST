@@ -6,6 +6,7 @@ args
 AST
 AUTOINCREMENT
 backoff
+behaviour
 backend
 backends
 BFS
