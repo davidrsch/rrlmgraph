@@ -1,5 +1,14 @@
 ﻿# rrlmgraph 0.1.5.9000 (development version)
 
+### Documentation fix (cross-repo consistency with rrlmgraph-bench #302/#303)
+
+- `vignettes/benchmark-results.Rmd`: Renamed `graph_rag_agentic` →
+  `rlm_graph` in the strategy table and added "no-sub-calls ablation of
+  Algorithm 1, arXiv:2512.24601 §4.3" disclosure to the description row
+  (issue #303).
+- `NEWS.md`: Updated historical reference from `graph_rag_agentic` to
+  `rlm_graph` for consistency (issue #302).
+
 ### Workflow and documentation fixes (adversarial audit)
 
 - `precompute-vignettes.yml`: Added `push` trigger scoped to `main` with
@@ -86,7 +95,7 @@ error_on="error")`) before committing precomputed artefacts; commit step
 - `graph_traverse.R` `query_context()`: Hard-truncation ceiling now uses
   3.5 chars/token (matching `context_assemble.R`, `generate_instructions.R`,
   and `rrlmgraph-mcp`) instead of the previous 4 chars/token (#114).
-- `vignettes/benchmark-results.Rmd`: Corrected `graph_rag_agentic` description
+- `vignettes/benchmark-results.Rmd`: Corrected `rlm_graph` description
   from "LLM drives MCP tool calls iteratively" to "REPL loop (Algorithm 1,
   arXiv:2512.24601)" (#113).
 
