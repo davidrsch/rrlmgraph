@@ -1,5 +1,48 @@
 # Changelog
 
+## rrlmgraph 0.1.5.9000 (development version)
+
+#### Documentation fix (cross-repo consistency with rrlmgraph-bench [\#302](https://github.com/davidrsch/rrlmgraph/issues/302)/#303)
+
+- `vignettes/benchmark-results.Rmd`: Renamed `graph_rag_agentic` →
+  `rlm_graph` in the strategy table and added “no-sub-calls ablation of
+  Algorithm 1, arXiv:2512.24601 §4.3” disclosure to the description row
+  (issue [\#303](https://github.com/davidrsch/rrlmgraph/issues/303)).
+- `NEWS.md`: Updated historical reference from `graph_rag_agentic` to
+  `rlm_graph` for consistency (issue
+  [\#302](https://github.com/davidrsch/rrlmgraph/issues/302)).
+
+#### Workflow and documentation fixes (adversarial audit)
+
+- `precompute-vignettes.yml`: Added `push` trigger scoped to `main` with
+  path filters on `R/**`, `inst/extdata/**`, and `vignettes/**` so the
+  precompute workflow runs automatically when relevant source files
+  change; previously it was `workflow_dispatch` only and had never been
+  triggered, causing the precomputed RDS artefacts to be absent
+  ([\#141](https://github.com/davidrsch/rrlmgraph/issues/141)).
+- `pkgdown.yaml`: Added `cancel-in-progress: true` to the concurrency
+  config to prevent race conditions when multiple pkgdown runs queue on
+  rapid successive pushes
+  ([\#145](https://github.com/davidrsch/rrlmgraph/issues/145)).
+- `CONTRIBUTING.md`: Created with version bump discipline guidelines so
+  version bumps are in dedicated commits and `NEWS.md` entries are
+  correctly attributed
+  ([\#144](https://github.com/davidrsch/rrlmgraph/issues/144)).
+
+#### Bug fixes (adversarial audit — 2026-03-29)
+
+- `R/sqlite_export_helpers.R` `.import_task_traces()`: polarity default
+  corrected from `1.0` to `0.0`; a task trace with no explicit polarity
+  should be neutral, not maximum-positive
+  ([\#139](https://github.com/davidrsch/rrlmgraph/issues/139),
+  [\#142](https://github.com/davidrsch/rrlmgraph/issues/142)).
+- `R/sqlite_export_helpers.R` `.upsert_tfidf_vocab()`: IDF fallback now
+  uses `sum(doc_count)` as the corpus-size proxy instead of
+  `max(doc_count)`. `max(doc_count)` is the most-frequent term’s count,
+  which gives the *lowest* IDF as the fallback — the opposite of the
+  correct behaviour for unseen terms
+  ([\#143](https://github.com/davidrsch/rrlmgraph/issues/143)).
+
 ## rrlmgraph 0.1.4.9000 (development version)
 
 #### CI fixes (adversarial audit)
@@ -85,9 +128,9 @@
   `context_assemble.R`, `generate_instructions.R`, and `rrlmgraph-mcp`)
   instead of the previous 4 chars/token
   ([\#114](https://github.com/davidrsch/rrlmgraph/issues/114)).
-- `vignettes/benchmark-results.Rmd`: Corrected `graph_rag_agentic`
-  description from “LLM drives MCP tool calls iteratively” to “REPL loop
-  (Algorithm 1, arXiv:2512.24601)”
+- `vignettes/benchmark-results.Rmd`: Corrected `rlm_graph` description
+  from “LLM drives MCP tool calls iteratively” to “REPL loop (Algorithm
+  1, arXiv:2512.24601)”
   ([\#113](https://github.com/davidrsch/rrlmgraph/issues/113)).
 
 #### Code organisation
