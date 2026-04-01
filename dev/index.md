@@ -9,6 +9,14 @@ entire source files, `rrlmgraph` reduces hallucinations by grounding
 responses in verified code and cuts token consumption by orders of
 magnitude.
 
+The same graph infrastructure powers the **`rlm_graph`** benchmark
+strategy (the primary scientific contribution): an LLM iteratively
+executes R code in a sandboxed REPL, accumulating context by traversing
+the graph across multiple turns rather than issuing a single static
+query. This is the no-sub-calls ablation of Algorithm 1 from
+arXiv:2512.24601, validated in
+[`rrlmgraph-bench`](https://github.com/davidrsch/rrlmgraph-bench).
+
 ## Installation
 
 You can install the development version of `rrlmgraph` from GitHub with:

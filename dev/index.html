@@ -71,6 +71,7 @@
 
 <!-- badges: end -->
 <p>The goal of <code>rrlmgraph</code> is to give large language models the <em>right</em> context about your R project — not the whole codebase. It builds a typed knowledge graph that encodes functions, files, packages, and tests as nodes, then performs a relevance-guided traversal to extract a token-budgeted context window for every LLM query. Compared to pasting entire source files, <code>rrlmgraph</code> reduces hallucinations by grounding responses in verified code and cuts token consumption by orders of magnitude.</p>
+<p>The same graph infrastructure powers the <strong><code>rlm_graph</code></strong> benchmark strategy (the primary scientific contribution): an LLM iteratively executes R code in a sandboxed REPL, accumulating context by traversing the graph across multiple turns rather than issuing a single static query. This is the no-sub-calls ablation of Algorithm 1 from arXiv:2512.24601, validated in <a href="https://github.com/davidrsch/rrlmgraph-bench" class="external-link"><code>rrlmgraph-bench</code></a>.</p>
 <div class="section level2">
 <h2 id="installation">Installation<a class="anchor" aria-label="anchor" href="#installation"></a>
 </h2>
