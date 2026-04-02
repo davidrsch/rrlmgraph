@@ -38,7 +38,10 @@
 #' @param query Character(1).  User query string.
 #' @param seed_node Character(1) or \code{NULL}.  Name of the vertex to
 #'   start traversal from.  \code{NULL} (default) triggers automatic
-#'   selection: the function-type node with the highest PageRank.
+#'   selection: prefer \code{entry_point == TRUE} nodes, ranking by
+#'   semantic similarity to the query when embeddings are available,
+#'   otherwise fall back to the function-type node with the highest
+#'   PageRank.
 #' @param budget_tokens Integer(1).  Hard token limit.  Default
 #'   \code{2000L}.
 #' @param min_relevance Numeric(1).  Minimum relevance score
@@ -120,11 +123,44 @@ query_context <- function(
       fn_idx <- seq_along(v_names)
     }
 
-    pr_vals <- igraph::vertex_attr(graph, "pagerank")
-    if (is.null(pr_vals) || all(is.na(pr_vals[fn_idx]))) {
-      seed_node <- v_names[fn_idx[[1L]]]
+    # Prefer entry-point nodes as seed candidates; fall back to all
+    # function nodes when no entry_point attribute is set (old graphs).
+    ep_attr <- igraph::vertex_attr(graph, "entry_point")
+    ep_idx <- if (!is.null(ep_attr)) {
+      which(
+        !is.na(v_types) &
+          v_types == "function" &
+          !is.na(ep_attr) &
+          as.logical(ep_attr)
+      )
     } else {
-      seed_node <- v_names[fn_idx[which.max(pr_vals[fn_idx])]]
+      integer(0)
+    }
+    candidates <- if (length(ep_idx) > 0L) ep_idx else fn_idx
+
+    # Among candidates, pick by semantic similarity to the query embedding.
+    # Fall back to PageRank when no embeddings are available.
+    if (length(query_vec) > 0L) {
+      emb_attr <- igraph::vertex_attr(graph, "embedding")
+      if (!is.null(emb_attr)) {
+        sims <- vapply(
+          candidates,
+          function(i) {
+            emb <- if (is.list(emb_attr)) emb_attr[[i]] else emb_attr[i]
+            if (!is.null(emb) && length(emb) > 0L) {
+              tryCatch(cosine_similarity(emb, query_vec), error = function(e) 0)
+            } else {
+              0
+            }
+          },
+          numeric(1L)
+        )
+        seed_node <- v_names[candidates[which.max(sims)]]
+      } else {
+        seed_node <- .seed_by_pagerank(graph, candidates, v_names)
+      }
+    } else {
+      seed_node <- .seed_by_pagerank(graph, candidates, v_names)
     }
   } else {
     if (!seed_node %in% v_names) {
@@ -277,6 +313,16 @@ query_context <- function(
 }
 
 # ---- rrlm_context S3 helpers ----------------------------------------
+
+#' @keywords internal
+.seed_by_pagerank <- function(graph, candidates, v_names) {
+  pr_vals <- igraph::vertex_attr(graph, "pagerank")
+  if (is.null(pr_vals) || all(is.na(pr_vals[candidates]))) {
+    v_names[candidates[[1L]]]
+  } else {
+    v_names[candidates[which.max(pr_vals[candidates])]]
+  }
+}
 
 #' @keywords internal
 .empty_rrlm_context <- function(budget_tokens) {

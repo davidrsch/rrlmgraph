@@ -112,7 +112,9 @@ export_to_sqlite <- function(graph, db_path) {
       task_weight  REAL,
       embedding    TEXT,
       pkg_name     TEXT,
-      pkg_version  TEXT
+      pkg_version  TEXT,
+      entry_point  INTEGER NOT NULL DEFAULT 0,
+      api_depth    INTEGER NOT NULL DEFAULT 99
     )
   "
   )
@@ -245,6 +247,8 @@ export_to_sqlite <- function(graph, db_path) {
     embedding = embedding_json,
     pkg_name = pull("pkg_name"),
     pkg_version = pull("pkg_version"),
+    entry_point = as.integer(as.logical(pull("entry_point", FALSE))),
+    api_depth = as.integer(pull("api_depth", 99L)),
     stringsAsFactors = FALSE
   )
 

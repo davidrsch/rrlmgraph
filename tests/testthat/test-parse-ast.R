@@ -131,6 +131,27 @@ test_that("detects R6 class public methods", {
   expect_true(length(names_found) > 0L)
 })
 
+test_that("all extracted function nodes have scope_level field equal to 0L", {
+  f <- write_r_file(c(
+    "top_fn <- function(x) x + 1",
+    "another <- function(a, b) a * b"
+  ))
+  nodes <- extract_function_nodes(f)
+
+  expect_length(nodes, 2L)
+  for (nd in nodes) {
+    expect_true(
+      "scope_level" %in% names(nd),
+      info = paste("scope_level missing from node", nd$name)
+    )
+    expect_equal(
+      nd$scope_level,
+      0L,
+      info = paste("scope_level != 0 for top-level function", nd$name)
+    )
+  }
+})
+
 test_that("gracefully handles parse errors without crashing", {
   f <- write_r_file("this is not valid R code <<< }")
   expect_no_error(suppressWarnings(extract_function_nodes(f)))

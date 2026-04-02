@@ -73,7 +73,13 @@ extract_function_nodes <- function(r_files) {
 # ---- private AST walker ---------------------------------------------
 
 #' @keywords internal
-.extract_from_exprs <- function(exprs, src_refs, source_lines, file_path) {
+.extract_from_exprs <- function(
+  exprs,
+  src_refs,
+  source_lines,
+  file_path,
+  scope_level = 0L
+) {
   nodes <- list()
 
   for (i in seq_along(exprs)) {
@@ -95,7 +101,14 @@ extract_function_nodes <- function(r_files) {
     ) {
       fn_name <- tryCatch(as.character(expr[[2L]]), error = function(e) NULL)
       if (!is.null(fn_name)) {
-        nd <- .make_node(fn_name, expr[[3L]], sr, source_lines, file_path)
+        nd <- .make_node(
+          fn_name,
+          expr[[3L]],
+          sr,
+          source_lines,
+          file_path,
+          scope_level = scope_level
+        )
         if (!is.null(nd)) nodes <- c(nodes, list(nd))
       }
 
@@ -109,7 +122,8 @@ extract_function_nodes <- function(r_files) {
           sr,
           source_lines,
           file_path,
-          kind = head
+          kind = head,
+          scope_level = scope_level
         )
         if (!is.null(nd)) nodes <- c(nodes, list(nd))
       }
@@ -137,7 +151,8 @@ extract_function_nodes <- function(r_files) {
   src_ref,
   source_lines,
   file_path,
-  kind = "function"
+  kind = "function",
+  scope_level = 0L
 ) {
   if (is.null(src_ref)) {
     return(NULL)
@@ -216,7 +231,8 @@ extract_function_nodes <- function(r_files) {
     body_text = body_text,
     roxygen_text = roxygen_text,
     complexity = as.integer(complexity),
-    calls_list = calls_list
+    calls_list = calls_list,
+    scope_level = as.integer(scope_level)
   )
 }
 

@@ -287,3 +287,67 @@ test_that("plot.rrlm_graph errors on unsupported file extension", {
   on.exit(unlink(tmp), add = TRUE)
   expect_error(plot(g, file = tmp), regexp = "Unsupported")
 })
+
+# ---- Phase 1 vertex attributes (entry_point, api_depth) ------------------
+
+test_that("build_rrlm_graph populates entry_point attribute on function nodes", {
+  g <- build_rrlm_graph(fixture_path, cache = FALSE, verbose = FALSE)
+
+  ep_attr <- igraph::V(g)$entry_point
+  expect_false(
+    is.null(ep_attr),
+    info = "entry_point vertex attribute must exist after build_rrlm_graph()"
+  )
+
+  fn_idx <- which(igraph::V(g)$node_type == "function")
+  expect_gt(length(fn_idx), 0L)
+
+  # At least one entry point must have been detected
+  expect_true(
+    any(ep_attr[fn_idx], na.rm = TRUE),
+    info = "At least one function node must be an entry point"
+  )
+})
+
+test_that("build_rrlm_graph populates api_depth attribute on function nodes", {
+  g <- build_rrlm_graph(fixture_path, cache = FALSE, verbose = FALSE)
+
+  depth_attr <- igraph::V(g)$api_depth
+  expect_false(
+    is.null(depth_attr),
+    info = "api_depth vertex attribute must exist after build_rrlm_graph()"
+  )
+
+  fn_idx <- which(igraph::V(g)$node_type == "function")
+  depths <- depth_attr[fn_idx]
+  # All depths must be non-negative integers
+  expect_true(
+    all(!is.na(depths) & as.integer(depths) >= 0L),
+    info = "api_depth must be a non-negative integer for all function nodes"
+  )
+
+  # Entry points have api_depth == 0
+  ep_idx <- which(
+    igraph::V(g)$node_type == "function" & igraph::V(g)$entry_point
+  )
+  if (length(ep_idx) > 0L) {
+    expect_true(
+      all(depth_attr[ep_idx] == 0L),
+      info = "Entry-point nodes must have api_depth == 0"
+    )
+  }
+})
+
+test_that("build_rrlm_graph populates scope_level attribute on function nodes", {
+  g <- build_rrlm_graph(fixture_path, cache = FALSE, verbose = FALSE)
+
+  sl_attr <- igraph::V(g)$scope_level
+  expect_false(
+    is.null(sl_attr),
+    info = "scope_level vertex attribute must exist after build_rrlm_graph()"
+  )
+
+  fn_idx <- which(igraph::V(g)$node_type == "function")
+  # All top-level functions must have scope_level == 0
+  expect_true(all(as.integer(sl_attr[fn_idx]) == 0L, na.rm = TRUE))
+})

@@ -285,3 +285,39 @@ test_that("summary.rrlm_context returns object invisibly", {
   expect_false(ret$visible)
   expect_identical(ret$value, ctx)
 })
+
+# ---- Phase 1D: entry-point seed selection ----------------------------
+
+test_that("entry_point nodes are preferred over high-PageRank internal nodes as seed", {
+  # pkg::a has entry_point=TRUE but low PageRank (0.10)
+  # pkg::b has entry_point=FALSE but high PageRank (0.40)
+  # Without entry_point preference: seed would be pkg::b (highest PageRank)
+  # With entry_point preference + no embeddings: seed must be pkg::a
+  verts <- data.frame(
+    name = c("pkg::a", "pkg::b", "pkg::c"),
+    node_type = c("function", "function", "function"),
+    pagerank = c(0.10, 0.40, 0.25),
+    entry_point = c(TRUE, FALSE, FALSE),
+    api_depth = c(0L, 1L, 2L),
+    scope_level = c(0L, 0L, 0L),
+    stringsAsFactors = FALSE
+  )
+  edges <- data.frame(
+    from = c("pkg::a", "pkg::b"),
+    to = c("pkg::b", "pkg::c"),
+    weight = 1.0,
+    edge_type = "CALLS",
+    stringsAsFactors = FALSE
+  )
+  g <- igraph::graph_from_data_frame(
+    d = edges,
+    vertices = verts,
+    directed = TRUE
+  )
+  igraph::graph_attr(g, "embed_method") <- "tfidf"
+  class(g) <- c("rrlm_graph", class(g))
+
+  ctx <- query_context(g, "run pipeline")
+  # Must start from the entry point, not the highest-PageRank internal node
+  expect_equal(ctx$seed_node, "pkg::a")
+})

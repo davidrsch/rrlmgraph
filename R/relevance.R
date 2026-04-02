@@ -8,23 +8,28 @@
 #'
 #' Calculate a composite relevance score for \code{node} given a query
 #' embedding and the traversal state.  The score is a weighted linear
-#' combination of four signals:
+#' combination of five signals:
 #'
 #' \deqn{
-#'   \text{relevance} = 0.40 \cdot \text{sem\_sim}
-#'                    + 0.25 \cdot \text{pagerank}
-#'                    + 0.25 \cdot \text{task\_trace\_weight}
+#'   \text{relevance} = 0.50 \cdot \text{sem\_sim}
+#'                    + 0.15 \cdot \text{api\_depth\_score}
+#'                    + 0.15 \cdot \text{task\_trace\_weight}
+#'                    + 0.10 \cdot \text{pagerank}
 #'                    + 0.10 \cdot \text{cochange\_score}
 #' }
 #'
 #' The weights can be overridden globally via
-#' \code{options(rrlmgraph.weights = list(semantic=, pagerank=,
-#' task_trace=, cochange=))}.
+#' \code{options(rrlmgraph.weights = list(semantic=, api_depth=,
+#' task_trace=, pagerank=, cochange=))}.
 #'
 #' @section Signal definitions:
 #' \describe{
 #'   \item{sem_sim}{Cosine similarity between the node's TF-IDF (or other)
 #'     embedding and \code{query_vec}.  Clamped to \eqn{[0, 1]}.}
+#'   \item{api_depth_score}{Smooth discount based on the node's distance
+#'     from the nearest entry-point: \eqn{1 / (1 + \text{api\_depth} \times 0.2)}.
+#'     Entry-point nodes (depth 0) score 1.0; depth 5 scores 0.5.  Defaults
+#'     to 0.5 when the \code{api_depth} vertex attribute is absent.}
 #'   \item{pagerank}{Pre-computed \code{pagerank} vertex attribute,
 #'     min-max normalised across the full graph to \eqn{[0, 1]}.}
 #'   \item{task_trace_weight}{Vertex attribute set by
@@ -35,15 +40,11 @@
 #'     \code{visited} is empty or no such edges exist.}
 #' }
 #'
-#' @note \strong{MCP server divergence (mcp#41):} The TypeScript BFS in
-#'   \pkg{rrlmgraph-mcp} cannot use the co-change signal because
-#'   \code{CO_CHANGES} edge weights are not stored in the exported SQLite
-#'   schema.  Instead it substitutes a \emph{depth-penalty} term
-#'   \eqn{1 / (1 + \text{depth} \times 0.5)}, which discounts nodes that are
-#'   far from the seed.  Scores produced by the two paths are therefore not
-#'   directly comparable; the R-side scores will generally assign more weight
-#'   to nodes that co-change with the seed node, while the MCP path prefers
-#'   structurally adjacent nodes.
+#' @note \strong{MCP server alignment (was mcp#41):} \pkg{rrlmgraph-mcp}
+#'   previously substituted a depth-from-seed penalty for the co-change
+#'   signal.  Since \code{api_depth} is now persisted in the SQLite schema,
+#'   the TypeScript BFS uses the same \code{api_depth_score} formula.
+#'   Scores produced by both paths are now directly comparable.
 #'
 #' @param node Character(1).  Name of the vertex (i.e., \code{node_id})
 #'   to score.
@@ -56,7 +57,8 @@
 #' @param graph An \code{rrlm_graph} / \code{igraph} object.
 #' @param weights Named list or \code{NULL}.  If non-\code{NULL},
 #'   overrides the corresponding default weight(s).  Recognised names:
-#'   \code{semantic}, \code{pagerank}, \code{task_trace}, \code{cochange}.
+#'   \code{semantic}, \code{api_depth}, \code{pagerank}, \code{task_trace},
+#'   \code{cochange}.
 #'   Falls back to \code{getOption("rrlmgraph.weights")}.
 #'
 #' @return Numeric(1) in \eqn{[0, 1]}.
@@ -114,7 +116,28 @@ compute_relevance <- function(
   }
   pr_norm <- max(0, min(1, if (is.na(pr_norm)) 0.5 else pr_norm))
 
-  # 3. Task-trace weight (vertex attribute, default 0.5) ------------------
+  # 3. API depth score ---------------------------------------------------
+  # api_depth: integer hops from the nearest entry-point following the
+  # call graph.  Entry points (depth 0) score 1.0; each hop discounts by
+  # 1/(1 + depth * 0.2).  Default 0.5 when attribute is absent.
+  api_depth_raw <- igraph::vertex_attr(graph, "api_depth", index = v_idx)
+  api_depth_val <- if (
+    is.null(api_depth_raw) ||
+      length(api_depth_raw) == 0L ||
+      is.na(api_depth_raw[[1L]])
+  ) {
+    NA_integer_
+  } else {
+    as.integer(api_depth_raw[[1L]])
+  }
+  api_depth_score <- if (is.na(api_depth_val) || api_depth_val >= 99L) {
+    0.5
+  } else {
+    1 / (1 + api_depth_val * 0.2)
+  }
+  api_depth_score <- max(0, min(1, api_depth_score))
+
+  # 4. Task-trace weight (vertex attribute, default 0.5) ------------------
   ttw_all <- igraph::V(graph)$task_trace_weight
   ttw <- if (!is.null(ttw_all) && length(ttw_all) >= v_idx) {
     ttw_all[[v_idx]]
@@ -126,14 +149,15 @@ compute_relevance <- function(
   }
   ttw <- max(0, min(1, ttw))
 
-  # 4. Co-change score ----------------------------------------------------
+  # 5. Co-change score ----------------------------------------------------
   cochange <- .cochange_score(graph, v_idx, node, visited)
 
   # Composite score -------------------------------------------------------
   score <- w$semantic *
     sem_sim +
-    w$pagerank * pr_norm +
+    w$api_depth * api_depth_score +
     w$task_trace * ttw +
+    w$pagerank * pr_norm +
     w$cochange * cochange
 
   max(0, min(1, score))
@@ -170,9 +194,10 @@ compute_relevance <- function(
 #' @keywords internal
 .relevance_weights <- function(weights) {
   defaults <- list(
-    semantic = 0.40,
-    pagerank = 0.25,
-    task_trace = 0.25,
+    semantic = 0.50,
+    api_depth = 0.15,
+    task_trace = 0.15,
+    pagerank = 0.10,
     cochange = 0.10
   )
   # Merge option-level overrides

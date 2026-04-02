@@ -130,6 +130,9 @@ build_rrlm_graph <- function(
         roxygen_text = NA_character_,
         complexity = NA_integer_,
         pagerank = NA_real_,
+        scope_level = 0L,
+        entry_point = FALSE,
+        api_depth = NA_integer_,
         stringsAsFactors = FALSE
       )
     }
@@ -153,6 +156,9 @@ build_rrlm_graph <- function(
         roxygen_text = NA_character_,
         complexity = NA_integer_,
         pagerank = NA_real_,
+        scope_level = 0L,
+        entry_point = FALSE,
+        api_depth = NA_integer_,
         stringsAsFactors = FALSE
       )
     }
@@ -178,6 +184,9 @@ build_rrlm_graph <- function(
       roxygen_text = character(0),
       complexity = integer(0),
       pagerank = numeric(0),
+      scope_level = integer(0),
+      entry_point = logical(0),
+      api_depth = integer(0),
       stringsAsFactors = FALSE
     )
   }
@@ -256,6 +265,43 @@ build_rrlm_graph <- function(
     error = function(e) rep(0, igraph::vcount(g))
   )
   igraph::V(g)$pagerank <- as.numeric(pr_scores)
+
+  # ---- 5b. Entry-point detection + api_depth ---------------------------
+  .vlog("Detecting entry points for project type '{proj$type}'")
+  entry_point_names <- tryCatch(
+    detect_entry_points(g, proj),
+    error = function(e) {
+      cli::cli_warn(
+        "Entry-point detection failed: {conditionMessage(e)}"
+      )
+      character(0)
+    }
+  )
+
+  igraph::V(g)$entry_point <- igraph::V(g)$name %in% entry_point_names
+
+  # api_depth: minimum hop count from any entry-point node following
+  # dependency edges (callers -> callees).  Unreachable nodes get 99L.
+  ep_idx <- which(igraph::V(g)$entry_point)
+  if (length(ep_idx) > 0L) {
+    dist_mat <- igraph::distances(
+      g,
+      v = ep_idx,
+      to = igraph::V(g),
+      mode = "out",
+      weights = NA
+    )
+    # dist_mat is |ep_idx| x |V(g)|; take column-wise minimum
+    min_dist <- if (nrow(dist_mat) == 1L) {
+      as.numeric(dist_mat[1L, ])
+    } else {
+      apply(dist_mat, 2L, min)
+    }
+    min_dist[!is.finite(min_dist)] <- 99
+    igraph::V(g)$api_depth <- as.integer(min_dist)
+  } else {
+    igraph::V(g)$api_depth <- 99L
+  }
 
   # Initialise task_trace_weight to 0.0 (neutral / no prior history).
   # Using 0.0 instead of 0.5 keeps the relevance formula unbiased on fresh

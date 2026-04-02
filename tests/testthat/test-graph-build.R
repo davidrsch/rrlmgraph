@@ -271,7 +271,12 @@ test_that("call edges recall >= 85% on mini_ds_project fixture", {
 
   gt_path <- system.file(
     "ground_truth/call_edges.rds",
-    package = "rrlmgraphbench"
+    package = "rrlmgraphbench",
+    mustWork = FALSE
+  )
+  skip_if(
+    nchar(gt_path) == 0L,
+    "ground_truth/call_edges.rds not found in rrlmgraphbench — skipping"
   )
   gt_edges <- readRDS(gt_path)
 

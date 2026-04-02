@@ -16,6 +16,9 @@
       roxygen_text = character(0),
       complexity = integer(0),
       pagerank = numeric(0),
+      scope_level = integer(0),
+      entry_point = logical(0),
+      api_depth = integer(0),
       stringsAsFactors = FALSE
     ))
   }
@@ -58,6 +61,13 @@
       integer(1)
     ),
     pagerank = 0,
+    scope_level = vapply(
+      func_nodes,
+      function(n) as.integer(n$scope_level %||% 0L),
+      integer(1)
+    ),
+    entry_point = FALSE,
+    api_depth = NA_integer_,
     stringsAsFactors = FALSE
   )
 }
