@@ -9,217 +9,217 @@ skip_if_not_installed("igraph")
 #   fn_names  — character vector of node IDs
 #   call_from / call_to — CALLS edge endpoints (matched by index)
 make_ep_graph <- function(
-    fn_names,
-    call_from = character(0),
-    call_to = character(0),
-    scope_levels = NULL
+  fn_names,
+  call_from = character(0),
+  call_to = character(0),
+  scope_levels = NULL
 ) {
-    if (is.null(scope_levels)) {
-        scope_levels <- rep(0L, length(fn_names))
-    }
-    verts <- data.frame(
-        name = fn_names,
-        node_type = "function",
-        pagerank = 0.1,
-        scope_level = as.integer(scope_levels),
-        entry_point = FALSE,
-        api_depth = NA_integer_,
-        stringsAsFactors = FALSE
-    )
+  if (is.null(scope_levels)) {
+    scope_levels <- rep(0L, length(fn_names))
+  }
+  verts <- data.frame(
+    name = fn_names,
+    node_type = "function",
+    pagerank = 0.1,
+    scope_level = as.integer(scope_levels),
+    entry_point = FALSE,
+    api_depth = NA_integer_,
+    stringsAsFactors = FALSE
+  )
 
-    if (length(call_from) > 0L && length(call_to) > 0L) {
-        edges <- data.frame(
-            from = call_from,
-            to = call_to,
-            weight = 1.0,
-            edge_type = "CALLS",
-            stringsAsFactors = FALSE
-        )
-        g <- igraph::graph_from_data_frame(
-            d = edges,
-            vertices = verts,
-            directed = TRUE
-        )
-    } else {
-        g <- igraph::graph_from_data_frame(
-            d = data.frame(
-                from = character(0),
-                to = character(0),
-                weight = numeric(0),
-                edge_type = character(0),
-                stringsAsFactors = FALSE
-            ),
-            vertices = verts,
-            directed = TRUE
-        )
-    }
-    class(g) <- c("rrlm_graph", class(g))
-    g
+  if (length(call_from) > 0L && length(call_to) > 0L) {
+    edges <- data.frame(
+      from = call_from,
+      to = call_to,
+      weight = 1.0,
+      edge_type = "CALLS",
+      stringsAsFactors = FALSE
+    )
+    g <- igraph::graph_from_data_frame(
+      d = edges,
+      vertices = verts,
+      directed = TRUE
+    )
+  } else {
+    g <- igraph::graph_from_data_frame(
+      d = data.frame(
+        from = character(0),
+        to = character(0),
+        weight = numeric(0),
+        edge_type = character(0),
+        stringsAsFactors = FALSE
+      ),
+      vertices = verts,
+      directed = TRUE
+    )
+  }
+  class(g) <- c("rrlm_graph", class(g))
+  g
 }
 
 # A minimal project list that mimics detect_rproject() output
 make_proj <- function(type, root = tempdir()) {
-    list(
-        type = type,
-        root = root,
-        r_files = character(0),
-        test_files = character(0)
-    )
+  list(
+    type = type,
+    root = root,
+    r_files = character(0),
+    test_files = character(0)
+  )
 }
 
 # ---- basic dispatch ---------------------------------------------------
 
 test_that("returns character(0) for graph with no function nodes", {
-    verts <- data.frame(
-        name = "extpkg",
-        node_type = "package",
-        pagerank = 0.0,
-        stringsAsFactors = FALSE
-    )
-    g <- igraph::graph_from_data_frame(
-        d = data.frame(
-            from = character(0),
-            to = character(0),
-            weight = numeric(0),
-            edge_type = character(0)
-        ),
-        vertices = verts,
-        directed = TRUE
-    )
-    class(g) <- c("rrlm_graph", class(g))
-    proj <- make_proj("package")
-    expect_equal(detect_entry_points(g, proj), character(0))
+  verts <- data.frame(
+    name = "extpkg",
+    node_type = "package",
+    pagerank = 0.0,
+    stringsAsFactors = FALSE
+  )
+  g <- igraph::graph_from_data_frame(
+    d = data.frame(
+      from = character(0),
+      to = character(0),
+      weight = numeric(0),
+      edge_type = character(0)
+    ),
+    vertices = verts,
+    directed = TRUE
+  )
+  class(g) <- c("rrlm_graph", class(g))
+  proj <- make_proj("package")
+  expect_equal(detect_entry_points(g, proj), character(0))
 })
 
 test_that("errors on non-igraph input", {
-    expect_error(
-        detect_entry_points(list(), make_proj("package")),
-        class = "rlang_error"
-    )
+  expect_error(
+    detect_entry_points(list(), make_proj("package")),
+    class = "rlang_error"
+  )
 })
 
 # ---- shiny entry points ----------------------------------------------
 
 test_that("shiny: server and ui have zero CALLS in-degree -> entry points", {
-    # server and ui are called by Shiny framework; user helpers call each other
-    g <- make_ep_graph(
-        fn_names = c(
-            "shiny::server",
-            "shiny::ui",
-            "shiny::helper1",
-            "shiny::helper2"
-        ),
-        call_from = c("shiny::helper1"),
-        call_to = c("shiny::helper2")
-    )
-    proj <- make_proj("shiny")
-    eps <- detect_entry_points(g, proj)
+  # server and ui are called by Shiny framework; user helpers call each other
+  g <- make_ep_graph(
+    fn_names = c(
+      "shiny::server",
+      "shiny::ui",
+      "shiny::helper1",
+      "shiny::helper2"
+    ),
+    call_from = c("shiny::helper1"),
+    call_to = c("shiny::helper2")
+  )
+  proj <- make_proj("shiny")
+  eps <- detect_entry_points(g, proj)
 
-    expect_true("shiny::server" %in% eps)
-    expect_true("shiny::ui" %in% eps)
-    # helper1 has zero in-degree too (nothing calls it) - also entry point
-    expect_true("shiny::helper1" %in% eps)
-    # helper2 is called by helper1 -> NOT an entry point
-    expect_false("shiny::helper2" %in% eps)
+  expect_true("shiny::server" %in% eps)
+  expect_true("shiny::ui" %in% eps)
+  # helper1 has zero in-degree too (nothing calls it) - also entry point
+  expect_true("shiny::helper1" %in% eps)
+  # helper2 is called by helper1 -> NOT an entry point
+  expect_false("shiny::helper2" %in% eps)
 })
 
 # ---- script entry points ---------------------------------------------
 
 test_that("script: zero-in-degree = entry points", {
-    g <- make_ep_graph(
-        fn_names = c(
-            "R/script::main_fn",
-            "R/script::helper_a",
-            "R/script::helper_b"
-        ),
-        call_from = c("R/script::main_fn", "R/script::main_fn"),
-        call_to = c("R/script::helper_a", "R/script::helper_b")
-    )
-    proj <- make_proj("script")
-    eps <- detect_entry_points(g, proj)
+  g <- make_ep_graph(
+    fn_names = c(
+      "R/script::main_fn",
+      "R/script::helper_a",
+      "R/script::helper_b"
+    ),
+    call_from = c("R/script::main_fn", "R/script::main_fn"),
+    call_to = c("R/script::helper_a", "R/script::helper_b")
+  )
+  proj <- make_proj("script")
+  eps <- detect_entry_points(g, proj)
 
-    expect_true("R/script::main_fn" %in% eps)
-    expect_false("R/script::helper_a" %in% eps)
-    expect_false("R/script::helper_b" %in% eps)
+  expect_true("R/script::main_fn" %in% eps)
+  expect_false("R/script::helper_a" %in% eps)
+  expect_false("R/script::helper_b" %in% eps)
 })
 
 # ---- package entry points (NAMESPACE) --------------------------------
 
 test_that("package: exported functions become entry points via NAMESPACE", {
-    # Write a minimal NAMESPACE file
-    tmp_root <- withr::local_tempdir()
-    writeLines(
-        c(
-            "# Generated by roxygen2",
-            'export(load_data)',
-            'export(fit_model)',
-            'export(compute_rmse)'
-        ),
-        file.path(tmp_root, "NAMESPACE")
-    )
+  # Write a minimal NAMESPACE file
+  tmp_root <- withr::local_tempdir()
+  writeLines(
+    c(
+      "# Generated by roxygen2",
+      'export(load_data)',
+      'export(fit_model)',
+      'export(compute_rmse)'
+    ),
+    file.path(tmp_root, "NAMESPACE")
+  )
 
-    g <- make_ep_graph(
-        fn_names = c(
-            "R/data::load_data",
-            "R/model::fit_model",
-            "R/model::compute_rmse",
-            "R/utils::internal_helper"
-        ),
-        call_from = c("R/data::load_data"),
-        call_to = c("R/utils::internal_helper")
-    )
-    proj <- make_proj("package", root = tmp_root)
-    eps <- detect_entry_points(g, proj)
+  g <- make_ep_graph(
+    fn_names = c(
+      "R/data::load_data",
+      "R/model::fit_model",
+      "R/model::compute_rmse",
+      "R/utils::internal_helper"
+    ),
+    call_from = c("R/data::load_data"),
+    call_to = c("R/utils::internal_helper")
+  )
+  proj <- make_proj("package", root = tmp_root)
+  eps <- detect_entry_points(g, proj)
 
-    expect_true("R/data::load_data" %in% eps)
-    expect_true("R/model::fit_model" %in% eps)
-    expect_true("R/model::compute_rmse" %in% eps)
-    expect_false("R/utils::internal_helper" %in% eps)
+  expect_true("R/data::load_data" %in% eps)
+  expect_true("R/model::fit_model" %in% eps)
+  expect_true("R/model::compute_rmse" %in% eps)
+  expect_false("R/utils::internal_helper" %in% eps)
 })
 
 test_that("package: fallback to zero-in-degree when NAMESPACE absent", {
-    tmp_root <- withr::local_tempdir() # no NAMESPACE written
+  tmp_root <- withr::local_tempdir() # no NAMESPACE written
 
-    g <- make_ep_graph(
-        fn_names = c("R/api::public_fn", "R/impl::private_fn"),
-        call_from = c("R/api::public_fn"),
-        call_to = c("R/impl::private_fn")
-    )
-    proj <- make_proj("package", root = tmp_root)
-    eps <- detect_entry_points(g, proj)
+  g <- make_ep_graph(
+    fn_names = c("R/api::public_fn", "R/impl::private_fn"),
+    call_from = c("R/api::public_fn"),
+    call_to = c("R/impl::private_fn")
+  )
+  proj <- make_proj("package", root = tmp_root)
+  eps <- detect_entry_points(g, proj)
 
-    expect_true("R/api::public_fn" %in% eps)
-    expect_false("R/impl::private_fn" %in% eps)
+  expect_true("R/api::public_fn" %in% eps)
+  expect_false("R/impl::private_fn" %in% eps)
 })
 
 # ---- scope_level filtering -------------------------------------------
 
 test_that("nested functions (scope_level > 0) are excluded from candidates", {
-    g <- make_ep_graph(
-        fn_names = c("R/top::exposed", "R/top::nested_helper"),
-        call_from = character(0),
-        call_to = character(0),
-        scope_levels = c(0L, 1L) # nested_helper is inside exposed
-    )
-    proj <- make_proj("script")
-    eps <- detect_entry_points(g, proj)
+  g <- make_ep_graph(
+    fn_names = c("R/top::exposed", "R/top::nested_helper"),
+    call_from = character(0),
+    call_to = character(0),
+    scope_levels = c(0L, 1L) # nested_helper is inside exposed
+  )
+  proj <- make_proj("script")
+  eps <- detect_entry_points(g, proj)
 
-    expect_true("R/top::exposed" %in% eps)
-    expect_false("R/top::nested_helper" %in% eps)
+  expect_true("R/top::exposed" %in% eps)
+  expect_false("R/top::nested_helper" %in% eps)
 })
 
 # ---- fallback --------------------------------------------------------
 
 test_that("fallback: returns all scope_level==0 fn nodes when zero-in-degree is empty", {
-    # Every function calls every other: no zero-in-degree
-    g <- make_ep_graph(
-        fn_names = c("R/a::fn1", "R/a::fn2"),
-        call_from = c("R/a::fn1", "R/a::fn2"),
-        call_to = c("R/a::fn2", "R/a::fn1")
-    )
-    proj <- make_proj("script")
-    eps <- detect_entry_points(g, proj)
+  # Every function calls every other: no zero-in-degree
+  g <- make_ep_graph(
+    fn_names = c("R/a::fn1", "R/a::fn2"),
+    call_from = c("R/a::fn1", "R/a::fn2"),
+    call_to = c("R/a::fn2", "R/a::fn1")
+  )
+  proj <- make_proj("script")
+  eps <- detect_entry_points(g, proj)
 
-    # Both nodes must be returned via fallback
-    expect_setequal(eps, c("R/a::fn1", "R/a::fn2"))
+  # Both nodes must be returned via fallback
+  expect_setequal(eps, c("R/a::fn1", "R/a::fn2"))
 })
