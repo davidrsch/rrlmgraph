@@ -52,6 +52,7 @@ reference:
       Parse R source files into nodes and edges.
     contents:
       - detect_rproject
+      - detect_entry_points
       - extract_function_nodes
       - build_call_edges
       - build_import_edges
