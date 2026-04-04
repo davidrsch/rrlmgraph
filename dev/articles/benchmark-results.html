@@ -26,7 +26,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">rrlmgraph</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.1.5.9000</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.1.6.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -159,12 +159,6 @@ baseline</strong>)</td>
 <span>        <span class="st">"to generate data, then run the `precompute-vignettes` workflow here.\n"</span></span>
 <span>    <span class="op">)</span></span>
 <span><span class="op">}</span></span></code></pre></div>
-<blockquote>
-<p><strong>Note:</strong> Benchmark results not yet available. Trigger
-the <code>run-benchmark</code> workflow in <a href="https://github.com/davidrsch/rrlmgraph-bench/actions" class="external-link">rrlmgraph-bench</a>
-to generate data, then run the <code>precompute-vignettes</code>
-workflow here.</p>
-</blockquote>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">stats</span> <span class="op">&lt;-</span> <span class="va">bench</span><span class="op">$</span><span class="va">stats</span></span>
 <span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span></span>
@@ -184,6 +178,133 @@ workflow here.</p>
 <span>        <span class="st">"Mean tokens"</span>, <span class="st">"Hallucination rate"</span>, <span class="st">"N"</span></span>
 <span>    <span class="op">)</span></span>
 <span><span class="op">)</span></span></code></pre></div>
+<table class="table">
+<caption>Mean score ± 95 % CI per strategy. Captured:
+2026-04-04T13:04:43Z. rrlmgraph v0.1.6.9000 / rrlmgraphbench
+v0.1.7.9000.</caption>
+<colgroup>
+<col width="25%">
+<col width="11%">
+<col width="6%">
+<col width="9%">
+<col width="9%">
+<col width="13%">
+<col width="20%">
+<col width="3%">
+</colgroup>
+<thead><tr class="header">
+<th align="left">Strategy</th>
+<th align="right">Mean score</th>
+<th align="right">SD</th>
+<th align="right">CI lower</th>
+<th align="right">CI upper</th>
+<th align="right">Mean tokens</th>
+<th align="right">Hallucination rate</th>
+<th align="right">N</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="left">graph_rag_tfidf</td>
+<td align="right">0.723</td>
+<td align="right">0.244</td>
+<td align="right">0.622</td>
+<td align="right">0.810</td>
+<td align="right">482.840</td>
+<td align="right">0.560</td>
+<td align="right">25</td>
+</tr>
+<tr class="even">
+<td align="left">graph_rag_tfidf_noseed</td>
+<td align="right">0.699</td>
+<td align="right">0.213</td>
+<td align="right">0.602</td>
+<td align="right">0.781</td>
+<td align="right">537.348</td>
+<td align="right">0.609</td>
+<td align="right">23</td>
+</tr>
+<tr class="odd">
+<td align="left">graph_rag_ollama</td>
+<td align="right">0.787</td>
+<td align="right">0.183</td>
+<td align="right">0.699</td>
+<td align="right">0.854</td>
+<td align="right">406.450</td>
+<td align="right">0.750</td>
+<td align="right">20</td>
+</tr>
+<tr class="even">
+<td align="left">full_files</td>
+<td align="right">0.727</td>
+<td align="right">0.094</td>
+<td align="right">0.687</td>
+<td align="right">0.767</td>
+<td align="right">1549.250</td>
+<td align="right">0.750</td>
+<td align="right">20</td>
+</tr>
+<tr class="odd">
+<td align="left">term_overlap</td>
+<td align="right">0.704</td>
+<td align="right">0.135</td>
+<td align="right">0.640</td>
+<td align="right">0.755</td>
+<td align="right">1529.800</td>
+<td align="right">0.750</td>
+<td align="right">20</td>
+</tr>
+<tr class="even">
+<td align="left">bm25_retrieval</td>
+<td align="right">0.749</td>
+<td align="right">0.078</td>
+<td align="right">0.715</td>
+<td align="right">0.781</td>
+<td align="right">1528.300</td>
+<td align="right">0.750</td>
+<td align="right">20</td>
+</tr>
+<tr class="odd">
+<td align="left">no_context</td>
+<td align="right">0.743</td>
+<td align="right">0.199</td>
+<td align="right">0.652</td>
+<td align="right">0.824</td>
+<td align="right">112.650</td>
+<td align="right">0.700</td>
+<td align="right">20</td>
+</tr>
+<tr class="even">
+<td align="left">graph_rag_mcp</td>
+<td align="right">0.778</td>
+<td align="right">0.142</td>
+<td align="right">0.715</td>
+<td align="right">0.837</td>
+<td align="right">341.350</td>
+<td align="right">0.750</td>
+<td align="right">20</td>
+</tr>
+<tr class="odd">
+<td align="left">random_k</td>
+<td align="right">0.735</td>
+<td align="right">0.091</td>
+<td align="right">0.695</td>
+<td align="right">0.773</td>
+<td align="right">1542.600</td>
+<td align="right">0.750</td>
+<td align="right">20</td>
+</tr>
+<tr class="even">
+<td align="left">rlm_graph</td>
+<td align="right">0.298</td>
+<td align="right">0.422</td>
+<td align="right">-3.493</td>
+<td align="right">4.090</td>
+<td align="right">3.700</td>
+<td align="right">0.150</td>
+<td align="right">20</td>
+</tr>
+</tbody>
+</table>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">stats</span> <span class="op">&lt;-</span> <span class="va">bench</span><span class="op">$</span><span class="va">stats</span></span>
 <span><span class="va">df</span> <span class="op">&lt;-</span> <span class="va">stats</span><span class="op">$</span><span class="va">summary</span></span>
@@ -213,8 +334,14 @@ workflow here.</p>
 <span>    col <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">df</span><span class="op">$</span><span class="va">strategy</span> <span class="op">==</span> <span class="st">"graph_rag_tfidf"</span>, <span class="st">"steelblue"</span>,</span>
 <span>        <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="va">df</span><span class="op">$</span><span class="va">strategy</span> <span class="op">==</span> <span class="st">"graph_rag_mcp"</span>, <span class="st">"seagreen"</span>, <span class="st">"grey40"</span><span class="op">)</span></span>
 <span>    <span class="op">)</span></span>
-<span><span class="op">)</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span><span class="va">op</span><span class="op">)</span></span></code></pre></div>
+<span><span class="op">)</span></span></code></pre></div>
+<div class="figure">
+<img src="benchmark-results_files/figure-html/score-plot-1.png" class="r-plt" alt="Mean score ± 95 % CI by strategy.  Dashed line = full_files baseline." width="768"><p class="caption">
+Mean score ± 95 % CI by strategy. Dashed line = full_files baseline.
+</p>
+</div>
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/par.html" class="external-link">par</a></span><span class="op">(</span><span class="va">op</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="token-efficiency">Token efficiency<a class="anchor" aria-label="anchor" href="#token-efficiency"></a>
@@ -222,18 +349,67 @@ workflow here.</p>
 <p>The Token Efficiency Ratio (TER) measures score gain per token
 relative to the <code>full_files</code> baseline. Values &gt; 1 indicate
 better score per token used.</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ter_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>    strategy <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">bench</span><span class="op">$</span><span class="va">stats</span><span class="op">$</span><span class="va">ter</span><span class="op">)</span>,</span>
 <span>    TER <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">bench</span><span class="op">$</span><span class="va">stats</span><span class="op">$</span><span class="va">ter</span>, <span class="fl">3</span><span class="op">)</span>,</span>
 <span>    stringsAsFactors <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span>
 <span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span><span class="va">ter_df</span>, row.names <span class="op">=</span> <span class="cn">FALSE</span>, caption <span class="op">=</span> <span class="st">"Token Efficiency Ratio (TER)"</span><span class="op">)</span></span></code></pre></div>
+<table class="table">
+<caption>Token Efficiency Ratio (TER)</caption>
+<thead><tr class="header">
+<th align="left">strategy</th>
+<th align="right">TER</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="left">graph_rag_tfidf</td>
+<td align="right">3.191</td>
+</tr>
+<tr class="even">
+<td align="left">graph_rag_tfidf_noseed</td>
+<td align="right">2.770</td>
+</tr>
+<tr class="odd">
+<td align="left">graph_rag_ollama</td>
+<td align="right">4.125</td>
+</tr>
+<tr class="even">
+<td align="left">full_files</td>
+<td align="right">NA</td>
+</tr>
+<tr class="odd">
+<td align="left">term_overlap</td>
+<td align="right">0.980</td>
+</tr>
+<tr class="even">
+<td align="left">bm25_retrieval</td>
+<td align="right">1.044</td>
+</tr>
+<tr class="odd">
+<td align="left">no_context</td>
+<td align="right">14.047</td>
+</tr>
+<tr class="even">
+<td align="left">graph_rag_mcp</td>
+<td align="right">4.857</td>
+</tr>
+<tr class="odd">
+<td align="left">random_k</td>
+<td align="right">1.015</td>
+</tr>
+<tr class="even">
+<td align="left">rlm_graph</td>
+<td align="right">171.784</td>
+</tr>
+</tbody>
+</table>
 </div>
 <div class="section level2">
 <h2 id="pairwise-tests">Pairwise tests<a class="anchor" aria-label="anchor" href="#pairwise-tests"></a>
 </h2>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">pw</span> <span class="op">&lt;-</span> <span class="va">bench</span><span class="op">$</span><span class="va">stats</span><span class="op">$</span><span class="va">pairwise</span></span>
 <span><span class="va">pw</span><span class="op">$</span><span class="va">significant</span> <span class="op">&lt;-</span> <span class="va">pw</span><span class="op">$</span><span class="va">p_bonferroni</span> <span class="op">&lt;</span> <span class="fl">0.05</span></span>
 <span><span class="fu">knitr</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/knitr/man/kable.html" class="external-link">kable</a></span><span class="op">(</span></span>
@@ -242,6 +418,340 @@ better score per token used.</p>
 <span>    col.names <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Strategy A"</span>, <span class="st">"Strategy B"</span>, <span class="st">"p (Bonferroni)"</span>, <span class="st">"Cohen's d"</span>, <span class="st">"Sig."</span><span class="op">)</span>,</span>
 <span>    caption   <span class="op">=</span> <span class="st">"Pairwise Welch t-tests (Bonferroni-corrected)."</span></span>
 <span><span class="op">)</span></span></code></pre></div>
+<table class="table">
+<caption>Pairwise Welch t-tests (Bonferroni-corrected).</caption>
+<colgroup>
+<col width="29%">
+<col width="29%">
+<col width="19%">
+<col width="12%">
+<col width="7%">
+</colgroup>
+<thead><tr class="header">
+<th align="left">Strategy A</th>
+<th align="left">Strategy B</th>
+<th align="right">p (Bonferroni)</th>
+<th align="right">Cohen’s d</th>
+<th align="left">Sig.</th>
+</tr></thead>
+<tbody>
+<tr class="odd">
+<td align="left">graph_rag_tfidf</td>
+<td align="left">graph_rag_tfidf_noseed</td>
+<td align="right">1</td>
+<td align="right">0.1060</td>
+<td align="left">FALSE</td>
+</tr>
+<tr class="even">
+<td align="left">graph_rag_tfidf</td>
+<td align="left">graph_rag_ollama</td>
+<td align="right">1</td>
+<td align="right">-0.2911</td>
+<td align="left">FALSE</td>
+</tr>
+<tr class="odd">
+<td align="left">graph_rag_tfidf</td>
+<td align="left">full_files</td>
+<td align="right">1</td>
+<td align="right">-0.0211</td>
+<td align="left">FALSE</td>
+</tr>
+<tr class="even">
+<td align="left">graph_rag_tfidf</td>
+<td align="left">term_overlap</td>
+<td align="right">1</td>
+<td align="right">0.0956</td>
+<td align="left">FALSE</td>
+</tr>
+<tr class="odd">
+<td align="left">graph_rag_tfidf</td>
+<td align="left">bm25_retrieval</td>
+<td align="right">1</td>
+<td align="right">-0.1350</td>
+<td align="left">FALSE</td>
+</tr>
+<tr class="even">
+<td align="left">graph_rag_tfidf</td>
+<td align="left">no_context</td>
+<td align="right">1</td>
+<td align="right">-0.0872</td>
+<td align="left">FALSE</td>
+</tr>
+<tr class="odd">
+<td align="left">graph_rag_tfidf</td>
+<td align="left">graph_rag_mcp</td>
+<td align="right">1</td>
+<td align="right">-0.2687</td>
+<td align="left">FALSE</td>
+</tr>
+<tr class="even">
+<td align="left">graph_rag_tfidf</td>
+<td align="left">random_k</td>
+<td align="right">1</td>
+<td align="right">-0.0625</td>
+<td align="left">FALSE</td>
+</tr>
+<tr class="odd">
+<td align="left">graph_rag_tfidf</td>
+<td align="left">rlm_graph</td>
+<td align="right">1</td>
+<td align="right">1.6772</td>
+<td align="left">FALSE</td>
+</tr>
+<tr class="even">
+<td align="left">graph_rag_tfidf_noseed</td>
+<td align="left">graph_rag_ollama</td>
+<td align="right">1</td>
+<td align="right">-0.4441</td>
+<td align="left">FALSE</td>
+</tr>
+<tr class="odd">
+<td align="left">graph_rag_tfidf_noseed</td>
+<td align="left">full_files</td>
+<td align="right">1</td>
+<td align="right">-0.1730</td>
+<td align="left">FALSE</td>
+</tr>
+<tr class="even">
+<td align="left">graph_rag_tfidf_noseed</td>
+<td align="left">term_overlap</td>
+<td align="right">1</td>
+<td align="right">-0.0283</td>
+<td align="left">FALSE</td>
+</tr>
+<tr class="odd">
+<td align="left">graph_rag_tfidf_noseed</td>
+<td align="left">bm25_retrieval</td>
+<td align="right">1</td>
+<td align="right">-0.3117</td>
+<td align="left">FALSE</td>
+</tr>
+<tr class="even">
+<td align="left">graph_rag_tfidf_noseed</td>
+<td align="left">no_context</td>
+<td align="right">1</td>
+<td align="right">-0.2139</td>
+<td align="left">FALSE</td>
+</tr>
+<tr class="odd">
+<td align="left">graph_rag_tfidf_noseed</td>
+<td align="left">graph_rag_mcp</td>
+<td align="right">1</td>
+<td align="right">-0.4394</td>
+<td align="left">FALSE</td>
+</tr>
+<tr class="even">
+<td align="left">graph_rag_tfidf_noseed</td>
+<td align="left">random_k</td>
+<td align="right">1</td>
+<td align="right">-0.2224</td>
+<td align="left">FALSE</td>
+</tr>
+<tr class="odd">
+<td align="left">graph_rag_tfidf_noseed</td>
+<td align="left">rlm_graph</td>
+<td align="right">1</td>
+<td align="right">1.7553</td>
+<td align="left">FALSE</td>
+</tr>
+<tr class="even">
+<td align="left">graph_rag_ollama</td>
+<td align="left">full_files</td>
+<td align="right">1</td>
+<td align="right">0.4099</td>
+<td align="left">FALSE</td>
+</tr>
+<tr class="odd">
+<td align="left">graph_rag_ollama</td>
+<td align="left">term_overlap</td>
+<td align="right">1</td>
+<td align="right">0.5176</td>
+<td align="left">FALSE</td>
+</tr>
+<tr class="even">
+<td align="left">graph_rag_ollama</td>
+<td align="left">bm25_retrieval</td>
+<td align="right">1</td>
+<td align="right">0.2714</td>
+<td align="left">FALSE</td>
+</tr>
+<tr class="odd">
+<td align="left">graph_rag_ollama</td>
+<td align="left">no_context</td>
+<td align="right">1</td>
+<td align="right">0.2309</td>
+<td align="left">FALSE</td>
+</tr>
+<tr class="even">
+<td align="left">graph_rag_ollama</td>
+<td align="left">graph_rag_mcp</td>
+<td align="right">1</td>
+<td align="right">0.0527</td>
+<td align="left">FALSE</td>
+</tr>
+<tr class="odd">
+<td align="left">graph_rag_ollama</td>
+<td align="left">random_k</td>
+<td align="right">1</td>
+<td align="right">0.3580</td>
+<td align="left">FALSE</td>
+</tr>
+<tr class="even">
+<td align="left">graph_rag_ollama</td>
+<td align="left">rlm_graph</td>
+<td align="right">1</td>
+<td align="right">2.4210</td>
+<td align="left">FALSE</td>
+</tr>
+<tr class="odd">
+<td align="left">full_files</td>
+<td align="left">term_overlap</td>
+<td align="right">1</td>
+<td align="right">0.2018</td>
+<td align="left">FALSE</td>
+</tr>
+<tr class="even">
+<td align="left">full_files</td>
+<td align="left">bm25_retrieval</td>
+<td align="right">1</td>
+<td align="right">-0.2481</td>
+<td align="left">FALSE</td>
+</tr>
+<tr class="odd">
+<td align="left">full_files</td>
+<td align="left">no_context</td>
+<td align="right">1</td>
+<td align="right">-0.1000</td>
+<td align="left">FALSE</td>
+</tr>
+<tr class="even">
+<td align="left">full_files</td>
+<td align="left">graph_rag_mcp</td>
+<td align="right">1</td>
+<td align="right">-0.4232</td>
+<td align="left">FALSE</td>
+</tr>
+<tr class="odd">
+<td align="left">full_files</td>
+<td align="left">random_k</td>
+<td align="right">1</td>
+<td align="right">-0.0855</td>
+<td align="left">FALSE</td>
+</tr>
+<tr class="even">
+<td align="left">full_files</td>
+<td align="left">rlm_graph</td>
+<td align="right">1</td>
+<td align="right">3.2534</td>
+<td align="left">FALSE</td>
+</tr>
+<tr class="odd">
+<td align="left">term_overlap</td>
+<td align="left">bm25_retrieval</td>
+<td align="right">1</td>
+<td align="right">-0.4086</td>
+<td align="left">FALSE</td>
+</tr>
+<tr class="even">
+<td align="left">term_overlap</td>
+<td align="left">no_context</td>
+<td align="right">1</td>
+<td align="right">-0.2299</td>
+<td align="left">FALSE</td>
+</tr>
+<tr class="odd">
+<td align="left">term_overlap</td>
+<td align="left">graph_rag_mcp</td>
+<td align="right">1</td>
+<td align="right">-0.5384</td>
+<td align="left">FALSE</td>
+</tr>
+<tr class="even">
+<td align="left">term_overlap</td>
+<td align="left">random_k</td>
+<td align="right">1</td>
+<td align="right">-0.2731</td>
+<td align="left">FALSE</td>
+</tr>
+<tr class="odd">
+<td align="left">term_overlap</td>
+<td align="left">rlm_graph</td>
+<td align="right">1</td>
+<td align="right">2.5086</td>
+<td align="left">FALSE</td>
+</tr>
+<tr class="even">
+<td align="left">bm25_retrieval</td>
+<td align="left">no_context</td>
+<td align="right">1</td>
+<td align="right">0.0393</td>
+<td align="left">FALSE</td>
+</tr>
+<tr class="odd">
+<td align="left">bm25_retrieval</td>
+<td align="left">graph_rag_mcp</td>
+<td align="right">1</td>
+<td align="right">-0.2577</td>
+<td align="left">FALSE</td>
+</tr>
+<tr class="even">
+<td align="left">bm25_retrieval</td>
+<td align="left">random_k</td>
+<td align="right">1</td>
+<td align="right">0.1599</td>
+<td align="left">FALSE</td>
+</tr>
+<tr class="odd">
+<td align="left">bm25_retrieval</td>
+<td align="left">rlm_graph</td>
+<td align="right">1</td>
+<td align="right">3.7151</td>
+<td align="left">FALSE</td>
+</tr>
+<tr class="even">
+<td align="left">no_context</td>
+<td align="left">graph_rag_mcp</td>
+<td align="right">1</td>
+<td align="right">-0.2053</td>
+<td align="left">FALSE</td>
+</tr>
+<tr class="odd">
+<td align="left">no_context</td>
+<td align="left">random_k</td>
+<td align="right">1</td>
+<td align="right">0.0494</td>
+<td align="left">FALSE</td>
+</tr>
+<tr class="even">
+<td align="left">no_context</td>
+<td align="left">rlm_graph</td>
+<td align="right">1</td>
+<td align="right">2.0621</td>
+<td align="left">FALSE</td>
+</tr>
+<tr class="odd">
+<td align="left">graph_rag_mcp</td>
+<td align="left">random_k</td>
+<td align="right">1</td>
+<td align="right">0.3612</td>
+<td align="left">FALSE</td>
+</tr>
+<tr class="even">
+<td align="left">graph_rag_mcp</td>
+<td align="left">rlm_graph</td>
+<td align="right">1</td>
+<td align="right">2.8640</td>
+<td align="left">FALSE</td>
+</tr>
+<tr class="odd">
+<td align="left">random_k</td>
+<td align="left">rlm_graph</td>
+<td align="right">1</td>
+<td align="right">3.3705</td>
+<td align="left">FALSE</td>
+</tr>
+</tbody>
+</table>
 </div>
 <div class="section level2">
 <h2 id="methodology">Methodology<a class="anchor" aria-label="anchor" href="#methodology"></a>

@@ -26,7 +26,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">rrlmgraph</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.1.5.9000</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.1.6.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -139,10 +139,54 @@ be re-generated on every <code>R CMD check</code> or CRAN build.</p>
 <span>        <span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="st">"---\n\n"</span><span class="op">)</span></span>
 <span>    <span class="op">}</span></span>
 <span><span class="op">}</span></span></code></pre></div>
-<blockquote>
-<p><strong>Note:</strong> Precomputed outputs not yet available. Run the
-<code>precompute-vignettes</code> workflow to generate them.</p>
-</blockquote>
+<div class="section level3">
+<h3 id="query">Query<a class="anchor" aria-label="anchor" href="#query"></a>
+</h3>
+<p>How does the data preparation and validation pipeline work?</p>
+<p><strong>Context nodes used:</strong> demo/predict::run_pipeline,
+demo/data_prep::prepare_data, demo/data_prep::clean_data,
+demo/model::fit_model, demo/model::tune_hyperparams,
+demo/predict::predict_results, demo/predict::evaluate_predictions,
+demo/data_prep::validate_inputs, demo/model::select_features</p>
+<p><strong>Provider / model:</strong> github / gpt-4o-mini</p>
+<p><strong>Response:</strong></p>
+<p>ERROR: HTTP 403 Forbidden. ℹ
+{“error”:{“code”:“no_access”,“message”:“No access to model:
+/gpt-4o-mini”,“details”:“No access to model: /gpt-4o-mini”}}</p>
+<hr>
+</div>
+<div class="section level3">
+<h3 id="query-1">Query<a class="anchor" aria-label="anchor" href="#query-1"></a>
+</h3>
+<p>Which function is called by fit_model() and what does it do?</p>
+<p><strong>Context nodes used:</strong> demo/predict::run_pipeline,
+demo/predict::predict_results, demo/data_prep::clean_data,
+demo/model::fit_model, demo/data_prep::prepare_data,
+demo/data_prep::validate_inputs, demo/model::select_features,
+demo/model::tune_hyperparams, demo/predict::evaluate_predictions</p>
+<p><strong>Provider / model:</strong> github / gpt-4o-mini</p>
+<p><strong>Response:</strong></p>
+<p>ERROR: HTTP 403 Forbidden. ℹ
+{“error”:{“code”:“no_access”,“message”:“No access to model:
+/gpt-4o-mini”,“details”:“No access to model: /gpt-4o-mini”}}</p>
+<hr>
+</div>
+<div class="section level3">
+<h3 id="query-2">Query<a class="anchor" aria-label="anchor" href="#query-2"></a>
+</h3>
+<p>What are the main entry points of the package?</p>
+<p><strong>Context nodes used:</strong> demo/predict::run_pipeline,
+demo/data_prep::prepare_data, demo/data_prep::clean_data,
+demo/predict::predict_results, demo/data_prep::validate_inputs,
+demo/predict::evaluate_predictions, demo/model::fit_model,
+demo/model::tune_hyperparams, demo/model::select_features</p>
+<p><strong>Provider / model:</strong> github / gpt-4o-mini</p>
+<p><strong>Response:</strong></p>
+<p>ERROR: HTTP 403 Forbidden. ℹ
+{“error”:{“code”:“no_access”,“message”:“No access to model:
+/gpt-4o-mini”,“details”:“No access to model: /gpt-4o-mini”}}</p>
+<hr>
+</div>
 </div>
 <div class="section level2">
 <h2 id="regenerating-outputs">Regenerating outputs<a class="anchor" aria-label="anchor" href="#regenerating-outputs"></a>

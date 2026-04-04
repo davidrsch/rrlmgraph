@@ -2,7 +2,7 @@
 
 Calculate a composite relevance score for `node` given a query embedding
 and the traversal state. The score is a weighted linear combination of
-four signals:
+five signals:
 
 ## Usage
 
@@ -41,8 +41,8 @@ compute_relevance(
 - weights:
 
   Named list or `NULL`. If non-`NULL`, overrides the corresponding
-  default weight(s). Recognised names: `semantic`, `pagerank`,
-  `task_trace`, `cochange`. Falls back to
+  default weight(s). Recognised names: `semantic`, `api_depth`,
+  `pagerank`, `task_trace`, `cochange`. Falls back to
   `getOption("rrlmgraph.weights")`.
 
 ## Value
@@ -51,23 +51,20 @@ Numeric(1) in \\\[0, 1\]\\.
 
 ## Details
 
-\$\$ \text{relevance} = 0.40 \cdot \text{sem\\sim} + 0.25 \cdot
-\text{pagerank} + 0.25 \cdot \text{task\\trace\\weight} + 0.10 \cdot
-\text{cochange\\score} \$\$
+\$\$ \text{relevance} = 0.50 \cdot \text{sem\\sim} + 0.15 \cdot
+\text{api\\depth\\score} + 0.15 \cdot \text{task\\trace\\weight} + 0.10
+\cdot \text{pagerank} + 0.10 \cdot \text{cochange\\score} \$\$
 
 The weights can be overridden globally via
-`options(rrlmgraph.weights = list(semantic=, pagerank=, task_trace=, cochange=))`.
+`options(rrlmgraph.weights = list(semantic=, api_depth=, task_trace=, pagerank=, cochange=))`.
 
 ## Note
 
-**MCP server divergence (mcp#41):** The TypeScript BFS in rrlmgraph-mcp
-cannot use the co-change signal because `CO_CHANGES` edge weights are
-not stored in the exported SQLite schema. Instead it substitutes a
-*depth-penalty* term \\1 / (1 + \text{depth} \times 0.5)\\, which
-discounts nodes that are far from the seed. Scores produced by the two
-paths are therefore not directly comparable; the R-side scores will
-generally assign more weight to nodes that co-change with the seed node,
-while the MCP path prefers structurally adjacent nodes.
+**MCP server alignment (was mcp#41):** rrlmgraph-mcp previously
+substituted a depth-from-seed penalty for the co-change signal. Since
+`api_depth` is now persisted in the SQLite schema, the TypeScript BFS
+uses the same `api_depth_score` formula. Scores produced by both paths
+are now directly comparable.
 
 ## Signal definitions
 
@@ -75,6 +72,13 @@ while the MCP path prefers structurally adjacent nodes.
 
   Cosine similarity between the node's TF-IDF (or other) embedding and
   `query_vec`. Clamped to \\\[0, 1\]\\.
+
+- api_depth_score:
+
+  Smooth discount based on the node's distance from the nearest
+  entry-point: \\1 / (1 + \text{api\\depth} \times 0.2)\\. Entry-point
+  nodes (depth 0) score 1.0; depth 5 scores 0.5. Defaults to 0.5 when
+  the `api_depth` vertex attribute is absent.
 
 - pagerank:
 

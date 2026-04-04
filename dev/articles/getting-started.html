@@ -26,7 +26,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">rrlmgraph</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.1.5.9000</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.1.6.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -114,9 +114,10 @@ package, a scripts folder, or a Shiny app – and returns an
 <span><span class="co">#&gt; Building DISPATCHES_ON / EXTENDS edges</span></span>
 <span><span class="co">#&gt; Assembling igraph</span></span>
 <span><span class="co">#&gt; Computing PageRank</span></span>
+<span><span class="co">#&gt; Detecting entry points for project type 'script'</span></span>
 <span><span class="co">#&gt; Embedding nodes with method 'tfidf'</span></span>
 <span><span class="co">#&gt; Computing semantic similarity edges (threshold 0.7)</span></span>
-<span><span class="co">#&gt; Done in 0.83s -- 27 nodes, 11 edges</span></span></code></pre></div>
+<span><span class="co">#&gt; Done in 0.61s -- 27 nodes, 11 edges</span></span></code></pre></div>
 <p>The function:</p>
 <ol style="list-style-type: decimal">
 <li>Detects the project type (package / scripts / Shiny app)</li>
@@ -133,8 +134,8 @@ analysis</li>
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">graph</span><span class="op">)</span></span>
 <span><span class="co">#&gt; === rrlm_graph: demo ===</span></span>
 <span><span class="co">#&gt; Root:  /home/runner/work/_temp/Library/rrlmgraph/extdata/demo</span></span>
-<span><span class="co">#&gt; Built: 2026-04-01 14:55:21</span></span>
-<span><span class="co">#&gt; Build time: 0.83 s</span></span>
+<span><span class="co">#&gt; Built: 2026-04-04 21:33:00</span></span>
+<span><span class="co">#&gt; Build time: 0.61 s</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Nodes (27 total):</span></span>
 <span><span class="co">#&gt;   package: 18</span></span>
@@ -186,42 +187,72 @@ for LLM prompts.</p>
 <span>  budget_tokens <span class="op">=</span> <span class="fl">400L</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">TRUE</span></span>
 <span><span class="op">)</span></span>
-<span><span class="co">#&gt; Seed node: <span style="color: #0000BB;">"demo/data_prep::clean_data"</span></span></span>
+<span><span class="co">#&gt; Seed node: <span style="color: #0000BB;">"demo/predict::run_pipeline"</span></span></span>
+<span><span class="co">#&gt; + <span style="color: #0000BB;">"demo/data_prep::prepare_data"</span> (score=0.201, tokens=32)</span></span>
+<span><span class="co">#&gt; + <span style="color: #0000BB;">"demo/data_prep::clean_data"</span> (score=0.24, tokens=24)</span></span>
+<span><span class="co">#&gt; + <span style="color: #0000BB;">"demo/model::fit_model"</span> (score=0.164, tokens=34)</span></span>
+<span><span class="co">#&gt; + <span style="color: #0000BB;">"demo/model::tune_hyperparams"</span> (score=0.157, tokens=21)</span></span>
+<span><span class="co">#&gt; + <span style="color: #0000BB;">"demo/predict::predict_results"</span> (score=0.144, tokens=24)</span></span>
+<span><span class="co">#&gt; + <span style="color: #0000BB;">"demo/predict::evaluate_predictions"</span> (score=0.14, tokens=16)</span></span>
+<span><span class="co">#&gt; + <span style="color: #0000BB;">"demo/data_prep::validate_inputs"</span> (score=0.138, tokens=16)</span></span>
+<span><span class="co">#&gt; + <span style="color: #0000BB;">"demo/model::select_features"</span> (score=0.133, tokens=24)</span></span>
+<span><span class="co">#&gt; Warning: Context truncated to 1397 chars to fit budget (400 tokens).</span></span>
 <span></span>
 <span><span class="co"># Nodes selected for the context window</span></span>
 <span><span class="va">ctx</span><span class="op">$</span><span class="va">nodes</span></span>
-<span><span class="co">#&gt; [1] "demo/data_prep::clean_data"</span></span>
+<span><span class="co">#&gt; [1] "demo/predict::run_pipeline"         "demo/data_prep::prepare_data"      </span></span>
+<span><span class="co">#&gt; [3] "demo/data_prep::clean_data"         "demo/model::fit_model"             </span></span>
+<span><span class="co">#&gt; [5] "demo/model::tune_hyperparams"       "demo/predict::predict_results"     </span></span>
+<span><span class="co">#&gt; [7] "demo/predict::evaluate_predictions" "demo/data_prep::validate_inputs"   </span></span>
+<span><span class="co">#&gt; [9] "demo/model::select_features"</span></span>
 <span></span>
 <span><span class="co"># Number of tokens used</span></span>
 <span><span class="va">ctx</span><span class="op">$</span><span class="va">tokens_used</span></span>
-<span><span class="co">#&gt; [1] 111</span></span></code></pre></div>
+<span><span class="co">#&gt; [1] 400</span></span></code></pre></div>
 <p>The assembled context string – ready to paste into a system
 prompt:</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/cat.html" class="external-link">cat</a></span><span class="op">(</span><span class="va">ctx</span><span class="op">$</span><span class="va">context_string</span><span class="op">)</span></span>
 <span><span class="co">#&gt; # rrlm_graph Context</span></span>
-<span><span class="co">#&gt; # Project: demo | R 4.5.3 | ~145 tokens</span></span>
+<span><span class="co">#&gt; # Project: demo | R 4.5.3 | ~743 tokens</span></span>
 <span><span class="co">#&gt; # Query: How does the data preparation and validation pipeline work?</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ## CORE FUNCTIONS</span></span>
 <span><span class="co">#&gt; ---</span></span>
-<span><span class="co">#&gt; ### demo/data_prep::clean_data</span></span>
-<span><span class="co">#&gt; #' Remove incomplete and duplicate rows</span></span>
+<span><span class="co">#&gt; ### demo/predict::run_pipeline</span></span>
+<span><span class="co">#&gt; #' Run the full modelling pipeline</span></span>
 <span><span class="co">#&gt; #'</span></span>
-<span><span class="co">#&gt; #' @param raw A data.frame.</span></span>
-<span><span class="co">#&gt; #' @return A cleaned data.frame with complete, deduplicated rows.</span></span>
+<span><span class="co">#&gt; #' Convenience wrapper that prepares data, fits a model, generates</span></span>
+<span><span class="co">#&gt; #' predictions, and evaluates them in a single call.</span></span>
+<span><span class="co">#&gt; #'</span></span>
+<span><span class="co">#&gt; #' @param raw A data.frame with columns \code{x} and \code{y}.</span></span>
+<span><span class="co">#&gt; #' @param ... Additional arguments forwarded to \code{\link{fit_model}}.</span></span>
+<span><span class="co">#&gt; #' @return A list with elements \code{model} (the fitted \code{lm}),</span></span>
+<span><span class="co">#&gt; #'   \code{predictions} (numeric vector), and \code{metrics} (named numeric</span></span>
+<span><span class="co">#&gt; #'   vector from \code{\link{evaluate_predictions}}).</span></span>
+<span><span class="co">#&gt; #' @seealso \code{\link{prepare_data}}, \code{\link{fit_model}},</span></span>
+<span><span class="co">#&gt; #'   \code{\link{predict_results}}, \code{\link{evaluate_predictions}}</span></span>
 <span><span class="co">#&gt; #' @export</span></span>
-<span><span class="co">#&gt; clean_data(raw) {</span></span>
-<span><span class="co">#&gt; clean_data &lt;- function(raw) {</span></span>
-<span><span class="co">#&gt;   raw &lt;- raw[stats::complete.cases(raw), , drop = FALSE]</span></span>
-<span><span class="co">#&gt;   raw &lt;- unique(raw)</span></span>
-<span><span class="co">#&gt;   raw</span></span>
+<span><span class="co">#&gt; run_pipeline(raw, ...) {</span></span>
+<span><span class="co">#&gt; run_pipeline &lt;- function(raw, ...) {</span></span>
+<span><span class="co">#&gt;   df &lt;- prepare_data(raw)</span></span>
+<span><span class="co">#&gt;   model &lt;- fit_model(raw, ...)</span></span>
+<span><span class="co">#&gt;   preds &lt;- predict_results(model, df)</span></span>
+<span><span class="co">#&gt;   metrics &lt;- evaluate_predictions(preds, df$y)</span></span>
+<span><span class="co">#&gt;   list(model = model, predictions = preds, metrics = metrics)</span></span>
 <span><span class="co">#&gt; }</span></span>
 <span><span class="co">#&gt; }</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; ## CONSTRAINTS</span></span>
+<span><span class="co">#&gt; ## SUPPORTING FUNCTIONS</span></span>
 <span><span class="co">#&gt; ---</span></span>
-<span><span class="co">#&gt; Only use the functions and packages listed above. Do not invent APIs, function names, or arguments not shown here. If unsure, ask for clarification.</span></span></code></pre></div>
+<span><span class="co">#&gt; ### demo/data_prep::prepare_data</span></span>
+<span><span class="co">#&gt; prepare_data(raw, scale_x)</span></span>
+<span><span class="co">#&gt; Prepare a data.frame for modelling</span></span>
+<span><span class="co">#&gt; Calls: demo/data_prep::validate_inputs, demo/data_prep::clean_data</span></span>
+<span><span class="co">#&gt; Called by: demo/model::fit_model, demo/predict::run_pipeline</span></span>
+<span><span class="co">#&gt; </span></span>
+<span><span class="co">#&gt; ### demo/data_prep::clean_data</span></span>
+<span><span class="co">#&gt; clean_data(raw)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="chatting-with-context-llm-required">4. Chatting with context (LLM required)<a class="anchor" aria-label="anchor" href="#chatting-with-context-llm-required"></a>
@@ -292,24 +323,25 @@ files:</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; ── <span style="font-weight: bold;">Incremental graph update</span> ──</span></span>
 <span><span class="co">#&gt; </span></span>
-<span><span class="co">#&gt; Changed files: <span style="color: #0000BB;">/tmp/RtmpmSrNvm/mypkg_demo/R/data_prep.R</span></span></span>
+<span><span class="co">#&gt; Changed files: <span style="color: #0000BB;">/tmp/RtmpKQemTu/mypkg_demo/R/data_prep.R</span></span></span>
 <span><span class="co">#&gt; Removing 1 stale node(s).</span></span>
 <span><span class="co">#&gt; Re-parsing 1 file(s).</span></span>
 <span><span class="co">#&gt; Embedding 1 new node(s) using method 'tfidf'.</span></span>
 <span><span class="co">#&gt; Graph now has 2 nodes, 0 edges.</span></span>
 <span><span class="co">#&gt; Recomputing PageRank.</span></span>
-<span><span class="co">#&gt; Persisting cache to <span style="color: #0000BB;">/tmp/RtmpmSrNvm/mypkg_demo</span>.</span></span>
-<span><span class="co">#&gt; Graph cached at <span style="color: #0000BB;">/tmp/RtmpmSrNvm/mypkg_demo/.rrlmgraph</span></span></span>
+<span><span class="co">#&gt; Persisting cache to <span style="color: #0000BB;">/tmp/RtmpKQemTu/mypkg_demo</span>.</span></span>
+<span><span class="co">#&gt; Graph cached at <span style="color: #0000BB;">/tmp/RtmpKQemTu/mypkg_demo/.rrlmgraph</span></span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">graph_small</span><span class="op">)</span></span>
-<span><span class="co">#&gt; IGRAPH 99b789d DNW- 2 0 -- </span></span>
+<span><span class="co">#&gt; IGRAPH 6dc1841 DNW- 2 0 -- </span></span>
 <span><span class="co">#&gt; + attr: project_name (g/c), project_root (g/c), project_type (g/c),</span></span>
 <span><span class="co">#&gt; | r_version (g/c), build_time (g/n), build_at (g/c), embed_method</span></span>
 <span><span class="co">#&gt; | (g/c), embed_model (g/x), cache_path (g/c), name (v/c), node_type</span></span>
 <span><span class="co">#&gt; | (v/c), file (v/c), line_start (v/n), line_end (v/n), signature (v/c),</span></span>
 <span><span class="co">#&gt; | body_text (v/c), roxygen_text (v/c), complexity (v/n), pagerank</span></span>
-<span><span class="co">#&gt; | (v/n), task_trace_weight (v/n), embedding (v/x), label (v/c), pkg</span></span>
-<span><span class="co">#&gt; | (v/c), doc (v/c), weight (e/n), edge_type (e/c)</span></span></code></pre></div>
+<span><span class="co">#&gt; | (v/n), scope_level (v/n), entry_point (v/l), api_depth (v/n),</span></span>
+<span><span class="co">#&gt; | task_trace_weight (v/n), embedding (v/x), label (v/c), pkg (v/c), doc</span></span>
+<span><span class="co">#&gt; | (v/c), weight (e/n), edge_type (e/c)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="caching-the-graph">6. Caching the graph<a class="anchor" aria-label="anchor" href="#caching-the-graph"></a>

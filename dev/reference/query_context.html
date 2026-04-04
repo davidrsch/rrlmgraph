@@ -13,7 +13,7 @@ function never returns more tokens than requested."><meta property="og:image" co
 
     <a class="navbar-brand me-2" href="../index.html">rrlmgraph</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.1.5.9000</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.1.6.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -82,7 +82,10 @@ function never returns more tokens than requested.</p>
 <dt id="arg-seed-node">seed_node<a class="anchor" aria-label="anchor" href="#arg-seed-node"></a></dt>
 <dd><p>Character(1) or <code>NULL</code>.  Name of the vertex to
 start traversal from.  <code>NULL</code> (default) triggers automatic
-selection: the function-type node with the highest PageRank.</p></dd>
+selection: prefer <code>entry_point == TRUE</code> nodes, ranking by
+semantic similarity to the query when embeddings are available,
+otherwise fall back to the function-type node with the highest
+PageRank.</p></dd>
 
 
 <dt id="arg-budget-tokens">budget_tokens<a class="anchor" aria-label="anchor" href="#arg-budget-tokens"></a></dt>

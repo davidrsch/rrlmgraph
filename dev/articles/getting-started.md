@@ -42,9 +42,10 @@ graph <- build_rrlm_graph(demo_dir, verbose = TRUE)
 #> Building DISPATCHES_ON / EXTENDS edges
 #> Assembling igraph
 #> Computing PageRank
+#> Detecting entry points for project type 'script'
 #> Embedding nodes with method 'tfidf'
 #> Computing semantic similarity edges (threshold 0.7)
-#> Done in 0.83s -- 27 nodes, 11 edges
+#> Done in 0.61s -- 27 nodes, 11 edges
 ```
 
 The function:
@@ -60,8 +61,8 @@ The function:
 summary(graph)
 #> === rrlm_graph: demo ===
 #> Root:  /home/runner/work/_temp/Library/rrlmgraph/extdata/demo
-#> Built: 2026-04-01 14:55:21
-#> Build time: 0.83 s
+#> Built: 2026-04-04 21:33:00
+#> Build time: 0.61 s
 #> 
 #> Nodes (27 total):
 #>   package: 18
@@ -112,15 +113,28 @@ ctx <- query_context(
   budget_tokens = 400L,
   verbose = TRUE
 )
-#> Seed node: "demo/data_prep::clean_data"
+#> Seed node: "demo/predict::run_pipeline"
+#> + "demo/data_prep::prepare_data" (score=0.201, tokens=32)
+#> + "demo/data_prep::clean_data" (score=0.24, tokens=24)
+#> + "demo/model::fit_model" (score=0.164, tokens=34)
+#> + "demo/model::tune_hyperparams" (score=0.157, tokens=21)
+#> + "demo/predict::predict_results" (score=0.144, tokens=24)
+#> + "demo/predict::evaluate_predictions" (score=0.14, tokens=16)
+#> + "demo/data_prep::validate_inputs" (score=0.138, tokens=16)
+#> + "demo/model::select_features" (score=0.133, tokens=24)
+#> Warning: Context truncated to 1397 chars to fit budget (400 tokens).
 
 # Nodes selected for the context window
 ctx$nodes
-#> [1] "demo/data_prep::clean_data"
+#> [1] "demo/predict::run_pipeline"         "demo/data_prep::prepare_data"      
+#> [3] "demo/data_prep::clean_data"         "demo/model::fit_model"             
+#> [5] "demo/model::tune_hyperparams"       "demo/predict::predict_results"     
+#> [7] "demo/predict::evaluate_predictions" "demo/data_prep::validate_inputs"   
+#> [9] "demo/model::select_features"
 
 # Number of tokens used
 ctx$tokens_used
-#> [1] 111
+#> [1] 400
 ```
 
 The assembled context string – ready to paste into a system prompt:
@@ -128,28 +142,45 @@ The assembled context string – ready to paste into a system prompt:
 ``` r
 cat(ctx$context_string)
 #> # rrlm_graph Context
-#> # Project: demo | R 4.5.3 | ~145 tokens
+#> # Project: demo | R 4.5.3 | ~743 tokens
 #> # Query: How does the data preparation and validation pipeline work?
 #> 
 #> ## CORE FUNCTIONS
 #> ---
-#> ### demo/data_prep::clean_data
-#> #' Remove incomplete and duplicate rows
+#> ### demo/predict::run_pipeline
+#> #' Run the full modelling pipeline
 #> #'
-#> #' @param raw A data.frame.
-#> #' @return A cleaned data.frame with complete, deduplicated rows.
+#> #' Convenience wrapper that prepares data, fits a model, generates
+#> #' predictions, and evaluates them in a single call.
+#> #'
+#> #' @param raw A data.frame with columns \code{x} and \code{y}.
+#> #' @param ... Additional arguments forwarded to \code{\link{fit_model}}.
+#> #' @return A list with elements \code{model} (the fitted \code{lm}),
+#> #'   \code{predictions} (numeric vector), and \code{metrics} (named numeric
+#> #'   vector from \code{\link{evaluate_predictions}}).
+#> #' @seealso \code{\link{prepare_data}}, \code{\link{fit_model}},
+#> #'   \code{\link{predict_results}}, \code{\link{evaluate_predictions}}
 #> #' @export
-#> clean_data(raw) {
-#> clean_data <- function(raw) {
-#>   raw <- raw[stats::complete.cases(raw), , drop = FALSE]
-#>   raw <- unique(raw)
-#>   raw
+#> run_pipeline(raw, ...) {
+#> run_pipeline <- function(raw, ...) {
+#>   df <- prepare_data(raw)
+#>   model <- fit_model(raw, ...)
+#>   preds <- predict_results(model, df)
+#>   metrics <- evaluate_predictions(preds, df$y)
+#>   list(model = model, predictions = preds, metrics = metrics)
 #> }
 #> }
 #> 
-#> ## CONSTRAINTS
+#> ## SUPPORTING FUNCTIONS
 #> ---
-#> Only use the functions and packages listed above. Do not invent APIs, function names, or arguments not shown here. If unsure, ask for clarification.
+#> ### demo/data_prep::prepare_data
+#> prepare_data(raw, scale_x)
+#> Prepare a data.frame for modelling
+#> Calls: demo/data_prep::validate_inputs, demo/data_prep::clean_data
+#> Called by: demo/model::fit_model, demo/predict::run_pipeline
+#> 
+#> ### demo/data_prep::clean_data
+#> clean_data(raw)
 ```
 
 ## 4. Chatting with context (LLM required)
@@ -225,24 +256,25 @@ graph_small <- update_graph_incremental(
 #> 
 #> ── Incremental graph update ──
 #> 
-#> Changed files: /tmp/RtmpmSrNvm/mypkg_demo/R/data_prep.R
+#> Changed files: /tmp/RtmpKQemTu/mypkg_demo/R/data_prep.R
 #> Removing 1 stale node(s).
 #> Re-parsing 1 file(s).
 #> Embedding 1 new node(s) using method 'tfidf'.
 #> Graph now has 2 nodes, 0 edges.
 #> Recomputing PageRank.
-#> Persisting cache to /tmp/RtmpmSrNvm/mypkg_demo.
-#> Graph cached at /tmp/RtmpmSrNvm/mypkg_demo/.rrlmgraph
+#> Persisting cache to /tmp/RtmpKQemTu/mypkg_demo.
+#> Graph cached at /tmp/RtmpKQemTu/mypkg_demo/.rrlmgraph
 
 summary(graph_small)
-#> IGRAPH 99b789d DNW- 2 0 -- 
+#> IGRAPH 6dc1841 DNW- 2 0 -- 
 #> + attr: project_name (g/c), project_root (g/c), project_type (g/c),
 #> | r_version (g/c), build_time (g/n), build_at (g/c), embed_method
 #> | (g/c), embed_model (g/x), cache_path (g/c), name (v/c), node_type
 #> | (v/c), file (v/c), line_start (v/n), line_end (v/n), signature (v/c),
 #> | body_text (v/c), roxygen_text (v/c), complexity (v/n), pagerank
-#> | (v/n), task_trace_weight (v/n), embedding (v/x), label (v/c), pkg
-#> | (v/c), doc (v/c), weight (e/n), edge_type (e/c)
+#> | (v/n), scope_level (v/n), entry_point (v/l), api_depth (v/n),
+#> | task_trace_weight (v/n), embedding (v/x), label (v/c), pkg (v/c), doc
+#> | (v/c), weight (e/n), edge_type (e/c)
 ```
 
 ## 6. Caching the graph

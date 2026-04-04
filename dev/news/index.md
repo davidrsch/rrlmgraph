@@ -1,5 +1,47 @@
 # Changelog
 
+## rrlmgraph 0.1.6.9000 (development version)
+
+#### Entry-point detection and api_depth vertex attribute (Phase 1)
+
+- `R/entry_points.R` (new):
+  [`detect_entry_points()`](https://davidrsch.github.io/rrlmgraph/dev/reference/detect_entry_points.md)
+  determines the callable API surface for all project types —
+  NAMESPACE-based for R packages, zero-in-degree (CALLS edges) for Shiny
+  apps, scripts, Quarto, and R Markdown documents. Falls back to all
+  top-level function nodes if detection yields nothing.
+- `R/parse_ast.R`: All extracted function nodes now carry a
+  `scope_level` integer attribute (`0` = top-level definition),
+  future-proofing the graph for nested-function extraction.
+- `R/graph_build_helpers.R` / `R/graph_build.R`: `scope_level`,
+  `entry_point` (logical), and `api_depth` (integer hop-count from the
+  nearest entry-point node via outgoing CALLS edges) are added to every
+  vertex data frame. Entry points receive `api_depth = 0`; unreachable
+  nodes receive `api_depth = 99`.
+- `R/graph_traverse.R`
+  [`query_context()`](https://davidrsch.github.io/rrlmgraph/dev/reference/query_context.md):
+  Seed selection now prefers `entry_point == TRUE` nodes, ranking them
+  by semantic similarity to the query when embeddings are available;
+  falls back to highest-PageRank node for graphs built without the new
+  attribute. Fixes systematic bias toward internal utility functions as
+  traversal seeds.
+- `R/relevance.R`
+  [`compute_relevance()`](https://davidrsch.github.io/rrlmgraph/dev/reference/compute_relevance.md):
+  New five-signal scoring formula —
+  `0.50 × sem_sim + 0.15 × api_depth_score + 0.15 × task_trace + 0.10 × pagerank + 0.10 × cochange`
+  where `api_depth_score = 1 / (1 + api_depth × 0.2)`. PageRank weight
+  reduced from 0.25 to 0.10 to reduce hub-utility bias.
+- `R/sqlite_export.R`: SQLite schema now includes
+  `entry_point INTEGER NOT NULL DEFAULT 0` and
+  `api_depth INTEGER NOT NULL DEFAULT 99` columns. Existing databases
+  are migrated via `ALTER TABLE` on first open.
+- `NAMESPACE` / `man/detect_entry_points.Rd`:
+  [`detect_entry_points()`](https://davidrsch.github.io/rrlmgraph/dev/reference/detect_entry_points.md)
+  exported and documented.
+- `tests/testthat/test-entry-points.R` (new): 18 tests covering all
+  project types, NAMESPACE parsing, zero-in-degree fallback, and the
+  scope_level guard.
+
 ## rrlmgraph 0.1.5.9000 (development version)
 
 #### Documentation fix (cross-repo consistency with rrlmgraph-bench [\#302](https://github.com/davidrsch/rrlmgraph/issues/302)/#303)

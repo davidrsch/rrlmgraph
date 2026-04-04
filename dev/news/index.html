@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">rrlmgraph</a>
 
-    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.1.5.9000</small>
+    <small class="nav-text text-danger me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="In-development version">0.1.6.9000</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -38,6 +38,28 @@
       <small>Source: <a href="https://github.com/davidrsch/rrlmgraph/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.1.6.9000" id="rrlmgraph-0169000-development-version">rrlmgraph 0.1.6.9000 (development version)<a class="anchor" aria-label="anchor" href="#rrlmgraph-0169000-development-version"></a></h2>
+<div class="section level4">
+<h4 id="entry-point-detection-and-api_depth-vertex-attribute-phase-0-1-6-9000">Entry-point detection and api_depth vertex attribute (Phase 1)<a class="anchor" aria-label="anchor" href="#entry-point-detection-and-api_depth-vertex-attribute-phase-0-1-6-9000"></a></h4>
+<ul><li>
+<code>R/entry_points.R</code> (new): <code><a href="../reference/detect_entry_points.html">detect_entry_points()</a></code> determines the callable API surface for all project types — NAMESPACE-based for R packages, zero-in-degree (CALLS edges) for Shiny apps, scripts, Quarto, and R Markdown documents. Falls back to all top-level function nodes if detection yields nothing.</li>
+<li>
+<code>R/parse_ast.R</code>: All extracted function nodes now carry a <code>scope_level</code> integer attribute (<code>0</code> = top-level definition), future-proofing the graph for nested-function extraction.</li>
+<li>
+<code>R/graph_build_helpers.R</code> / <code>R/graph_build.R</code>: <code>scope_level</code>, <code>entry_point</code> (logical), and <code>api_depth</code> (integer hop-count from the nearest entry-point node via outgoing CALLS edges) are added to every vertex data frame. Entry points receive <code>api_depth = 0</code>; unreachable nodes receive <code>api_depth = 99</code>.</li>
+<li>
+<code>R/graph_traverse.R</code> <code><a href="../reference/query_context.html">query_context()</a></code>: Seed selection now prefers <code>entry_point == TRUE</code> nodes, ranking them by semantic similarity to the query when embeddings are available; falls back to highest-PageRank node for graphs built without the new attribute. Fixes systematic bias toward internal utility functions as traversal seeds.</li>
+<li>
+<code>R/relevance.R</code> <code><a href="../reference/compute_relevance.html">compute_relevance()</a></code>: New five-signal scoring formula — <code>0.50 × sem_sim + 0.15 × api_depth_score + 0.15 × task_trace + 0.10 × pagerank + 0.10 × cochange</code> where <code>api_depth_score = 1 / (1 + api_depth × 0.2)</code>. PageRank weight reduced from 0.25 to 0.10 to reduce hub-utility bias.</li>
+<li>
+<code>R/sqlite_export.R</code>: SQLite schema now includes <code>entry_point INTEGER NOT NULL DEFAULT 0</code> and <code>api_depth INTEGER NOT NULL DEFAULT 99</code> columns. Existing databases are migrated via <code>ALTER TABLE</code> on first open.</li>
+<li>
+<code>NAMESPACE</code> / <code>man/detect_entry_points.Rd</code>: <code><a href="../reference/detect_entry_points.html">detect_entry_points()</a></code> exported and documented.</li>
+<li>
+<code>tests/testthat/test-entry-points.R</code> (new): 18 tests covering all project types, NAMESPACE parsing, zero-in-degree fallback, and the scope_level guard.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.1.5.9000" id="rrlmgraph-0159000-development-version">rrlmgraph 0.1.5.9000 (development version)<a class="anchor" aria-label="anchor" href="#rrlmgraph-0159000-development-version"></a></h2>
 <div class="section level4">

@@ -73,8 +73,65 @@ if (is.null(outputs)) {
 }
 ```
 
-> **Note:** Precomputed outputs not yet available. Run the
-> `precompute-vignettes` workflow to generate them.
+### Query
+
+How does the data preparation and validation pipeline work?
+
+**Context nodes used:** demo/predict::run_pipeline,
+demo/data_prep::prepare_data, demo/data_prep::clean_data,
+demo/model::fit_model, demo/model::tune_hyperparams,
+demo/predict::predict_results, demo/predict::evaluate_predictions,
+demo/data_prep::validate_inputs, demo/model::select_features
+
+**Provider / model:** github / gpt-4o-mini
+
+**Response:**
+
+ERROR: HTTP 403 Forbidden. ℹ {“error”:{“code”:“no_access”,“message”:“No
+access to model: /gpt-4o-mini”,“details”:“No access to model:
+/gpt-4o-mini”}}
+
+------------------------------------------------------------------------
+
+### Query
+
+Which function is called by fit_model() and what does it do?
+
+**Context nodes used:** demo/predict::run_pipeline,
+demo/predict::predict_results, demo/data_prep::clean_data,
+demo/model::fit_model, demo/data_prep::prepare_data,
+demo/data_prep::validate_inputs, demo/model::select_features,
+demo/model::tune_hyperparams, demo/predict::evaluate_predictions
+
+**Provider / model:** github / gpt-4o-mini
+
+**Response:**
+
+ERROR: HTTP 403 Forbidden. ℹ {“error”:{“code”:“no_access”,“message”:“No
+access to model: /gpt-4o-mini”,“details”:“No access to model:
+/gpt-4o-mini”}}
+
+------------------------------------------------------------------------
+
+### Query
+
+What are the main entry points of the package?
+
+**Context nodes used:** demo/predict::run_pipeline,
+demo/data_prep::prepare_data, demo/data_prep::clean_data,
+demo/predict::predict_results, demo/data_prep::validate_inputs,
+demo/predict::evaluate_predictions, demo/model::fit_model,
+demo/model::tune_hyperparams, demo/model::select_features
+
+**Provider / model:** github / gpt-4o-mini
+
+**Response:**
+
+ERROR: HTTP 403 Forbidden. ℹ {“error”:{“code”:“no_access”,“message”:“No
+access to model: /gpt-4o-mini”,“details”:“No access to model:
+/gpt-4o-mini”}}
+
+------------------------------------------------------------------------
 
 ## Regenerating outputs
 

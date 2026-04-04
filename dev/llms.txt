@@ -227,6 +227,8 @@ Parse R source files into nodes and edges.
 
 - [`detect_rproject()`](https://davidrsch.github.io/rrlmgraph/dev/reference/detect_rproject.md)
   : Detect an R project type and discover its files
+- [`detect_entry_points()`](https://davidrsch.github.io/rrlmgraph/dev/reference/detect_entry_points.md)
+  : Detect entry-point function nodes in an rrlm graph
 - [`extract_function_nodes()`](https://davidrsch.github.io/rrlmgraph/dev/reference/extract_function_nodes.md)
   : Extract function nodes from R source files
 - [`build_call_edges()`](https://davidrsch.github.io/rrlmgraph/dev/reference/build_call_edges.md)

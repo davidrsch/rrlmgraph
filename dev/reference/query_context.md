@@ -34,8 +34,10 @@ query_context(
 - seed_node:
 
   Character(1) or `NULL`. Name of the vertex to start traversal from.
-  `NULL` (default) triggers automatic selection: the function-type node
-  with the highest PageRank.
+  `NULL` (default) triggers automatic selection: prefer
+  `entry_point == TRUE` nodes, ranking by semantic similarity to the
+  query when embeddings are available, otherwise fall back to the
+  function-type node with the highest PageRank.
 
 - budget_tokens:
 
